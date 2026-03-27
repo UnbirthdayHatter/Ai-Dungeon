@@ -5,15 +5,23 @@ import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, on
 // Import the Firebase configuration
 import firebaseConfig from '../firebase-applet-config.json';
 
-// Initialize Firebase SDK
-console.log("Firebase Config loaded:", firebaseConfig ? { ...firebaseConfig, apiKey: "REDACTED" } : "UNDEFINED");
+type AppFirebaseConfig = typeof firebaseConfig & {
+  firestoreDatabaseId?: string;
+};
 
-if (!firebaseConfig || !firebaseConfig.projectId || !firebaseConfig.firestoreDatabaseId) {
-  console.error("CRITICAL: Firebase configuration is missing or invalid (projectId or firestoreDatabaseId).");
+const appFirebaseConfig = firebaseConfig as AppFirebaseConfig;
+
+// Initialize Firebase SDK
+console.log("Firebase Config loaded:", appFirebaseConfig ? { ...appFirebaseConfig, apiKey: "REDACTED" } : "UNDEFINED");
+
+if (!appFirebaseConfig || !appFirebaseConfig.projectId) {
+  console.error("CRITICAL: Firebase configuration is missing or invalid (projectId).");
 }
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig?.firestoreDatabaseId || "(default)");
+const app = initializeApp(appFirebaseConfig);
+export const db = appFirebaseConfig?.firestoreDatabaseId
+  ? getFirestore(app, appFirebaseConfig.firestoreDatabaseId)
+  : getFirestore(app);
 export const auth = getAuth(app);
 
 // Connection test
