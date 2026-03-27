@@ -29,7 +29,7 @@ function AppContent() {
     activeTab, 
     showClocks, 
     showJournal, 
-    currentRoleplayId, 
+    currentLiveRoleplayId,
     syncRoleplay, 
     theme,
     fetchUserSheets,
@@ -55,11 +55,11 @@ function AppContent() {
   }, [user, fetchUserSheets, fetchUserRoleplays, fetchUserConfig]);
 
   useEffect(() => {
-    if (currentRoleplayId) {
-      const unsub = syncRoleplay(currentRoleplayId);
+    if (currentLiveRoleplayId) {
+      const unsub = syncRoleplay(currentLiveRoleplayId);
       return () => unsub();
     }
-  }, [currentRoleplayId, syncRoleplay]);
+  }, [currentLiveRoleplayId, syncRoleplay]);
 
   const themeClasses = THEME_CLASSES[theme] || THEME_CLASSES.classic;
 
@@ -129,4 +129,3 @@ export default function App() {
     </FirestoreErrorBoundary>
   );
 }
-

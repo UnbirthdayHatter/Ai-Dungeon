@@ -11,6 +11,7 @@ interface Location {
   type: 'city' | 'dungeon' | 'landmark' | 'wilderness';
   coordinates: { x: number; y: number };
   imageUrl?: string;
+  imageLocked?: boolean;
 }
 
 export function WorldMap() {
@@ -55,6 +56,8 @@ export function WorldMap() {
         y: 20 + (idx * 20) % 60 
       },
       imageUrl: entry.imageUrl || entry.avatarUrl
+      ,
+      imageLocked: entry.imageLocked
     }));
 
   const handleGenerateImage = async (location: Location) => {
@@ -181,7 +184,7 @@ export function WorldMap() {
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
                   />
-                  {canEdit && (
+                  {canEdit && !selectedLocation.imageLocked && (
                     <button
                       onClick={() => handleGenerateImage(selectedLocation)}
                       disabled={isGeneratingImage}
@@ -193,7 +196,7 @@ export function WorldMap() {
                   )}
                 </div>
               ) : (
-                canEdit ? (
+                canEdit && !selectedLocation.imageLocked ? (
                   <button
                     onClick={() => handleGenerateImage(selectedLocation)}
                     disabled={isGeneratingImage}
@@ -211,7 +214,7 @@ export function WorldMap() {
                 ) : (
                   <div className="w-full aspect-video rounded-xl border border-zinc-800 flex flex-col items-center justify-center gap-2 text-zinc-600">
                     <ImageIcon className="w-6 h-6" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">No Image</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">{selectedLocation.imageLocked ? 'Image Locked' : 'No Image'}</span>
                   </div>
                 )
               )}

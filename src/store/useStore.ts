@@ -159,6 +159,7 @@ export type LoreEntry = {
   description: string;
   avatarUrl?: string;
   imageUrl?: string;
+  imageLocked?: boolean;
   parentId?: string | null;
   coordinates?: { x: number; y: number };
 };
@@ -457,6 +458,8 @@ export const useStore = create<any>()((set, get) => ({
   joinedRoleplays: [] as RoleplaySummary[],
   connectedPlayers: [] as { id: string; name: string; permissions?: { role: 'admin' | 'editor' | 'viewer' } }[],
   currentRoleplayId: null,
+  currentSaveRoleplayId: null,
+  currentLiveRoleplayId: null,
   currentRoleplayName: 'New Adventure',
   joinCode: null,
   isLive: false,
@@ -552,6 +555,8 @@ export const useStore = create<any>()((set, get) => ({
       }
       set({
         currentRoleplayId: null,
+        currentSaveRoleplayId: null,
+        currentLiveRoleplayId: null,
         currentRoleplayName: 'New Adventure',
         joinCode: null,
         isLive: false,
@@ -564,6 +569,8 @@ export const useStore = create<any>()((set, get) => ({
     const roleplay = state.userRoleplays.find((rp: RoleplaySummary) => rp.id === id) || state.joinedRoleplays.find((rp: RoleplaySummary) => rp.id === id);
     set({
       currentRoleplayId: id,
+      currentSaveRoleplayId: roleplay ? null : id,
+      currentLiveRoleplayId: roleplay ? id : null,
       currentRoleplayName: roleplay?.name || state.currentRoleplayName,
       joinCode: roleplay?.joinCode || state.joinCode,
       isLive: Boolean(roleplay),
@@ -646,6 +653,8 @@ export const useStore = create<any>()((set, get) => ({
         ? state.joinedRoleplays.map((rp: RoleplaySummary) => rp.id === joinedRoleplay.id ? joinedRoleplay : rp)
         : [...state.joinedRoleplays, joinedRoleplay],
       currentRoleplayId: joinedRoleplay.id,
+      currentSaveRoleplayId: null,
+      currentLiveRoleplayId: joinedRoleplay.id,
       currentRoleplayName: joinedRoleplay.name,
       joinCode: joinedRoleplay.joinCode,
       isLive: true,
@@ -673,6 +682,8 @@ export const useStore = create<any>()((set, get) => ({
           || null;
         return {
           currentRoleplayId: id,
+          currentSaveRoleplayId: null,
+          currentLiveRoleplayId: id,
           currentRoleplayName: data.name || state.currentRoleplayName,
           joinCode: data.joinCode || state.joinCode,
           mood: data.mood || '',
@@ -984,6 +995,8 @@ export const useStore = create<any>()((set, get) => ({
     set((current: any) => ({
       savedRoleplays: [...current.savedRoleplays.filter((item: SavedRoleplay) => item.id !== id), saved],
       currentRoleplayId: id,
+      currentSaveRoleplayId: id,
+      currentLiveRoleplayId: null,
       currentRoleplayName: name,
       lastSaved: Date.now(),
     }));
@@ -1008,6 +1021,8 @@ export const useStore = create<any>()((set, get) => ({
     set((current: any) => ({
       savedRoleplays: [...current.savedRoleplays.filter((item: SavedRoleplay) => item.id !== forkId), forkedRoleplay],
       currentRoleplayId: forkId,
+      currentSaveRoleplayId: forkId,
+      currentLiveRoleplayId: null,
       currentRoleplayName: name,
       messages: forkedRoleplay.messages || [],
       systemRules: forkedRoleplay.systemRules || defaultSystemRules,
@@ -1037,6 +1052,8 @@ export const useStore = create<any>()((set, get) => ({
     if (!roleplay) return {};
     return {
       currentRoleplayId: roleplay.id,
+      currentSaveRoleplayId: roleplay.id,
+      currentLiveRoleplayId: null,
       currentRoleplayName: roleplay.name,
       messages: roleplay.messages || [],
       systemRules: roleplay.systemRules || defaultSystemRules,
@@ -1162,6 +1179,8 @@ export const useStore = create<any>()((set, get) => ({
     }
     set((current: any) => ({
       currentRoleplayId: saveId,
+      currentSaveRoleplayId: saveId,
+      currentLiveRoleplayId: null,
       savedRoleplays: [...current.savedRoleplays.filter((item: SavedRoleplay) => item.id !== saveId), saved],
     }));
   },
@@ -1334,7 +1353,7 @@ export const useStore = create<any>()((set, get) => ({
     const state = get();
     const user = auth.currentUser;
     if (state.currentRoleplayId === id) {
-      set({ currentRoleplayId: null, joinCode: null });
+      set({ currentRoleplayId: null, currentSaveRoleplayId: null, currentLiveRoleplayId: null, joinCode: null });
     }
     if (user) {
       // If it's a saved roleplay (local to user)
@@ -1481,6 +1500,7 @@ export const useStore = create<any>()((set, get) => ({
       }
     }
 
+    const nextRoleplayId = newId || Math.random().toString(36).substring(7);
     const cleanState = {
       messages: [{
         id: 'welcome',
@@ -1498,7 +1518,9 @@ export const useStore = create<any>()((set, get) => ({
       combat: { active: false, turnIndex: 0, combatants: [] },
       contextAndRules: '',
       systemRules: defaultSystemRules,
-      currentRoleplayId: newId || Math.random().toString(36).substring(7),
+      currentRoleplayId: nextRoleplayId,
+      currentSaveRoleplayId: isMultiplayer ? null : nextRoleplayId,
+      currentLiveRoleplayId: isMultiplayer ? newId : null,
       currentRoleplayName: 'New Adventure',
       sessionId: null,
       isHost: isMultiplayer,

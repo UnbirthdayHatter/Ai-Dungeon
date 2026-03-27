@@ -8,7 +8,7 @@ interface BitDSheetProps {
 }
 
 export function BitDSheet({ sheet }: BitDSheetProps) {
-  const { updateSheet, addMessage, generateAIResponse, currentRoleplayId, isHost, aiAutoRespond } = useStore();
+  const { updateSheet, addMessage, generateAIResponse, isLive, isHost, aiAutoRespond } = useStore();
   const bitd = (sheet.bitd || {}) as any;
 
   const updateBitD = (field: string, value: any) => {
@@ -53,7 +53,7 @@ export function BitDSheet({ sheet }: BitDSheetProps) {
       content: `**${sheet.name}** rolled **${actionName}** (${diceStr})\n\nResult: ${rollDetails} -> **${highest}**\n**${result}**`
     });
 
-    if (!currentRoleplayId || (isHost && aiAutoRespond)) {
+    if (!isLive || (isHost && aiAutoRespond)) {
       generateAIResponse();
     }
   };

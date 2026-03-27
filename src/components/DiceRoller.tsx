@@ -8,7 +8,7 @@ export function DiceRoller() {
   const [isOpen, setIsOpen] = useState(false);
   const [diceCount, setDiceCount] = useState(1);
   const [activeRoll, setActiveRoll] = useState<{ result: number, diceType: number, message: string } | null>(null);
-  const { addMessage, sheets, activeSheetId, generateAIResponse, currentRoleplayId, isHost, aiAutoRespond } = useStore();
+  const { addMessage, sheets, activeSheetId, generateAIResponse, isLive, isHost, aiAutoRespond } = useStore();
 
   const activeSheet = sheets.find(s => s.id === activeSheetId) || sheets[0];
 
@@ -18,7 +18,7 @@ export function DiceRoller() {
       role: 'dice',
       content: activeRoll.message
     });
-    if (!currentRoleplayId || (isHost && aiAutoRespond)) {
+    if (!isLive || (isHost && aiAutoRespond)) {
       generateAIResponse();
     }
     setActiveRoll(null);

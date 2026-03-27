@@ -400,7 +400,7 @@ export function Lorebook() {
                     <div className="flex items-center gap-4">
                       <button
                         onClick={handleGeneratePortrait}
-                        disabled={isGenerating || selectedEntry.category === 'Folder'}
+                        disabled={isGenerating || selectedEntry.category === 'Folder' || Boolean((selectedEntry as any).imageLocked)}
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white rounded-lg text-sm font-medium transition-all shadow-lg shadow-indigo-900/20"
                       >
                         {isGenerating ? (
@@ -409,6 +409,17 @@ export function Lorebook() {
                           <Sparkles className="w-4 h-4" />
                         )}
                         Generate Portrait
+                      </button>
+                      <button
+                        onClick={() => updateLoreEntry(selectedEntry.id, { imageLocked: !(selectedEntry as any).imageLocked })}
+                        className={cn(
+                          "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border",
+                          (selectedEntry as any).imageLocked
+                            ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                            : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200"
+                        )}
+                      >
+                        {(selectedEntry as any).imageLocked ? 'Image Locked' : 'Lock Image'}
                       </button>
                     </div>
 

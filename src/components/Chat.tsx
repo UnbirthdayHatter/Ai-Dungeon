@@ -75,10 +75,11 @@ export function Chat() {
   const currentUserId = auth.currentUser?.uid || '';
   const isAdmin = Boolean(isHost || activeRoleplay?.admins?.includes(auth.currentUser?.uid || ''));
   const isEditor = Boolean(activeRoleplay?.editors?.includes(auth.currentUser?.uid || ''));
-  const canEditAIResponses = Boolean(aiEditEnabled && (isAdmin || isEditor));
+  const canEditAIResponses = !isLive || Boolean(aiEditEnabled && (isAdmin || isEditor));
   const canUseOoc = isAdmin;
   const isAdventureScoped = Boolean(isLive && currentRoleplayId);
   const characterLookupSheets = isAdventureScoped ? sessionSheets : sheets;
+  const canGenerateAiNow = !isLive || (isHost && aiAutoRespond);
 
   const getEffectiveApiKey = () => {
     const providerKey = apiKeys[provider];
@@ -195,6 +196,26 @@ export function Chat() {
       .replace(/[^a-z0-9]+/g, ' ')
       .trim();
 
+  const parseDiceCommand = (command: string) => {
+    const match = command.trim().match(/^\/roll\s+(\d+)d(\d+)([+-]\d+)?$/i);
+    if (!match) return null;
+    const diceCount = Number(match[1]);
+    const diceSides = Number(match[2]);
+    const modifier = match[3] ? Number(match[3]) : 0;
+    if (!Number.isFinite(diceCount) || !Number.isFinite(diceSides) || diceCount <= 0 || diceSides <= 0 || diceCount > 20 || diceSides > 1000) {
+      return null;
+    }
+    return { diceCount, diceSides, modifier };
+  };
+
+  const buildDiceCommandMessage = (diceCount: number, diceSides: number, modifier: number) => {
+    const rolls = Array.from({ length: diceCount }, () => Math.floor(Math.random() * diceSides) + 1);
+    const subtotal = rolls.reduce((sum, roll) => sum + roll, 0);
+    const total = subtotal + modifier;
+    const modifierLabel = modifier ? ` ${modifier > 0 ? '+' : '-'} ${Math.abs(modifier)}` : '';
+    return `**${activeSheet?.name || 'Player'}** rolled **${diceCount}d${diceSides}${modifier ? (modifier > 0 ? `+${modifier}` : modifier) : ''}**\n\nRolls: [${rolls.join(', ')}]\nSubtotal: **${subtotal}**${modifierLabel}\nTotal: **${total}**`;
+  };
+
   const activeSheet =
     characterLookupSheets.find(s => s.id === activeSheetId)
     || characterLookupSheets.find(s => s.ownerId === auth.currentUser?.uid)
@@ -308,19 +329,27 @@ export function Chat() {
     const messageContent = content || input.trim();
     if (!messageContent || !canSend) return;
 
+    const diceCommand = parseDiceCommand(messageContent);
     if (!content) setInput('');
-    await addMessage({ 
-      role: isOocMode ? 'ooc' : 'user', 
-      content: messageContent,
-      isCollapsed: false // OOC messages are visible by default, collapsible
-    });
+    if (diceCommand) {
+      await addMessage({
+        role: 'dice',
+        content: buildDiceCommandMessage(diceCommand.diceCount, diceCommand.diceSides, diceCommand.modifier),
+      });
+    } else {
+      await addMessage({ 
+        role: isOocMode ? 'ooc' : 'user', 
+        content: messageContent,
+        isCollapsed: false // OOC messages are visible by default, collapsible
+      });
+    }
     isTypingRef.current = false;
     setTyping(false);
     
     if (isOocMode) setIsOocMode(false); // Toggle off after sending
 
     // Only generate AI response if we're not a guest in a multiplayer session, and auto-respond is enabled
-    if (!isOocMode && (!isLive || (isHost && aiAutoRespond))) {
+    if (!isOocMode && canGenerateAiNow) {
       generateAIResponse();
     }
   };
@@ -332,7 +361,7 @@ export function Chat() {
       await addMessage({ role: 'user', content: action });
     
       // Only generate AI response if we're not a guest in a multiplayer session, and auto-respond is enabled
-      if (!isLive || (isHost && aiAutoRespond)) {
+      if (canGenerateAiNow) {
         generateAIResponse();
       }
     })();
@@ -501,7 +530,7 @@ export function Chat() {
       role: 'dice',
       content: message
     });
-    if (!isLive || (isHost && aiAutoRespond)) {
+    if (canGenerateAiNow) {
       generateAIResponse();
     }
     
@@ -591,9 +620,30 @@ export function Chat() {
     )}>
       {/* HUD Rail - Left Side */}
       <div className="w-72 hidden xl:flex flex-col gap-4 p-4 overflow-y-auto border-r border-zinc-800/50 bg-zinc-950/20 z-20 shrink-0">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Info className="w-4 h-4 text-amber-500" />
+              <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Session Status</h3>
+            </div>
+            <span className={cn(
+              "px-2 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest",
+              isLive ? "bg-amber-500/10 text-amber-400 border-amber-500/30" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+            )}>
+              {isLive ? (isHost ? 'Hosted MP' : 'Joined MP') : 'Solo'}
+            </span>
+          </div>
+          <div className="text-xs text-zinc-400 space-y-1">
+            <p><span className="text-zinc-500">Character:</span> {activeSheet?.name || 'None attached'}</p>
+            <p><span className="text-zinc-500">AI:</span> {canGenerateAiNow ? 'Ready' : 'Waiting on host'}</p>
+            {!isLive && (
+              <p><span className="text-zinc-500">Autosave:</span> {isSaving ? 'Saving...' : lastSaved ? `Saved ${new Date(lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Not saved yet'}</p>
+            )}
+          </div>
+        </div>
         <div className="flex items-center gap-2 mb-2">
           <Shield className="w-4 h-4 text-zinc-500" />
-          <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Party Status</h3>
+          <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Party Panel</h3>
         </div>
         {sessionSheets.length > 0 ? (
           sessionSheets.map((sheet) => (
@@ -968,6 +1018,38 @@ export function Chat() {
                   {/* Roll Prompts */}
                   {msg.role === 'assistant' && !isAIGenerating && isLastAssistantTurn(msg.id) && (
                     <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        onClick={() => generateAIResponse()}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg border text-xs font-bold transition-all flex items-center gap-2 shadow-sm",
+                          (theme === 'parchment' || theme === 'sepia')
+                            ? "bg-orange-100 border-orange-300 text-orange-900 hover:bg-orange-200"
+                            : "bg-zinc-800 border-zinc-700 text-zinc-200 hover:bg-zinc-700"
+                        )}
+                      >
+                        <Bot className="w-3 h-3" />
+                        Continue Scene
+                      </button>
+                      <button
+                        onClick={() => {
+                          const previousPlayerMessage = [...messages]
+                            .reverse()
+                            .find((entry) => ['user', 'dice', 'ooc'].includes(entry.role) && entry.timestamp! < (msg.timestamp || Number.MAX_SAFE_INTEGER));
+                          if (previousPlayerMessage) {
+                            rewindToMessage(previousPlayerMessage.id);
+                            setTimeout(() => generateAIResponse(), 0);
+                          }
+                        }}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg border text-xs font-bold transition-all flex items-center gap-2 shadow-sm",
+                          (theme === 'parchment' || theme === 'sepia')
+                            ? "bg-orange-100 border-orange-300 text-orange-900 hover:bg-orange-200"
+                            : "bg-zinc-800 border-zinc-700 text-zinc-200 hover:bg-zinc-700"
+                        )}
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        Regenerate
+                      </button>
                       {parseRollPrompts(msg.content).map((prompt, idx) => (
                         <button
                           key={`${prompt.label}-${idx}`}
