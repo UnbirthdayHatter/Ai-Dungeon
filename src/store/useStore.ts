@@ -480,7 +480,7 @@ export const useStore = create<any>()((set, get) => ({
       admins: data.admins || [],
       ownerId: data.ownerId,
     };
-    await setDoc(doc(db, 'users', user.uid, 'joinedRoleplays', roleplayDoc.id), joinedRoleplay, { merge: true } as any).catch(console.error);
+    await setDoc(doc(db, 'users', user.uid, 'joinedRoleplays', roleplayDoc.id), cleanObject(joinedRoleplay), { merge: true } as any).catch(console.error);
     set((state: any) => ({
       joinedRoleplays: state.joinedRoleplays.some((rp: RoleplaySummary) => rp.id === joinedRoleplay.id)
         ? state.joinedRoleplays.map((rp: RoleplaySummary) => rp.id === joinedRoleplay.id ? joinedRoleplay : rp)
