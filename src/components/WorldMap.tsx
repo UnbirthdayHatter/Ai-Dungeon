@@ -19,7 +19,6 @@ export function WorldMap() {
     lorebook, 
     updateLoreEntry, 
     isHost,
-    currentRoleplayId,
     currentLiveRoleplayId,
     userRoleplays,
     joinedRoleplays,

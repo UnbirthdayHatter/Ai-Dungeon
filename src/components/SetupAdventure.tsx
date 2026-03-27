@@ -25,7 +25,8 @@ export function SetupAdventure() {
     addSheet,
     saveRoleplay,
     currentRoleplayName,
-    currentRoleplayId,
+    currentSaveRoleplayId,
+    currentLiveRoleplayId,
     activeSheetId,
     sheets,
     sessionSheets,
@@ -87,12 +88,13 @@ export function SetupAdventure() {
   }, [joinedRoleplays, savedRoleplays, userRoleplays]);
 
   useEffect(() => {
-    if (currentRoleplayId) {
-      setSelectedTargetKey(`${isLive ? 'live' : 'saved'}:${currentRoleplayId}`);
+    const activeTargetId = isLive ? currentLiveRoleplayId : currentSaveRoleplayId;
+    if (activeTargetId) {
+      setSelectedTargetKey(`${isLive ? 'live' : 'saved'}:${activeTargetId}`);
     } else if (!selectedTargetKey && setupTargets.length > 0) {
       setSelectedTargetKey(setupTargets[0].key);
     }
-  }, [currentRoleplayId, isLive, selectedTargetKey, setupTargets]);
+  }, [currentLiveRoleplayId, currentSaveRoleplayId, isLive, selectedTargetKey, setupTargets]);
 
   const selectedTarget = setupTargets.find((target) => target.key === selectedTargetKey) || null;
   const canGenerate = !isGenerating && (!isLive || isHost);

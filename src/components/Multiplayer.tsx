@@ -6,7 +6,7 @@ import { auth } from '@/firebase';
 
 export function Multiplayer() {
   const { 
-    currentRoleplayId, 
+    currentLiveRoleplayId, 
     setCurrentRoleplayId, 
     createRoleplay, 
     joinRoleplay, 
@@ -37,7 +37,7 @@ export function Multiplayer() {
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState('');
 
-  const activeRoleplay = userRoleplays.find(rp => rp.id === currentRoleplayId) || joinedRoleplays.find(rp => rp.id === currentRoleplayId);
+  const activeRoleplay = userRoleplays.find(rp => rp.id === currentLiveRoleplayId) || joinedRoleplays.find(rp => rp.id === currentLiveRoleplayId);
   const getRoleLabel = (ownerId?: string) => {
     if (!ownerId) return 'Player';
     if (ownerId === auth.currentUser?.uid) return 'You';
@@ -51,9 +51,9 @@ export function Multiplayer() {
   }, [fetchUserRoleplays]);
 
   const handleRename = async () => {
-    if (!currentRoleplayId || !newName.trim()) return;
+    if (!currentLiveRoleplayId || !newName.trim()) return;
     try {
-      await renameRoleplay(currentRoleplayId, newName.trim());
+      await renameRoleplay(currentLiveRoleplayId, newName.trim());
       setIsRenaming(false);
     } catch (err: any) {
       setError(err.message);
@@ -106,7 +106,7 @@ export function Multiplayer() {
   };
 
   const copyToClipboard = () => {
-    const code = activeJoinCode || currentRoleplayId;
+    const code = activeJoinCode || currentLiveRoleplayId;
     if (code) {
       navigator.clipboard.writeText(code);
       setCopied(true);
@@ -115,8 +115,8 @@ export function Multiplayer() {
   };
 
   const leaveSession = async () => {
-    if (currentRoleplayId && activeSheetId) {
-      await removeSheetFromRoleplay(currentRoleplayId, activeSheetId);
+    if (currentLiveRoleplayId && activeSheetId) {
+      await removeSheetFromRoleplay(currentLiveRoleplayId, activeSheetId);
     }
     setCurrentRoleplayId(null);
     setJoinCode('');
@@ -153,10 +153,10 @@ export function Multiplayer() {
           <div className="flex items-center gap-3">
             <Users className="w-6 h-6 text-amber-500" />
             <h2 className="text-2xl font-serif font-bold text-zinc-100">
-              {currentRoleplayId && activeRoleplay ? activeRoleplay.name : 'Multiplayer Session'}
+              {currentLiveRoleplayId && activeRoleplay ? activeRoleplay.name : 'Multiplayer Session'}
             </h2>
           </div>
-          {currentRoleplayId && isHost && !isRenaming && (
+          {currentLiveRoleplayId && isHost && !isRenaming && (
             <button
               onClick={() => {
                 setNewName(activeRoleplay?.name || '');
@@ -193,7 +193,7 @@ export function Multiplayer() {
           </div>
         )}
 
-        {!currentRoleplayId ? (
+        {!currentLiveRoleplayId ? (
           <div className="space-y-8">
             {/* Session Management Tabs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -367,7 +367,7 @@ export function Multiplayer() {
                 <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Active Session Code</p>
                 <div className="flex items-center justify-center gap-4">
                   <span className="text-3xl font-mono font-black text-white tracking-widest select-all">
-                    {activeJoinCode || currentRoleplayId}
+                    {activeJoinCode || currentLiveRoleplayId}
                   </span>
                   <button
                     onClick={copyToClipboard}
@@ -443,7 +443,7 @@ export function Multiplayer() {
                     {isHost && sheet.ownerId !== auth.currentUser?.uid && (
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => togglePlayerPermission(currentRoleplayId!, sheet.ownerId!, 'admin')}
+                          onClick={() => togglePlayerPermission(currentLiveRoleplayId!, sheet.ownerId!, 'admin')}
                           className={cn(
                             "px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border",
                             activeRoleplay?.admins?.includes(sheet.ownerId)
@@ -455,7 +455,7 @@ export function Multiplayer() {
                           Admin
                         </button>
                         <button
-                          onClick={() => togglePlayerPermission(currentRoleplayId!, sheet.ownerId!, 'editor')}
+                          onClick={() => togglePlayerPermission(currentLiveRoleplayId!, sheet.ownerId!, 'editor')}
                           className={cn(
                             "px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border",
                             activeRoleplay?.editors?.includes(sheet.ownerId)
@@ -467,7 +467,7 @@ export function Multiplayer() {
                           Editor
                         </button>
                         <button
-                          onClick={() => togglePlayerPermission(currentRoleplayId!, sheet.ownerId!, 'viewer')}
+                          onClick={() => togglePlayerPermission(currentLiveRoleplayId!, sheet.ownerId!, 'viewer')}
                           className={cn(
                             "px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border",
                             !activeRoleplay?.editors?.includes(sheet.ownerId) && !activeRoleplay?.admins?.includes(sheet.ownerId)
@@ -481,7 +481,7 @@ export function Multiplayer() {
                         <button
                           onClick={() => {
                             if (confirm(`Are you sure you want to remove ${sheet.name} from the session?`)) {
-                              removeSheetFromRoleplay(currentRoleplayId!, sheet.id);
+                              removeSheetFromRoleplay(currentLiveRoleplayId!, sheet.id);
                             }
                           }}
                           className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all"

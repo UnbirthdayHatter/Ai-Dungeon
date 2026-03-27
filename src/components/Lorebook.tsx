@@ -21,7 +21,6 @@ export function Lorebook() {
     setCurrentRoleplayId,
     loadRoleplay,
     setActiveTab,
-    currentRoleplayId,
     currentLiveRoleplayId,
     isHost,
     refreshRoleplayCollections

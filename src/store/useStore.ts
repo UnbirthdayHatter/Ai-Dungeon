@@ -610,8 +610,13 @@ export const useStore = create<any>()((set, get) => ({
   },
   createRoleplay: async (name: string) => {
     await get().newRoleplay(true);
-    set({ currentRoleplayName: name || 'New Adventure' });
-    return get().currentRoleplayId || makeId();
+    const nextId = get().currentLiveRoleplayId || get().currentRoleplayId || makeId();
+    const nextName = name || 'New Adventure';
+    set({ currentRoleplayName: nextName });
+    if (nextId && nextName !== 'New Adventure') {
+      await get().renameRoleplay(nextId, nextName);
+    }
+    return nextId;
   },
   archiveRoleplay: async (id: string, archived: boolean) => set((state: any) => ({
     savedRoleplays: state.savedRoleplays.map((rp: SavedRoleplay) => rp.id === id ? { ...rp, archived } : rp),
@@ -983,7 +988,7 @@ export const useStore = create<any>()((set, get) => ({
     const nextMessages = state.messages.map((message: Message) => message.id === id ? { ...message, content } : message);
     set((current: any) => ({
       messages: nextMessages,
-      savedRoleplays: syncSavedRoleplayMessages(current.savedRoleplays, current.currentRoleplayId, nextMessages),
+      savedRoleplays: syncSavedRoleplayMessages(current.savedRoleplays, current.currentSaveRoleplayId, nextMessages),
     }));
     if (state.isLive && state.currentLiveRoleplayId) {
       await setDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'messages', id), { content }, { merge: true } as any).catch(console.error);
@@ -1386,7 +1391,7 @@ export const useStore = create<any>()((set, get) => ({
   deleteRoleplay: (id) => {
     const state = get();
     const user = auth.currentUser;
-    if (state.currentRoleplayId === id) {
+    if (state.currentSaveRoleplayId === id || state.currentLiveRoleplayId === id || state.currentRoleplayId === id) {
       set({ currentRoleplayId: null, currentSaveRoleplayId: null, currentLiveRoleplayId: null, joinCode: null });
     }
     if (user) {
@@ -1433,7 +1438,9 @@ export const useStore = create<any>()((set, get) => ({
       savedRoleplays: state.savedRoleplays.map(r => r.id === id ? { ...r, name: newName } : r),
       userRoleplays: state.userRoleplays.map(r => r.id === id ? { ...r, name: newName } : r),
       joinedRoleplays: state.joinedRoleplays.map(r => r.id === id ? { ...r, name: newName } : r),
-      currentRoleplayName: state.currentRoleplayId === id ? newName : state.currentRoleplayName
+      currentRoleplayName: state.currentSaveRoleplayId === id || state.currentLiveRoleplayId === id || state.currentRoleplayId === id
+        ? newName
+        : state.currentRoleplayName
     }));
 
     // 2. Update in Firestore
@@ -1640,8 +1647,8 @@ export const useStore = create<any>()((set, get) => ({
     const state = get();
     const user = auth.currentUser;
     if (!user) throw new Error('Must be logged in to promote to multiplayer.');
-    const sourceSavedRoleplayId = state.savedRoleplays.some((rp: SavedRoleplay) => rp.id === state.currentRoleplayId)
-      ? state.currentRoleplayId
+    const sourceSavedRoleplayId = state.savedRoleplays.some((rp: SavedRoleplay) => rp.id === state.currentSaveRoleplayId)
+      ? state.currentSaveRoleplayId
       : null;
 
     try {
