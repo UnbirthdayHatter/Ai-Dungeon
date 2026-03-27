@@ -394,6 +394,8 @@ const syncSavedRoleplaySheets = (savedRoleplays: SavedRoleplay[], roleplayId: st
       )
     : savedRoleplays;
 
+let activeRoleplaySyncCleanup: (() => void) | null = null;
+
 const postPresenceUpdate = async (payload: { roleplayId: string; userId?: string; name?: string; isTyping?: boolean; isAIGenerating?: boolean }) => {
   await fetch('/api/presence/update', {
     method: 'POST',
@@ -544,6 +546,10 @@ export const useStore = create<any>()((set, get) => ({
   },
   setCurrentRoleplayId: (id: string | null) => {
     if (!id) {
+      if (activeRoleplaySyncCleanup) {
+        activeRoleplaySyncCleanup();
+        activeRoleplaySyncCleanup = null;
+      }
       set({
         currentRoleplayId: null,
         currentRoleplayName: 'New Adventure',
@@ -648,6 +654,10 @@ export const useStore = create<any>()((set, get) => ({
     }));
   },
   syncRoleplay: (id: string) => {
+    if (activeRoleplaySyncCleanup) {
+      activeRoleplaySyncCleanup();
+      activeRoleplaySyncCleanup = null;
+    }
     const unsubscribers: Array<() => void> = [];
     get().refreshRoleplayCollections(id).catch(console.error);
 
@@ -715,9 +725,11 @@ export const useStore = create<any>()((set, get) => ({
       }));
     }));
 
-    return () => {
+    const cleanup = () => {
       unsubscribers.forEach((unsubscribe) => unsubscribe());
     };
+    activeRoleplaySyncCleanup = cleanup;
+    return cleanup;
   },
   setQuests: (quests: Quest[]) => set({ quests }),
   addQuest: (quest: Quest) => set((state: any) => ({ quests: [...state.quests, quest] })),
@@ -1017,6 +1029,10 @@ export const useStore = create<any>()((set, get) => ({
     return forkId;
   },
   loadRoleplay: (id: string) => set((state: any) => {
+    if (activeRoleplaySyncCleanup) {
+      activeRoleplaySyncCleanup();
+      activeRoleplaySyncCleanup = null;
+    }
     const roleplay = state.savedRoleplays.find((item: SavedRoleplay) => item.id === id);
     if (!roleplay) return {};
     return {
@@ -1037,6 +1053,13 @@ export const useStore = create<any>()((set, get) => ({
       sessionSheets: roleplay.sheets || [],
       activeSheetId: roleplay.sheets?.[0]?.id || null,
       isLive: false,
+      isHost: false,
+      joinCode: null,
+      typingUsers: {},
+      isAIGenerating: false,
+      connectedPlayers: [],
+      admins: [],
+      editors: [],
     };
   }),
   applyAdventureSetup: async ({
@@ -1389,6 +1412,10 @@ export const useStore = create<any>()((set, get) => ({
   newRoleplay: async (isMultiplayer = false) => {
     const state = get();
     const user = auth.currentUser;
+    if (activeRoleplaySyncCleanup) {
+      activeRoleplaySyncCleanup();
+      activeRoleplaySyncCleanup = null;
+    }
     
     // Auto-save the current adventure before starting a new one
     if (state.messages.length > 1) {
