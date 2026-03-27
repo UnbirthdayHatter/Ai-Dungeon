@@ -72,7 +72,10 @@ export function Chat() {
   } = useStore();
 
   const activeRoleplay = [...userRoleplays, ...joinedRoleplays].find(rp => rp.id === currentRoleplayId);
-  const canEdit = isHost || activeRoleplay?.admins?.includes(auth.currentUser?.uid || '') || activeRoleplay?.editors?.includes(auth.currentUser?.uid || '');
+  const isAdmin = Boolean(isHost || activeRoleplay?.admins?.includes(auth.currentUser?.uid || ''));
+  const isEditor = Boolean(activeRoleplay?.editors?.includes(auth.currentUser?.uid || ''));
+  const canEditAIResponses = Boolean(aiEditEnabled && (isAdmin || isEditor));
+  const canUseOoc = isAdmin;
   const isAdventureScoped = Boolean(isLive && currentRoleplayId);
   const characterLookupSheets = isAdventureScoped ? sessionSheets : sheets;
 
@@ -977,7 +980,7 @@ export function Chat() {
                       )}
                     </button>
                   )}
-                  {((canEdit || (msg.role === 'user' && msg.senderId === auth.currentUser?.uid) || (msg.role === 'assistant' && aiEditEnabled))) && (
+                  {(((msg.role === 'user' || msg.role === 'ooc') && msg.senderId === auth.currentUser?.uid) || (msg.role === 'assistant' && canEditAIResponses)) && (
                     <button
                       onClick={() => {
                         setEditingMessageId(msg.id);
@@ -1135,7 +1138,7 @@ export function Chat() {
             >
               <Dices className="w-5 h-5" />
             </button>
-            {isHost && (
+            {canUseOoc && (
               <button
                 onClick={() => setIsOocMode(!isOocMode)}
                 className={cn(

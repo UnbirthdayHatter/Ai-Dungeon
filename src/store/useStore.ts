@@ -351,6 +351,7 @@ export const useStore = create<any>()((set, get) => ({
   aiAutoRespond: true,
   aiEditEnabled: false,
   isHost: false,
+  admins: [],
   editors: [],
   userRoleplays: [] as RoleplaySummary[],
   joinedRoleplays: [] as RoleplaySummary[],
@@ -538,6 +539,7 @@ export const useStore = create<any>()((set, get) => ({
           currentNPCs: data.currentNPCs || [],
           isLive: true,
           isHost: data.ownerId === currentUserId,
+          admins: data.admins || [],
           editors: data.editors || [],
           activeSheetId,
         };

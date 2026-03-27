@@ -419,7 +419,7 @@ export function Multiplayer() {
                       </div>
                     </div>
 
-                    {isHost && sheet.id !== activeSheetId && (
+                    {isHost && sheet.ownerId !== auth.currentUser?.uid && (
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => togglePlayerPermission(currentRoleplayId!, sheet.ownerId!, 'admin')}

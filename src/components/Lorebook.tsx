@@ -27,7 +27,7 @@ export function Lorebook() {
   } = useStore();
 
   const activeRoleplay = [...userRoleplays, ...joinedRoleplays].find(rp => rp.id === currentRoleplayId);
-  const canEdit = isHost || activeRoleplay?.admins?.includes(auth.currentUser?.uid || '') || activeRoleplay?.editors?.includes(auth.currentUser?.uid || '');
+  const canEdit = Boolean(isHost || activeRoleplay?.admins?.includes(auth.currentUser?.uid || ''));
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | 'All'>('All');
   const [isGenerating, setIsGenerating] = useState(false);

@@ -618,6 +618,9 @@ export function Settings() {
                 {aiEditEnabled ? 'Enabled' : 'Disabled'}
               </button>
             </div>
+            <p className="text-[10px] text-zinc-500">
+              When enabled, hosts, admins, and editors can edit AI responses. Admins can also use OOC mode and edit the lorebook.
+            </p>
             <div className="space-y-2">
               <label className="block text-xs font-bold text-zinc-500 uppercase">Dice Skin</label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
