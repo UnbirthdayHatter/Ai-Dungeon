@@ -387,9 +387,27 @@ export const useStore = create<any>()((set, get) => ({
   setNotes: (notes: string) => set({ notes }),
   generatePortrait: async () => {},
   setTheme: (theme: ThemeType) => set({ theme }),
-  setSystemRules: (rules: string) => set({ systemRules: rules }),
-  setContextAndRules: (rules: string) => set({ contextAndRules: rules }),
-  setMood: (mood: string) => set({ mood }),
+  setSystemRules: (rules: string) => {
+    const state = get();
+    set({ systemRules: rules });
+    if (state.currentRoleplayId && state.isHost) {
+      updateDoc(doc(db, 'roleplays', state.currentRoleplayId), { systemRules: rules, updatedAt: Date.now() }).catch(console.error);
+    }
+  },
+  setContextAndRules: (rules: string) => {
+    const state = get();
+    set({ contextAndRules: rules });
+    if (state.currentRoleplayId && state.isHost) {
+      updateDoc(doc(db, 'roleplays', state.currentRoleplayId), { contextAndRules: rules, updatedAt: Date.now() }).catch(console.error);
+    }
+  },
+  setMood: (mood: string) => {
+    const state = get();
+    set({ mood });
+    if (state.currentRoleplayId && state.isHost) {
+      updateDoc(doc(db, 'roleplays', state.currentRoleplayId), { mood, updatedAt: Date.now() }).catch(console.error);
+    }
+  },
   setCurrentRoleplayId: (id: string | null) => {
     if (!id) {
       set({
@@ -631,7 +649,12 @@ export const useStore = create<any>()((set, get) => ({
     }
     set((state: any) => ({
       savedCharacters: state.savedCharacters.some((item: Sheet) => item.id === nextSheet.id) ? state.savedCharacters : [...state.savedCharacters, nextSheet],
-      sheets: state.isLive ? state.sheets : [...state.sheets, nextSheet],
+      sessionSheets: state.isLive && state.currentRoleplayId
+        ? (state.sessionSheets.some((item: Sheet) => item.id === nextSheet.id) ? state.sessionSheets : [...state.sessionSheets, nextSheet])
+        : state.sessionSheets,
+      sheets: state.isLive && state.currentRoleplayId
+        ? (state.sessionSheets.some((item: Sheet) => item.id === nextSheet.id) ? state.sessionSheets : [...state.sessionSheets, nextSheet])
+        : [...state.sheets, nextSheet],
       activeSheetId: nextSheet.id,
     }));
   },
@@ -689,13 +712,40 @@ export const useStore = create<any>()((set, get) => ({
   },
   addLoreEntry: (entry: any) => {
     const id = makeId();
-    set((state: any) => ({ lorebook: [...state.lorebook, { id, ...entry }] }));
+    const state = get();
+    const nextEntry = { id, ...entry };
+    set((current: any) => ({ lorebook: [...current.lorebook, nextEntry] }));
+    if (state.currentRoleplayId) {
+      setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'lorebook', id), cleanObject(nextEntry), { merge: true } as any).catch(console.error);
+    }
     return id;
   },
-  updateLoreEntry: (id: string, updates: any) => set((state: any) => ({ lorebook: state.lorebook.map((entry: LoreEntry) => entry.id === id ? { ...entry, ...updates } : entry) })),
-  deleteLoreEntry: (id: string) => set((state: any) => ({ lorebook: state.lorebook.filter((entry: LoreEntry) => entry.id !== id), selectedLoreId: state.selectedLoreId === id ? null : state.selectedLoreId })),
+  updateLoreEntry: (id: string, updates: any) => {
+    const state = get();
+    const currentEntry = state.lorebook.find((entry: LoreEntry) => entry.id === id);
+    const nextEntry = currentEntry ? { ...currentEntry, ...updates } : null;
+    set((current: any) => ({ lorebook: current.lorebook.map((entry: LoreEntry) => entry.id === id ? { ...entry, ...updates } : entry) }));
+    if (state.currentRoleplayId && nextEntry) {
+      setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'lorebook', id), cleanObject(nextEntry), { merge: true } as any).catch(console.error);
+    }
+  },
+  deleteLoreEntry: (id: string) => {
+    const state = get();
+    set((current: any) => ({ lorebook: current.lorebook.filter((entry: LoreEntry) => entry.id !== id), selectedLoreId: current.selectedLoreId === id ? null : current.selectedLoreId }));
+    if (state.currentRoleplayId) {
+      deleteDoc(doc(db, 'roleplays', state.currentRoleplayId, 'lorebook', id)).catch(console.error);
+    }
+  },
   setLorebook: (entries: any[]) => set({ lorebook: entries }),
-  moveLoreEntry: (id: string, parentId: string) => set((state: any) => ({ lorebook: state.lorebook.map((entry: LoreEntry) => entry.id === id ? { ...entry, parentId } : entry) })),
+  moveLoreEntry: (id: string, parentId: string) => {
+    const state = get();
+    const currentEntry = state.lorebook.find((entry: LoreEntry) => entry.id === id);
+    const nextEntry = currentEntry ? { ...currentEntry, parentId } : null;
+    set((current: any) => ({ lorebook: current.lorebook.map((entry: LoreEntry) => entry.id === id ? { ...entry, parentId } : entry) }));
+    if (state.currentRoleplayId && nextEntry) {
+      setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'lorebook', id), cleanObject(nextEntry), { merge: true } as any).catch(console.error);
+    }
+  },
   setCurrentNPCs: (npcs: any[]) => set({ currentNPCs: npcs }),
   addMessage: async (message: any) => {
     const state = get();

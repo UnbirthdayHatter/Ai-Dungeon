@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '@/store/useStore';
 import { Map as MapIcon, Navigation, MapPin, Search, Plus, Loader2, Sparkles, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { GoogleGenAI } from "@google/genai";
 import { auth } from '../firebase';
 
 interface Location {
@@ -17,10 +16,7 @@ interface Location {
 export function WorldMap() {
   const { 
     lorebook, 
-    apiKeys, 
-    apiKey, 
     updateLoreEntry, 
-    provider,
     isHost,
     currentRoleplayId,
     userRoleplays,
@@ -30,14 +26,6 @@ export function WorldMap() {
   
   const activeRoleplay = [...userRoleplays, ...joinedRoleplays].find(rp => rp.id === currentRoleplayId);
   const canEdit = isHost || activeRoleplay?.admins?.includes(auth.currentUser?.uid || '') || activeRoleplay?.editors?.includes(auth.currentUser?.uid || '');
-
-  const getGeminiApiKey = () => {
-    if (apiKeys.gemini) return apiKeys.gemini;
-    if (provider === 'gemini' && apiKey) return apiKey;
-    return (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '') || '';
-  };
-
-  const effectiveApiKey = getGeminiApiKey();
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [isGeneratingMap, setIsGeneratingMap] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
@@ -66,33 +54,23 @@ export function WorldMap() {
     }));
 
   const handleGenerateImage = async (location: Location) => {
-    if (!effectiveApiKey || !canEdit) return;
+    if (!canEdit) return;
     setIsGeneratingImage(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: effectiveApiKey });
-      const { withRetry } = await import("@/lib/utils");
-      const response = await withRetry(() => ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
-        contents: {
-          parts: [
-            {
-              text: `A high-quality fantasy landscape painting of ${location.name}. ${location.description}. Epic scale, detailed environment, cinematic lighting.`,
-            },
-          ],
-        },
-      }));
-
-      for (const part of response.candidates?.[0]?.content?.parts || []) {
-        if (part.inlineData) {
-          const base64Data = part.inlineData.data;
-          const imageUrl = `data:image/png;base64,${base64Data}`;
-          
-          // Update lore entry with the new image
-          updateLoreEntry(location.id, { imageUrl });
-          setSelectedLocation(prev => prev ? { ...prev, imageUrl } : null);
-          break;
-        }
+      const response = await fetch('/api/ai/image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: `A high-quality fantasy landscape painting of ${location.name}. ${location.description}. Epic scale, detailed environment, cinematic lighting.`,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data?.imageUrl) {
+        throw new Error(data?.error?.message || 'Failed to generate location image.');
       }
+      const imageUrl = data.imageUrl as string;
+      updateLoreEntry(location.id, { imageUrl });
+      setSelectedLocation(prev => prev ? { ...prev, imageUrl } : null);
     } catch (error) {
       console.error('Error generating location image:', error);
     } finally {
@@ -200,7 +178,7 @@ export function WorldMap() {
                 canEdit ? (
                   <button
                     onClick={() => handleGenerateImage(selectedLocation)}
-                    disabled={isGeneratingImage || !apiKey}
+                    disabled={isGeneratingImage}
                     className="w-full aspect-video rounded-xl border-2 border-dashed border-zinc-800 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all flex flex-col items-center justify-center gap-2 text-zinc-500 hover:text-amber-500 group disabled:opacity-50"
                   >
                     {isGeneratingImage ? (

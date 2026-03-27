@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { useStore } from '@/store/useStore';
+import { useStore, Sheet } from '@/store/useStore';
 import { Wand2, Download, Upload, Plus, User, Sparkles, Loader2 } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
 import { cn } from '@/lib/utils';
 
 export function SetupAdventure() {
@@ -14,6 +13,10 @@ export function SetupAdventure() {
     mood, 
     savedCharacters,
     addCharacterToAdventure,
+    addSheet,
+    saveRoleplay,
+    currentRoleplayName,
+    setActiveTab,
     apiKey, 
     provider, 
     apiKeys 
@@ -24,37 +27,39 @@ export function SetupAdventure() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showCharacterPopup, setShowCharacterPopup] = useState(false);
 
-  const getApiKey = () => {
-    if (provider === 'gemini' && apiKey) return apiKey;
-    if (apiKeys.gemini) return apiKeys.gemini;
-    return process.env.GEMINI_API_KEY || '';
-  };
-
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: getApiKey() });
       const prompt = `Generate a Blades in the Dark campaign based on the following:
       Mood/Tone: ${mood}
       Context/Rules: ${context}
       Adventure Type: ${adventureType}
       
       Return as JSON: { "setting": "...", "plotHook": "...", "initialScene": "..." }`;
-      
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt,
-        config: { responseMimeType: 'application/json' }
+
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider,
+          apiKey: apiKeys[provider] || (provider === 'gemini' ? apiKeys.gemini || apiKey || undefined : apiKey || undefined),
+          systemPrompt: 'You generate concise RPG campaign setup JSON only.',
+          messages: [{ role: 'user', content: prompt }],
+          responseMimeType: 'application/json',
+        })
       });
-      
-      const data = JSON.parse(response.text || '{}');
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data?.text) {
+        throw new Error(data?.error?.message || 'Failed to generate adventure.');
+      }
+      const generated = JSON.parse(data.text || '{}');
       
       newRoleplay(false);
-      setSystemRules(`Setting: ${data.setting}\n\nPlot Hook: ${data.plotHook}`);
-      setContextAndRules(`Initial Scene: ${data.initialScene}`);
+      setSystemRules(`Setting: ${generated.setting}\n\nPlot Hook: ${generated.plotHook}`);
+      setContextAndRules(`Initial Scene: ${generated.initialScene}`);
       addMessage({
         role: 'assistant',
-        content: `Adventure generated: ${data.setting}\n\n${data.plotHook}\n\n${data.initialScene}`,
+        content: `Adventure generated: ${generated.setting}\n\n${generated.plotHook}\n\n${generated.initialScene}`,
       });
     } catch (e) {
       console.error(e);
@@ -62,6 +67,49 @@ export function SetupAdventure() {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleNewCharacter = () => {
+    const newSheet: Sheet = {
+      id: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+      type: 'bitd',
+      name: 'New Character',
+      bitd: {
+        playbook: '',
+        crew: '',
+        alias: '',
+        look: '',
+        heritage: '',
+        background: '',
+        vice: '',
+        stress: 0,
+        trauma: [],
+        harm: { light1: '', light2: '', medium1: '', medium2: '', severe: '', fatal: '' },
+        healingClock: 0,
+        armor: false,
+        heavyArmor: false,
+        specialArmor: false,
+        coin: 0,
+        stash: 0,
+        playbookXp: 0,
+        insightXp: 0,
+        prowessXp: 0,
+        resolveXp: 0,
+        actions: { hunt: 0, study: 0, survey: 0, tinker: 0, finesse: 0, prowl: 0, skirmish: 0, wreck: 0, attune: 0, command: 0, consort: 0, sway: 0 },
+        specialAbilities: '',
+        friends: '',
+        items: '',
+        load: 'normal'
+      },
+      level: 1,
+      hp: 10,
+      maxHp: 10,
+      ac: 10,
+      proficiencies: [],
+    };
+    addSheet(newSheet);
+    void addCharacterToAdventure(newSheet.id);
+    setActiveTab('character');
   };
 
   return (
@@ -101,7 +149,10 @@ export function SetupAdventure() {
           <div className="space-y-2">
             <label className="text-sm font-medium text-zinc-400">Character for this Adventure</label>
             <div className="grid grid-cols-2 gap-4">
-              <button className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center gap-2 hover:border-indigo-500 transition-colors">
+              <button
+                onClick={handleNewCharacter}
+                className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center gap-2 hover:border-indigo-500 transition-colors"
+              >
                 <Plus className="w-8 h-8 text-zinc-500" />
                 <span className="font-medium text-zinc-100">New Character</span>
                 <span className="text-xs text-zinc-500">Create a fresh sheet</span>
@@ -158,7 +209,10 @@ export function SetupAdventure() {
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
           <div className="flex gap-2">
-            <button className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-medium transition-colors">
+            <button
+              onClick={() => saveRoleplay(currentRoleplayName || 'New Adventure')}
+              className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-medium transition-colors"
+            >
               Save Settings
             </button>
             <button className="p-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl transition-colors">

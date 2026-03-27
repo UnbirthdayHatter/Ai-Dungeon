@@ -55,7 +55,8 @@ async function startServer() {
         customEndpointUrl,
         systemPrompt = '',
         messages = [],
-      } = req.body || {};
+        responseMimeType,
+        } = req.body || {};
 
       const apiKey = getProviderApiKey(provider, requestApiKey);
 
@@ -78,6 +79,7 @@ async function startServer() {
           config: {
             systemInstruction: systemPrompt,
             temperature: 0.7,
+            responseMimeType: responseMimeType || undefined,
           }
         });
 
@@ -191,6 +193,47 @@ async function startServer() {
       return res.json({ text });
     } catch (error: any) {
       console.error("AI chat proxy exception:", error);
+      return res.status(500).json({ error: { message: error.message || "Internal Server Error" } });
+    }
+  });
+
+  app.post("/api/ai/image", async (req, res) => {
+    try {
+      const { prompt, apiKey: requestApiKey } = req.body || {};
+      if (!prompt) {
+        return res.status(400).json({ error: { message: 'prompt is required' } });
+      }
+
+      const apiKey = getProviderApiKey('gemini', requestApiKey);
+      if (!apiKey) {
+        return res.status(400).json({ error: { message: 'Gemini API key is missing.' } });
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      const result = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image',
+        contents: {
+          parts: [{ text: prompt }],
+        },
+        config: {
+          imageConfig: {
+            aspectRatio: "1:1",
+            imageSize: "1K",
+          }
+        }
+      });
+
+      for (const part of result.candidates?.[0]?.content?.parts || []) {
+        if (part.inlineData?.data) {
+          return res.json({
+            imageUrl: `data:image/png;base64,${part.inlineData.data}`,
+          });
+        }
+      }
+
+      return res.status(502).json({ error: { message: 'Image generation returned no image data.' } });
+    } catch (error: any) {
+      console.error("AI image proxy exception:", error);
       return res.status(500).json({ error: { message: error.message || "Internal Server Error" } });
     }
   });

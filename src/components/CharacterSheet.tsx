@@ -4,7 +4,6 @@ import { useStore, Sheet, SheetType } from '@/store/useStore';
 import { Shield, Heart, Sword, User, Book, Backpack, Dices, Plus, Upload, Download, Trash2, ChevronDown, ChevronRight, Archive, Wand2, Loader2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { GoogleGenAI } from '@google/genai';
 
 export function CharacterSheet() {
   const { 
@@ -75,8 +74,6 @@ export function CharacterSheet() {
     
     setIsGeneratingAvatar(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      
       let prompt = `A portrait of a tabletop RPG character. `;
       if (activeSheet.type === 'bitd') {
         prompt += `Blades in the Dark setting, dark fantasy, steampunk, scoundrel. `;
@@ -90,28 +87,17 @@ export function CharacterSheet() {
       if (activeSheet.name) prompt += `Name: ${activeSheet.name}. `;
       prompt += `High quality, digital art, fantasy character portrait, dramatic lighting.`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
-        contents: {
-          parts: [{ text: prompt }],
-        },
-        config: {
-          imageConfig: {
-            aspectRatio: "1:1",
-            imageSize: "1K"
-          }
-        }
+      const response = await fetch('/api/ai/image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
       });
-
-      for (const part of response.candidates?.[0]?.content?.parts || []) {
-        if (part.inlineData) {
-          const base64EncodeString = part.inlineData.data;
-          const imageUrl = `data:image/png;base64,${base64EncodeString}`;
-          const resizedImage = await resizeImage(imageUrl);
-          updateSheet(activeSheet.id, { avatarUrl: resizedImage });
-          break;
-        }
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data?.imageUrl) {
+        throw new Error(data?.error?.message || 'Failed to generate portrait.');
       }
+      const resizedImage = await resizeImage(data.imageUrl);
+      updateSheet(activeSheet.id, { avatarUrl: resizedImage });
     } catch (error) {
       console.error('Failed to generate avatar:', error);
       alert('Failed to generate avatar. Please try again.');
@@ -301,6 +287,10 @@ export function CharacterSheet() {
       ac: 10,
     };
     addSheet(newSheet);
+    setActiveSheet(newSheet.id);
+    if (isAdventureScoped) {
+      void addCharacterToAdventure(newSheet.id);
+    }
     setActiveTabState('active');
   };
 
