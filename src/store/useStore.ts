@@ -522,29 +522,29 @@ export const useStore = create<any>()((set, get) => ({
   setSystemRules: (rules: string) => {
     const state = get();
     set({ systemRules: rules });
-    if (state.currentRoleplayId && state.isHost) {
-      updateDoc(doc(db, 'roleplays', state.currentRoleplayId), { systemRules: rules, updatedAt: Date.now() }).catch(console.error);
+    if (state.currentLiveRoleplayId && state.isHost) {
+      updateDoc(doc(db, 'roleplays', state.currentLiveRoleplayId), { systemRules: rules, updatedAt: Date.now() }).catch(console.error);
     }
   },
   setContextAndRules: (rules: string) => {
     const state = get();
     set({ contextAndRules: rules });
-    if (state.currentRoleplayId && state.isHost) {
-      updateDoc(doc(db, 'roleplays', state.currentRoleplayId), { contextAndRules: rules, updatedAt: Date.now() }).catch(console.error);
+    if (state.currentLiveRoleplayId && state.isHost) {
+      updateDoc(doc(db, 'roleplays', state.currentLiveRoleplayId), { contextAndRules: rules, updatedAt: Date.now() }).catch(console.error);
     }
   },
   setMood: (mood: string) => {
     const state = get();
     set({ mood });
-    if (state.currentRoleplayId && state.isHost) {
-      updateDoc(doc(db, 'roleplays', state.currentRoleplayId), { mood, updatedAt: Date.now() }).catch(console.error);
+    if (state.currentLiveRoleplayId && state.isHost) {
+      updateDoc(doc(db, 'roleplays', state.currentLiveRoleplayId), { mood, updatedAt: Date.now() }).catch(console.error);
     }
   },
   setVisualStyle: (visualStyle: string) => {
     const state = get();
     set({ visualStyle });
-    if (state.currentRoleplayId && state.isHost) {
-      updateDoc(doc(db, 'roleplays', state.currentRoleplayId), { visualStyle, updatedAt: Date.now() }).catch(console.error);
+    if (state.currentLiveRoleplayId && state.isHost) {
+      updateDoc(doc(db, 'roleplays', state.currentLiveRoleplayId), { visualStyle, updatedAt: Date.now() }).catch(console.error);
     }
   },
   setCurrentRoleplayId: (id: string | null) => {
@@ -790,7 +790,7 @@ export const useStore = create<any>()((set, get) => ({
     set({ userRoleplays, joinedRoleplays, savedRoleplays });
   },
   refreshRoleplayCollections: async (roleplayId?: string) => {
-    const id = roleplayId || get().currentRoleplayId;
+    const id = roleplayId || get().currentLiveRoleplayId;
     if (!id) return;
     const { getDocs } = await import('firebase/firestore');
     const [loreSnap, questSnap, timelineSnap] = await Promise.all([
@@ -820,7 +820,7 @@ export const useStore = create<any>()((set, get) => ({
     set((state: any) => ({
       savedCharacters: state.savedCharacters.some((item: Sheet) => item.id === nextSheet.id) ? state.savedCharacters : [...state.savedCharacters, nextSheet],
       sheets: [...state.sheets, nextSheet],
-      savedRoleplays: syncSavedRoleplaySheets(state.savedRoleplays, state.currentRoleplayId, [...state.sheets, nextSheet]),
+      savedRoleplays: syncSavedRoleplaySheets(state.savedRoleplays, state.currentSaveRoleplayId, [...state.sheets, nextSheet]),
       activeSheetId: nextSheet.id,
     }));
   },
@@ -831,8 +831,8 @@ export const useStore = create<any>()((set, get) => ({
     const nextSheet = existing ? { ...existing, ...updates, lastSeen: Date.now() } : null;
     if (user && nextSheet && JSON.stringify(existing) !== JSON.stringify(nextSheet)) {
       getUserSheetWriter(id)(user.uid, { ...nextSheet, archived: nextSheet.archived || false });
-      if (state.isLive && state.currentRoleplayId && state.sessionSheets.some((sheet: Sheet) => sheet.id === id)) {
-        getRoleplaySheetWriter(state.currentRoleplayId, id)(nextSheet);
+      if (state.isLive && state.currentLiveRoleplayId && state.sessionSheets.some((sheet: Sheet) => sheet.id === id)) {
+        getRoleplaySheetWriter(state.currentLiveRoleplayId, id)(nextSheet);
       }
     }
     set((current: any) => ({
@@ -841,7 +841,7 @@ export const useStore = create<any>()((set, get) => ({
       sessionSheets: current.sessionSheets.map((sheet: Sheet) => sheet.id === id ? { ...sheet, ...updates, lastSeen: Date.now() } : sheet),
       savedRoleplays: syncSavedRoleplaySheets(
         current.savedRoleplays,
-        current.currentRoleplayId,
+        current.currentSaveRoleplayId,
         current.sheets.map((sheet: Sheet) => sheet.id === id ? { ...sheet, ...updates } : sheet)
       ),
     }));
@@ -851,8 +851,8 @@ export const useStore = create<any>()((set, get) => ({
     const user = auth.currentUser;
     if (user) {
       deleteDoc(doc(db, 'users', user.uid, 'sheets', id)).catch(console.error);
-      if (state.currentRoleplayId) {
-        deleteDoc(doc(db, 'roleplays', state.currentRoleplayId, 'sheets', id)).catch(console.error);
+      if (state.currentLiveRoleplayId) {
+        deleteDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'sheets', id)).catch(console.error);
       }
     }
     set((current: any) => ({
@@ -861,7 +861,7 @@ export const useStore = create<any>()((set, get) => ({
       sessionSheets: current.sessionSheets.filter((sheet: Sheet) => sheet.id !== id),
       savedRoleplays: syncSavedRoleplaySheets(
         current.savedRoleplays,
-        current.currentRoleplayId,
+        current.currentSaveRoleplayId,
         current.sheets.filter((sheet: Sheet) => sheet.id !== id)
       ),
       activeSheetId: current.activeSheetId === id ? null : current.activeSheetId,
@@ -891,8 +891,8 @@ export const useStore = create<any>()((set, get) => ({
     const state = get();
     const nextEntry = { id, ...entry };
     set((current: any) => ({ lorebook: [...current.lorebook, nextEntry] }));
-    if (state.currentRoleplayId) {
-      setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'lorebook', id), cleanObject(nextEntry), { merge: true } as any).catch(console.error);
+    if (state.currentLiveRoleplayId) {
+      setDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'lorebook', id), cleanObject(nextEntry), { merge: true } as any).catch(console.error);
     }
     return id;
   },
@@ -901,15 +901,15 @@ export const useStore = create<any>()((set, get) => ({
     const currentEntry = state.lorebook.find((entry: LoreEntry) => entry.id === id);
     const nextEntry = currentEntry ? { ...currentEntry, ...updates } : null;
     set((current: any) => ({ lorebook: current.lorebook.map((entry: LoreEntry) => entry.id === id ? { ...entry, ...updates } : entry) }));
-    if (state.currentRoleplayId && nextEntry) {
-      setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'lorebook', id), cleanObject(nextEntry), { merge: true } as any).catch(console.error);
+    if (state.currentLiveRoleplayId && nextEntry) {
+      setDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'lorebook', id), cleanObject(nextEntry), { merge: true } as any).catch(console.error);
     }
   },
   deleteLoreEntry: (id: string) => {
     const state = get();
     set((current: any) => ({ lorebook: current.lorebook.filter((entry: LoreEntry) => entry.id !== id), selectedLoreId: current.selectedLoreId === id ? null : current.selectedLoreId }));
-    if (state.currentRoleplayId) {
-      deleteDoc(doc(db, 'roleplays', state.currentRoleplayId, 'lorebook', id)).catch(console.error);
+    if (state.currentLiveRoleplayId) {
+      deleteDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'lorebook', id)).catch(console.error);
     }
   },
   setLorebook: (entries: any[]) => set({ lorebook: entries }),
@@ -918,8 +918,8 @@ export const useStore = create<any>()((set, get) => ({
     const currentEntry = state.lorebook.find((entry: LoreEntry) => entry.id === id);
     const nextEntry = currentEntry ? { ...currentEntry, parentId } : null;
     set((current: any) => ({ lorebook: current.lorebook.map((entry: LoreEntry) => entry.id === id ? { ...entry, parentId } : entry) }));
-    if (state.currentRoleplayId && nextEntry) {
-      setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'lorebook', id), cleanObject(nextEntry), { merge: true } as any).catch(console.error);
+    if (state.currentLiveRoleplayId && nextEntry) {
+      setDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'lorebook', id), cleanObject(nextEntry), { merge: true } as any).catch(console.error);
     }
   },
   setCurrentNPCs: (npcs: any[]) => set({ currentNPCs: npcs }),
@@ -928,21 +928,21 @@ export const useStore = create<any>()((set, get) => ({
     const defaultSheetId = ['user', 'dice', 'ooc'].includes(message.role) ? (message.sheetId || state.activeSheetId || undefined) : undefined;
     const defaultSenderId = message.role === 'assistant' ? undefined : (message.senderId || auth.currentUser?.uid);
     const nextMessage = { id: message.id || makeId(), timestamp: message.timestamp || Date.now(), sheetId: defaultSheetId, senderId: defaultSenderId, ...message };
-    if (state.isLive && state.currentRoleplayId) {
+    if (state.isLive && state.currentLiveRoleplayId) {
       set((current: any) => ({
         messages: sortMessagesByTimeline([
           ...current.messages.filter((item: Message) => item.id !== nextMessage.id),
           nextMessage,
         ]),
       }));
-      await setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'messages', nextMessage.id), cleanObject(nextMessage));
+      await setDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'messages', nextMessage.id), cleanObject(nextMessage));
       return;
     }
     set((current: any) => ({
       messages: sortMessagesByTimeline([...current.messages, nextMessage]),
       savedRoleplays: syncSavedRoleplayMessages(
         current.savedRoleplays,
-        current.currentRoleplayId,
+        current.currentSaveRoleplayId,
         sortMessagesByTimeline([...current.messages, nextMessage])
       ),
       lastSaved: Date.now(),
@@ -955,8 +955,8 @@ export const useStore = create<any>()((set, get) => ({
       messages: nextMessages,
       savedRoleplays: syncSavedRoleplayMessages(current.savedRoleplays, current.currentRoleplayId, nextMessages),
     }));
-    if (state.isLive && state.currentRoleplayId) {
-      await setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'messages', id), { content }, { merge: true } as any).catch(console.error);
+    if (state.isLive && state.currentLiveRoleplayId) {
+      await setDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'messages', id), { content }, { merge: true } as any).catch(console.error);
     }
   },
   toggleMessageCollapse: (id: string) => set((state: any) => ({ messages: state.messages.map((message: Message) => message.id === id ? { ...message, isCollapsed: !message.isCollapsed } : message) })),
@@ -969,7 +969,7 @@ export const useStore = create<any>()((set, get) => ({
   saveRoleplay: (name: string) => {
     const state = get();
     const user = auth.currentUser;
-    const id = state.currentRoleplayId || makeId();
+    const id = state.currentSaveRoleplayId || makeId();
     const existingSaved = state.savedRoleplays.find((item: SavedRoleplay) => item.id === id);
     const saved = {
       id,
@@ -1210,7 +1210,7 @@ export const useStore = create<any>()((set, get) => ({
       timestamp: Date.now(),
       name: attachedSheet?.name || auth.currentUser?.displayName || 'Player'
     };
-    if (!state.isLive || !state.currentRoleplayId || !auth.currentUser?.uid) {
+    if (!state.isLive || !state.currentLiveRoleplayId || !auth.currentUser?.uid) {
       set((current: any) => {
         const nextTypingUsers = { ...current.typingUsers };
         delete nextTypingUsers[userId];
@@ -1218,11 +1218,11 @@ export const useStore = create<any>()((set, get) => ({
       });
       return;
     }
-    if (state.isLive && state.currentRoleplayId && auth.currentUser?.uid) {
+    if (state.isLive && state.currentLiveRoleplayId && auth.currentUser?.uid) {
       if (isTyping) {
-        writeTypingPresence(state.currentRoleplayId, userId, payload);
+        writeTypingPresence(state.currentLiveRoleplayId, userId, payload);
       } else {
-        postPresenceUpdate({ roleplayId: state.currentRoleplayId, userId, name: payload.name, isTyping: false });
+        postPresenceUpdate({ roleplayId: state.currentLiveRoleplayId, userId, name: payload.name, isTyping: false });
       }
     }
     set((current: any) => {
@@ -1255,16 +1255,16 @@ export const useStore = create<any>()((set, get) => ({
     if (user) {
       setDoc(doc(db, 'users', user.uid, 'sheets', attached.id), cleanObject(attached), { merge: true } as any).catch(console.error);
     }
-    if (state.currentRoleplayId) {
+    if (state.currentLiveRoleplayId) {
       const previousForOwner = state.sessionSheets.find((sheet: Sheet) => sheet.ownerId === attached.ownerId && sheet.id !== attached.id);
       if (previousForOwner) {
-        await deleteDoc(doc(db, 'roleplays', state.currentRoleplayId, 'sheets', previousForOwner.id)).catch(console.error);
+        await deleteDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'sheets', previousForOwner.id)).catch(console.error);
       }
-      await setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'sheets', attached.id), cleanObject(attached), { merge: true } as any).catch(console.error);
-      await updateDoc(doc(db, 'roleplays', state.currentRoleplayId), { updatedAt: Date.now() }).catch(console.error);
+      await setDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'sheets', attached.id), cleanObject(attached), { merge: true } as any).catch(console.error);
+      await updateDoc(doc(db, 'roleplays', state.currentLiveRoleplayId), { updatedAt: Date.now() }).catch(console.error);
     }
   },
-  removeCharacterFromAdventure: (sheetId: string) => get().removeSheetFromRoleplay(get().currentRoleplayId || '', sheetId),
+  removeCharacterFromAdventure: (sheetId: string) => get().removeSheetFromRoleplay(get().currentLiveRoleplayId || '', sheetId),
   hostSavedRoleplay: async (id) => {
     const state = get();
     const user = auth.currentUser;
@@ -1333,8 +1333,12 @@ export const useStore = create<any>()((set, get) => ({
 
       set((state: any) => ({
         currentRoleplayId: newId,
+        currentSaveRoleplayId: null,
+        currentLiveRoleplayId: newId,
         currentRoleplayName: roleplay.name,
         joinCode: hostedJoinCode,
+        isLive: true,
+        isHost: true,
         savedRoleplays: state.savedRoleplays.map((saved: SavedRoleplay) =>
           saved.id === id ? { ...saved, promotedToRoleplayId: newId } : saved
         ),
@@ -1618,8 +1622,8 @@ export const useStore = create<any>()((set, get) => ({
   generateAIResponse: async () => {
     const state = get();
 
-    if (state.currentRoleplayId) {
-      postPresenceUpdate({ roleplayId: state.currentRoleplayId, isAIGenerating: true });
+    if (state.currentLiveRoleplayId) {
+      postPresenceUpdate({ roleplayId: state.currentLiveRoleplayId, isAIGenerating: true });
     }
     set({ isAIGenerating: true });
 
@@ -1873,8 +1877,8 @@ Do not take over the narrative; instead, support and enhance the player's vision
                 };
                 newState.sheets = newSheets;
                 
-                if (s.currentRoleplayId) {
-                  updateDoc(doc(db, 'roleplays', s.currentRoleplayId, 'sheets', s.activeSheetId), { hp: newHp });
+                if (s.currentLiveRoleplayId) {
+                  updateDoc(doc(db, 'roleplays', s.currentLiveRoleplayId, 'sheets', s.activeSheetId), { hp: newHp });
                 }
               }
             }
@@ -1890,8 +1894,8 @@ Do not take over the narrative; instead, support and enhance the player's vision
                   inventory: newInv
                 };
                 
-                if (s.currentRoleplayId) {
-                  updateDoc(doc(db, 'roleplays', s.currentRoleplayId, 'sheets', s.activeSheetId), { inventory: newInv });
+                if (s.currentLiveRoleplayId) {
+                  updateDoc(doc(db, 'roleplays', s.currentLiveRoleplayId, 'sheets', s.activeSheetId), { inventory: newInv });
                 }
                 
                 // Also handle structured loot suggestions
@@ -1927,8 +1931,8 @@ Do not take over the narrative; instead, support and enhance the player's vision
                     parentId: null
                   };
                   
-                  if (s.currentRoleplayId) {
-                    setDoc(doc(db, 'roleplays', s.currentRoleplayId, 'lorebook', id), cleanObject(entry));
+                  if (s.currentLiveRoleplayId) {
+                    setDoc(doc(db, 'roleplays', s.currentLiveRoleplayId, 'lorebook', id), cleanObject(entry));
                   }
 
                   if ((entry.category || '').toLowerCase() === 'npc') {
@@ -1954,16 +1958,16 @@ Do not take over the narrative; instead, support and enhance the player's vision
               }));
               newState.currentNPCs = newNPCs;
               
-              if (s.currentRoleplayId) {
-                updateDoc(doc(db, 'roleplays', s.currentRoleplayId), { currentNPCs: newNPCs });
+              if (s.currentLiveRoleplayId) {
+                updateDoc(doc(db, 'roleplays', s.currentLiveRoleplayId), { currentNPCs: newNPCs });
               }
             }
 
             if (updates.notes && typeof updates.notes === 'string') {
               const newNotes = s.notes ? `${s.notes}\n\n${updates.notes}` : updates.notes;
               newState.notes = newNotes;
-              if (s.currentRoleplayId) {
-                updateDoc(doc(db, 'roleplays', s.currentRoleplayId), { notes: newNotes });
+              if (s.currentLiveRoleplayId) {
+                updateDoc(doc(db, 'roleplays', s.currentLiveRoleplayId), { notes: newNotes });
               }
             }
 
@@ -1978,8 +1982,8 @@ Do not take over the narrative; instead, support and enhance the player's vision
               };
               newState.combat = newCombat;
               
-              if (s.currentRoleplayId) {
-                updateDoc(doc(db, 'roleplays', s.currentRoleplayId), { combat: newCombat });
+              if (s.currentLiveRoleplayId) {
+                updateDoc(doc(db, 'roleplays', s.currentLiveRoleplayId), { combat: newCombat });
               }
             }
 
@@ -2036,8 +2040,8 @@ Do not take over the narrative; instead, support and enhance the player's vision
     } finally {
       set({ isAIGenerating: false });
       const s = get();
-      if (s.currentRoleplayId) {
-        postPresenceUpdate({ roleplayId: s.currentRoleplayId, isAIGenerating: false });
+      if (s.currentLiveRoleplayId) {
+        postPresenceUpdate({ roleplayId: s.currentLiveRoleplayId, isAIGenerating: false });
       }
     }
   }

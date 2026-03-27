@@ -3,7 +3,7 @@ import { useStore } from '@/store/useStore';
 import { Save, FolderOpen, Trash2, Plus, Clock, MessageSquare } from 'lucide-react';
 
 export function Roleplays() {
-  const { savedRoleplays, saveRoleplay, loadRoleplay, deleteRoleplay, newRoleplay, messages, currentRoleplayId } = useStore();
+  const { savedRoleplays, saveRoleplay, loadRoleplay, deleteRoleplay, newRoleplay, messages, currentSaveRoleplayId } = useStore();
   const [saveName, setSaveName] = useState('');
   const visibleSavedRoleplays = savedRoleplays.filter((rp: any) => !rp.promotedToRoleplayId);
 
@@ -59,11 +59,11 @@ export function Roleplays() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
               <Save className="w-5 h-5 text-amber-500" />
-              {currentRoleplayId ? 'Update / Rename Roleplay' : 'Save Current Roleplay'}
+              {currentSaveRoleplayId ? 'Update / Rename Roleplay' : 'Save Current Roleplay'}
             </h3>
-            {currentRoleplayId && (
+            {currentSaveRoleplayId && (
               <button
-                onClick={() => handleDelete(currentRoleplayId)}
+                onClick={() => handleDelete(currentSaveRoleplayId)}
                 className="px-3 py-1.5 bg-red-600/10 hover:bg-red-600/20 text-red-500 rounded-lg border border-red-500/20 text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-all"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -76,7 +76,7 @@ export function Roleplays() {
               type="text"
               value={saveName}
               onChange={(e) => setSaveName(e.target.value)}
-              placeholder={currentRoleplayId ? "Rename this roleplay..." : "Enter a name for this save (e.g., 'Curse of Strahd')"}
+              placeholder={currentSaveRoleplayId ? "Rename this roleplay..." : "Enter a name for this save (e.g., 'Curse of Strahd')"}
               className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2 text-zinc-100 focus:outline-none focus:border-amber-500"
               onKeyDown={(e) => e.key === 'Enter' && handleSave()}
             />
@@ -85,12 +85,12 @@ export function Roleplays() {
               disabled={!saveName.trim()}
               className="px-6 py-2 bg-amber-600 hover:bg-amber-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-bold rounded-xl transition-colors"
             >
-              {currentRoleplayId ? 'Update' : 'Save'}
+              {currentSaveRoleplayId ? 'Update' : 'Save'}
             </button>
           </div>
           <p className="text-sm text-zinc-500 mt-3">
-            {currentRoleplayId 
-              ? `Currently syncing to: ${visibleSavedRoleplays.find(r => r.id === currentRoleplayId)?.name || 'Unknown'}`
+            {currentSaveRoleplayId 
+              ? `Currently syncing to: ${visibleSavedRoleplays.find(r => r.id === currentSaveRoleplayId)?.name || 'Unknown'}`
               : `Currently active: ${messages.length} messages in history.`
             }
           </p>

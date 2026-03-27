@@ -52,6 +52,7 @@ export function Chat() {
     aiAutoRespond,
     setAiAutoRespond,
     currentRoleplayId,
+    currentLiveRoleplayId,
     userRoleplays,
     joinedRoleplays,
     savedRoleplays,
@@ -71,7 +72,7 @@ export function Chat() {
     toggleMessageCollapse
   } = useStore();
 
-  const activeRoleplay = [...userRoleplays, ...joinedRoleplays].find(rp => rp.id === currentRoleplayId);
+  const activeRoleplay = [...userRoleplays, ...joinedRoleplays].find(rp => rp.id === currentLiveRoleplayId);
   const currentUserId = auth.currentUser?.uid || '';
   const isAdmin = Boolean(isHost || activeRoleplay?.admins?.includes(auth.currentUser?.uid || ''));
   const isEditor = Boolean(activeRoleplay?.editors?.includes(auth.currentUser?.uid || ''));
@@ -274,7 +275,7 @@ export function Chat() {
   };
 
   useEffect(() => {
-    if (!currentRoleplayId || !isHost || !aiAutoRespond || isAIGenerating || messages.length === 0) return;
+    if (!currentLiveRoleplayId || !isHost || !aiAutoRespond || isAIGenerating || messages.length === 0) return;
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage) return;
     if (lastMessage.id === lastAutoReplyMessageIdRef.current) return;
@@ -283,7 +284,7 @@ export function Chat() {
 
     lastAutoReplyMessageIdRef.current = lastMessage.id;
     generateAIResponse();
-  }, [messages, currentRoleplayId, isHost, aiAutoRespond, isAIGenerating, generateAIResponse]);
+  }, [messages, currentLiveRoleplayId, isHost, aiAutoRespond, isAIGenerating, generateAIResponse]);
 
   useEffect(() => {
     scrollToBottom();
