@@ -80,11 +80,7 @@ export function Chat() {
     const providerKey = apiKeys[provider];
     if (providerKey) return providerKey;
     if (provider === 'gemini') {
-      try {
-        return apiKey || process.env.GEMINI_API_KEY || '';
-      } catch (e) {
-        return apiKey || '';
-      }
+      return apiKey || '';
     }
     return '';
   };
@@ -92,11 +88,7 @@ export function Chat() {
   const getGeminiApiKey = () => {
     if (apiKeys.gemini) return apiKeys.gemini;
     if (provider === 'gemini' && apiKey) return apiKey;
-    try {
-      return process.env.GEMINI_API_KEY || '';
-    } catch (e) {
-      return '';
-    }
+    return '';
   };
 
   const effectiveApiKey = getEffectiveApiKey();
@@ -270,7 +262,7 @@ export function Chat() {
     setSuggestedLore(prev => prev.filter(l => l.name !== lore.name));
   };
 
-  const canSend = effectiveApiKey || (currentRoleplayId && !isHost);
+  const canSend = true;
 
   const handleSend = async (content?: string) => {
     const messageContent = content || input.trim();

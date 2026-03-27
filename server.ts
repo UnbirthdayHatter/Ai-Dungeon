@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import { GoogleGenAI } from "@google/genai";
 
 dotenv.config();
 
@@ -25,6 +26,174 @@ async function startServer() {
   const presenceClients = new Map<string, Set<express.Response>>();
 
   app.use(express.json());
+
+  const getProviderApiKey = (provider: string, requestApiKey?: string) => {
+    if (requestApiKey) return requestApiKey;
+    switch (provider) {
+      case 'gemini':
+        return process.env.GEMINI_API_KEY || '';
+      case 'deepseek':
+        return process.env.DEEPSEEK_API_KEY || '';
+      case 'openai':
+        return process.env.OPENAI_API_KEY || '';
+      case 'anthropic':
+        return process.env.ANTHROPIC_API_KEY || '';
+      case 'openrouter':
+        return process.env.OPENROUTER_API_KEY || '';
+      case 'custom':
+        return process.env.CUSTOM_API_KEY || '';
+      default:
+        return '';
+    }
+  };
+
+  app.post("/api/ai/chat", async (req, res) => {
+    try {
+      const {
+        provider = 'gemini',
+        apiKey: requestApiKey,
+        customEndpointUrl,
+        systemPrompt = '',
+        messages = [],
+      } = req.body || {};
+
+      const apiKey = getProviderApiKey(provider, requestApiKey);
+
+      if (!Array.isArray(messages)) {
+        return res.status(400).json({ error: { message: 'messages must be an array' } });
+      }
+
+      if (!apiKey) {
+        return res.status(400).json({ error: { message: `API key for ${provider} is missing.` } });
+      }
+
+      if (provider === 'gemini') {
+        const ai = new GoogleGenAI({ apiKey });
+        const result = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: messages.map((message: any) => ({
+            role: message.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: message.content || '' }],
+          })),
+          config: {
+            systemInstruction: systemPrompt,
+            temperature: 0.7,
+          }
+        });
+
+        return res.json({ text: result?.text || '' });
+      }
+
+      let endpoint = '';
+      let model = '';
+      let headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      let body: Record<string, unknown> = {};
+
+      switch (provider) {
+        case 'openai':
+          endpoint = 'https://api.openai.com/v1/chat/completions';
+          model = 'gpt-4o-mini';
+          headers.Authorization = `Bearer ${apiKey.trim()}`;
+          body = {
+            model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              ...messages,
+            ],
+            temperature: 0.7,
+            max_tokens: 1000,
+          };
+          break;
+        case 'anthropic':
+          endpoint = 'https://api.anthropic.com/v1/messages';
+          model = 'claude-3-haiku-20240307';
+          headers['x-api-key'] = apiKey.trim();
+          headers['anthropic-version'] = '2023-06-01';
+          body = {
+            model,
+            system: systemPrompt,
+            messages,
+            max_tokens: 1000,
+            temperature: 0.7,
+          };
+          break;
+        case 'openrouter':
+          endpoint = 'https://openrouter.ai/api/v1/chat/completions';
+          model = 'gryphe/mythomax-l2-13b';
+          headers.Authorization = `Bearer ${apiKey.trim()}`;
+          body = {
+            model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              ...messages,
+            ],
+            temperature: 0.7,
+            max_tokens: 1000,
+          };
+          break;
+        case 'custom':
+          endpoint = customEndpointUrl || process.env.CUSTOM_API_URL || '';
+          model = 'default';
+          headers.Authorization = `Bearer ${apiKey.trim()}`;
+          body = {
+            model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              ...messages,
+            ],
+            temperature: 0.7,
+            max_tokens: 1000,
+          };
+          break;
+        case 'deepseek':
+        default:
+          endpoint = 'https://api.deepseek.com/chat/completions';
+          model = 'deepseek-chat';
+          headers.Authorization = `Bearer ${apiKey.trim()}`;
+          body = {
+            model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              ...messages,
+            ],
+            temperature: 0.7,
+            max_tokens: 1000,
+          };
+          break;
+      }
+
+      if (!endpoint) {
+        return res.status(400).json({ error: { message: `Endpoint for ${provider} is missing.` } });
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        return res.status(response.status).json({
+          error: {
+            message: data?.error?.message || data?.message || `${provider} request failed`,
+            details: data,
+          }
+        });
+      }
+
+      const text = provider === 'anthropic'
+        ? data?.content?.[0]?.text || ''
+        : data?.choices?.[0]?.message?.content || '';
+
+      return res.json({ text });
+    } catch (error: any) {
+      console.error("AI chat proxy exception:", error);
+      return res.status(500).json({ error: { message: error.message || "Internal Server Error" } });
+    }
+  });
 
   const ensurePresenceRoom = (roleplayId: string) => {
     if (!presenceState.has(roleplayId)) {

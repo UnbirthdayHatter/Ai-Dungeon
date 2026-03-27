@@ -1149,20 +1149,7 @@ export const useStore = create<any>()((set, get) => ({
 
   generateAIResponse: async () => {
     const state = get();
-    
-    const getEffectiveApiKey = () => {
-      if (state.provider === 'gemini') {
-        try {
-          return state.apiKeys.gemini || state.apiKey || process.env.GEMINI_API_KEY || '';
-        } catch (e) {
-          return state.apiKeys.gemini || state.apiKey || '';
-        }
-      }
-      return state.apiKeys[state.provider] || state.apiKey || '';
-    };
 
-    if (!getEffectiveApiKey()) return;
-    
     if (state.currentRoleplayId) {
       postPresenceUpdate({ roleplayId: state.currentRoleplayId, isAIGenerating: true });
     }
@@ -1332,114 +1319,34 @@ Do not take over the narrative; instead, support and enhance the player's vision
         ...combinedMessages
       ];
 
-      let endpoint = '';
-      let model = '';
-      let apiKey = '';
-
-      switch (state.provider) {
-        case 'openai':
-          endpoint = 'https://api.openai.com/v1/chat/completions';
-          model = 'gpt-4o-mini';
-          apiKey = state.apiKeys.openai || '';
-          break;
-        case 'anthropic':
-          endpoint = 'https://api.anthropic.com/v1/messages';
-          model = 'claude-3-haiku-20240307';
-          apiKey = state.apiKeys.anthropic || '';
-          break;
-        case 'openrouter':
-          endpoint = 'https://openrouter.ai/api/v1/chat/completions';
-          model = 'gryphe/mythomax-l2-13b';
-          apiKey = state.apiKeys.openrouter || '';
-          break;
-        case 'custom':
-          endpoint = state.customEndpointUrl || '';
-          model = 'default';
-          apiKey = state.apiKeys.custom || '';
-          break;
-        case 'gemini':
-          apiKey = state.apiKeys.gemini || state.apiKey || process.env.GEMINI_API_KEY || '';
-          break;
-        case 'deepseek':
-        default:
-          endpoint = 'https://api.deepseek.com/chat/completions';
-          model = 'deepseek-chat';
-          apiKey = state.apiKeys.deepseek || state.apiKey || '';
-          break;
-      }
-
-      if (!apiKey) {
-        throw new Error(`API key for ${state.provider} is missing. Please configure it in Settings.`);
-      }
-      if (state.provider === 'custom' && !endpoint) {
+      const apiKey = state.apiKeys[state.provider] || (state.provider === 'gemini' ? state.apiKeys.gemini || state.apiKey || '' : state.apiKey || '');
+      if (state.provider === 'custom' && !state.customEndpointUrl) {
         throw new Error(`Custom endpoint URL is missing. Please configure it in Settings.`);
       }
 
-      let response;
-      let aiResponse = '';
-      if (state.provider === 'gemini') {
-        const { GoogleGenAI } = await import("@google/genai");
-        const { withRetry } = await import("@/lib/utils");
-        const ai = new GoogleGenAI({ apiKey });
-        
-        const result = await withRetry(() => ai.models.generateContent({
-          model: 'gemini-3-flash-preview',
-          contents: apiMessages.map(m => ({
-            role: m.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: m.content }]
-          })),
-          config: {
-            systemInstruction: systemPrompt,
-            temperature: 0.7,
-          }
-        }));
-        
-        aiResponse = result?.text || '';
-      } else if (state.provider === 'anthropic') {
-        response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey.trim(),
-            'anthropic-version': '2023-06-01'
-          },
-          body: JSON.stringify({
-            model,
-            system: systemPrompt,
-            messages: combinedMessages,
-            max_tokens: 1000,
-            temperature: 0.7,
-          })
-        });
-      } else {
-        response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey.trim()}`
-          },
-          body: JSON.stringify({
-            model,
-            messages: apiMessages,
-            temperature: 0.7,
-            max_tokens: 1000,
-          })
-        });
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: state.provider,
+          apiKey: apiKey || undefined,
+          customEndpointUrl: state.customEndpointUrl || undefined,
+          systemPrompt,
+          messages: combinedMessages,
+        })
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        console.error('API Error Details:', data);
+        throw new Error(data?.error?.message || `API request failed: ${response.status} ${response.statusText}`);
       }
 
-      if (state.provider !== 'gemini') {
-        if (!response || !response.ok) {
-          const errorData = await response?.json().catch(() => ({}));
-          console.error('API Error Details:', errorData);
-          throw new Error(`API request failed: ${response?.status} ${response?.statusText} - ${errorData?.error?.message || 'Unknown error'}`);
-        }
-
-        const data = await response.json();
-        if (state.provider === 'anthropic') {
-          aiResponse = data.content[0].text;
-        } else {
-          aiResponse = data.choices[0].message.content;
-        }
+      const aiResponse = data?.text || '';
+      if (!aiResponse) {
+        throw new Error('The AI returned an empty response.');
       }
       
       // Parse JSON block if present

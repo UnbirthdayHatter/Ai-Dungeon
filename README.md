@@ -32,15 +32,22 @@ This app can be deployed as a single Railway service. The Express server in [ser
 ### Required environment variables
 
 - `NODE_ENV=production`
-- `GEMINI_API_KEY=...`
+- `GEMINI_API_KEY=...` or another provider key below
 
 ### Optional environment variables
 
 - `KOKORO_API_URL=...`
 - `KOKORO_API_KEY=...`
+- `DEEPSEEK_API_KEY=...`
+- `OPENAI_API_KEY=...`
+- `ANTHROPIC_API_KEY=...`
+- `OPENROUTER_API_KEY=...`
+- `CUSTOM_API_KEY=...`
+- `CUSTOM_API_URL=...`
 
 ### Notes
 
 - Railway provides the `PORT` environment variable automatically. The server now reads that value in production.
 - Firebase client config is loaded from [firebase-applet-config.json](./firebase-applet-config.json), so make sure that file contains the correct production project settings before deploying.
 - Presence state for typing and AI generation is stored in server memory. It works well on a single Railway service, but it is not shared across multiple replicas.
+- Text generation now runs through the Express server, so Railway environment variables can be used for Gemini, DeepSeek, OpenAI, Anthropic, OpenRouter, or a custom OpenAI-compatible endpoint.
