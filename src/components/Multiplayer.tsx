@@ -408,7 +408,7 @@ export function Multiplayer() {
                       <div>
                         <p className="text-sm font-bold text-zinc-100">
                           {sheet.name || 'Unknown Hero'} 
-                          {sheet.id === activeSheetId && ' (You)'}
+                          {sheet.ownerId === auth.currentUser?.uid && ' (You)'}
                         </p>
                         <p className="text-[10px] text-zinc-600">
                           {sheet.ownerId === auth.currentUser?.uid ? 'Linked to your login' : 'Linked to player login'}

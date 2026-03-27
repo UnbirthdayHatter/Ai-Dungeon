@@ -174,7 +174,13 @@ export function Chat() {
     return PLAYER_COLORS[Math.abs(hash) % PLAYER_COLORS.length];
   };
 
-  const activeSheet = characterLookupSheets.find(s => s.id === activeSheetId) || characterLookupSheets[0] || sheets.find(s => s.id === activeSheetId) || sheets[0];
+  const activeSheet =
+    characterLookupSheets.find(s => s.id === activeSheetId)
+    || characterLookupSheets.find(s => s.ownerId === auth.currentUser?.uid)
+    || sheets.find(s => s.id === activeSheetId)
+    || sheets.find(s => s.ownerId === auth.currentUser?.uid)
+    || characterLookupSheets[0]
+    || sheets[0];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -565,11 +571,9 @@ export function Chat() {
           <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Party Status</h3>
         </div>
         {sessionSheets.length > 0 ? (
-          sessionSheets
-            .filter(s => s.lastSeen && Date.now() - s.lastSeen < 60000)
-            .map((sheet) => (
-              <HUD key={sheet.id} sheet={sheet} isCompact={sessionSheets.length > 2} />
-            ))
+          sessionSheets.map((sheet) => (
+            <HUD key={sheet.id} sheet={sheet} isCompact={sessionSheets.length > 2} />
+          ))
         ) : (
           <HUD sheet={activeSheet} />
         )}
@@ -799,7 +803,12 @@ export function Chat() {
               'bg-red-900 border-red-800'
             )}>
               {msg.role === 'user' ? (() => {
-                const messageSheet = characterLookupSheets.find(s => s.id === msg.sheetId) || (!isAdventureScoped ? sheets.find(s => s.id === msg.sheetId) : null) || (msg.sheetId === activeSheetId ? activeSheet : null);
+                const messageSheet =
+                  characterLookupSheets.find(s => s.ownerId === msg.senderId)
+                  || characterLookupSheets.find(s => s.id === msg.sheetId)
+                  || (!isAdventureScoped ? sheets.find(s => s.ownerId === msg.senderId) : null)
+                  || (!isAdventureScoped ? sheets.find(s => s.id === msg.sheetId) : null)
+                  || (msg.senderId === auth.currentUser?.uid ? activeSheet : null);
                 const avatarUrl = messageSheet?.avatarUrl || activeSheet?.avatarUrl;
                 return avatarUrl ? (
                   <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />

@@ -746,7 +746,9 @@ export const useStore = create<any>()((set, get) => ({
   setCurrentNPCs: (npcs: any[]) => set({ currentNPCs: npcs }),
   addMessage: async (message: any) => {
     const state = get();
-    const nextMessage = { id: message.id || makeId(), timestamp: message.timestamp || Date.now(), sheetId: message.sheetId || state.activeSheetId || undefined, senderId: message.senderId || auth.currentUser?.uid, ...message };
+    const defaultSheetId = ['user', 'dice', 'ooc'].includes(message.role) ? (message.sheetId || state.activeSheetId || undefined) : undefined;
+    const defaultSenderId = message.role === 'assistant' ? undefined : (message.senderId || auth.currentUser?.uid);
+    const nextMessage = { id: message.id || makeId(), timestamp: message.timestamp || Date.now(), sheetId: defaultSheetId, senderId: defaultSenderId, ...message };
     if (state.isLive && state.currentRoleplayId) {
       await setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'messages', nextMessage.id), cleanObject(nextMessage));
       return;
@@ -859,9 +861,10 @@ export const useStore = create<any>()((set, get) => ({
     if (!source) return;
     const attached = { ...source, ownerId: user?.uid || source.ownerId, lastSeen: Date.now() };
     set((current: any) => {
-      const sessionSheets = current.sessionSheets.some((sheet: Sheet) => sheet.id === attached.id)
-        ? current.sessionSheets.map((sheet: Sheet) => sheet.id === attached.id ? attached : sheet)
-        : [...current.sessionSheets, attached];
+      const sessionSheets = [
+        ...current.sessionSheets.filter((sheet: Sheet) => sheet.ownerId !== attached.ownerId && sheet.id !== attached.id),
+        attached,
+      ];
       return {
         sessionSheets,
         sheets: current.isLive ? sessionSheets : current.sheets.some((sheet: Sheet) => sheet.id === attached.id) ? current.sheets : [...current.sheets, attached],
@@ -872,6 +875,10 @@ export const useStore = create<any>()((set, get) => ({
       setDoc(doc(db, 'users', user.uid, 'sheets', attached.id), cleanObject(attached), { merge: true } as any).catch(console.error);
     }
     if (state.currentRoleplayId) {
+      const previousForOwner = state.sessionSheets.find((sheet: Sheet) => sheet.ownerId === attached.ownerId && sheet.id !== attached.id);
+      if (previousForOwner) {
+        await deleteDoc(doc(db, 'roleplays', state.currentRoleplayId, 'sheets', previousForOwner.id)).catch(console.error);
+      }
       await setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'sheets', attached.id), cleanObject(attached), { merge: true } as any).catch(console.error);
       await updateDoc(doc(db, 'roleplays', state.currentRoleplayId), { updatedAt: Date.now() }).catch(console.error);
     }
