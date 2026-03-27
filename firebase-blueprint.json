@@ -1,0 +1,196 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Roleplay": {
+      "title": "Roleplay",
+      "description": "A game session",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "systemRules": { "type": "string" },
+        "mood": { "type": "string" },
+        "updatedAt": { "type": "number" },
+        "requireRolls": { "type": "boolean" },
+        "ambientAudioUrl": { "type": "string" },
+        "backgroundImageUrl": { "type": "string" },
+        "joinCode": { "type": "string" },
+        "combat": {
+          "type": "object",
+          "properties": {
+            "active": { "type": "boolean" },
+            "turnIndex": { "type": "number" },
+            "combatants": { "type": "array", "items": { "type": "object" } }
+          }
+        }
+      },
+      "required": ["id", "name", "ownerId"]
+    },
+    "Message": {
+      "title": "Message",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "assistant", "system", "dice"] },
+        "content": { "type": "string" },
+        "characterName": { "type": "string" },
+        "type": { "type": "string" },
+        "timestamp": { "type": "number" }
+      }
+    },
+    "LoreEntry": {
+      "title": "LoreEntry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "category": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "imageUrl": { "type": "string" }
+      }
+    },
+    "Sheet": {
+      "title": "Sheet",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "name": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "hp": { "type": "number" },
+        "maxHp": { "type": "number" },
+        "ac": { "type": "number" },
+        "stats": { "type": "object" },
+        "inventoryItems": { "type": "array" }
+      }
+    },
+    "Quest": {
+      "title": "Quest",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "completed", "failed"] }
+      }
+    },
+    "TimelineEntry": {
+      "title": "TimelineEntry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "event": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "WorldPreset": {
+      "title": "WorldPreset",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "systemRules": { "type": "string" },
+        "contextAndRules": { "type": "string" },
+        "mood": { "type": "string" }
+      }
+    },
+    "SheetTemplate": {
+      "title": "SheetTemplate",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "customStats": { "type": "array" },
+        "customText": { "type": "string" }
+      }
+    },
+    "UserConfig": {
+      "title": "UserConfig",
+      "type": "object",
+      "properties": {
+        "apiKeys": { "type": "object" },
+        "provider": { "type": "string" },
+        "theme": { "type": "string" },
+        "soundscapesEnabled": { "type": "boolean" },
+        "ttsEnabled": { "type": "boolean" },
+        "ttsVolume": { "type": "number" },
+        "selectedVoice": { "type": "string" },
+        "ttsProvider": { "type": "string" },
+        "diceSkin": { "type": "string" },
+        "isCopilotMode": { "type": "boolean" },
+        "aiAutoRespond": { "type": "boolean" },
+        "aiEditEnabled": { "type": "boolean" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/users/{userId}/config/default": {
+      "schema": "UserConfig",
+      "description": "User settings and configuration"
+    },
+    "/users/{userId}/worldPresets/{presetId}": {
+      "schema": "WorldPreset",
+      "description": "User world presets"
+    },
+    "/users/{userId}/sheetTemplates/{templateId}": {
+      "schema": "SheetTemplate",
+      "description": "User character sheet templates"
+    },
+    "/users/{userId}/sheets/{sheetId}": {
+      "schema": "Sheet",
+      "description": "User character sheets"
+    },
+    "/users/{userId}/savedRoleplays/{roleplayId}": {
+      "schema": "Roleplay",
+      "description": "User saved roleplays"
+    },
+    "/users/{userId}/joinedRoleplays/{roleplayId}": {
+      "schema": "Roleplay",
+      "description": "User joined roleplays"
+    },
+    "/roleplays/{roleplayId}": {
+      "schema": "Roleplay",
+      "description": "Game sessions"
+    },
+    "/roleplays/{roleplayId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Messages in a session"
+    },
+    "/roleplays/{roleplayId}/lorebook/{loreId}": {
+      "schema": "LoreEntry",
+      "description": "Lorebook entries in a session"
+    },
+    "/roleplays/{roleplayId}/sheets/{sheetId}": {
+      "schema": "Sheet",
+      "description": "Character sheets in a session"
+    },
+    "/roleplays/{roleplayId}/quests/{questId}": {
+      "schema": "Quest",
+      "description": "Quests in a session"
+    },
+    "/roleplays/{roleplayId}/timeline/{timelineId}": {
+      "schema": "TimelineEntry",
+      "description": "Timeline entries in a session"
+    }
+  }
+}
