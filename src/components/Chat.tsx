@@ -291,7 +291,7 @@ export function Chat() {
     if (!messageContent || !canSend) return;
 
     if (!content) setInput('');
-    addMessage({ 
+    await addMessage({ 
       role: isOocMode ? 'ooc' : 'user', 
       content: messageContent,
       isCollapsed: false // OOC messages are visible by default, collapsible
@@ -308,12 +308,14 @@ export function Chat() {
   const handleQuickAction = (action: string) => {
     if (!canSend || isAIGenerating) return;
     setShowQuickActions(false);
-    addMessage({ role: 'user', content: action });
+    void (async () => {
+      await addMessage({ role: 'user', content: action });
     
-    // Only generate AI response if we're not a guest in a multiplayer session, and auto-respond is enabled
-    if (!currentRoleplayId || (isHost && aiAutoRespond)) {
-      generateAIResponse();
-    }
+      // Only generate AI response if we're not a guest in a multiplayer session, and auto-respond is enabled
+      if (!currentRoleplayId || (isHost && aiAutoRespond)) {
+        generateAIResponse();
+      }
+    })();
   };
 
   const handleDownloadText = () => {

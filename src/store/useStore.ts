@@ -369,6 +369,13 @@ const getSavedRoleplayWriter = (roleplayId: string) => {
   return savedRoleplayWriteQueue.get(roleplayId)! as (userId: string, payload: SavedRoleplay) => void;
 };
 
+const sortMessagesByTimeline = (messages: Message[]) =>
+  [...messages].sort((a, b) => {
+    const timeDiff = (a.timestamp || 0) - (b.timestamp || 0);
+    if (timeDiff !== 0) return timeDiff;
+    return a.id.localeCompare(b.id);
+  });
+
 const postPresenceUpdate = async (payload: { roleplayId: string; userId?: string; name?: string; isTyping?: boolean; isAIGenerating?: boolean }) => {
   await fetch('/api/presence/update', {
     method: 'POST',
@@ -671,9 +678,9 @@ export const useStore = create<any>()((set, get) => ({
     unsubscribers.push(() => presenceSource.close());
 
     unsubscribers.push(onSnapshot(collection(db, 'roleplays', id, 'messages'), (snap) => {
-      const messages = snap.docs
+      const messages = sortMessagesByTimeline(snap.docs
         .map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() as any) }))
-        .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+      );
       set({ messages });
     }));
 
@@ -870,15 +877,28 @@ export const useStore = create<any>()((set, get) => ({
     const defaultSenderId = message.role === 'assistant' ? undefined : (message.senderId || auth.currentUser?.uid);
     const nextMessage = { id: message.id || makeId(), timestamp: message.timestamp || Date.now(), sheetId: defaultSheetId, senderId: defaultSenderId, ...message };
     if (state.isLive && state.currentRoleplayId) {
+      set((current: any) => ({
+        messages: sortMessagesByTimeline([
+          ...current.messages.filter((item: Message) => item.id !== nextMessage.id),
+          nextMessage,
+        ]),
+      }));
       await setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'messages', nextMessage.id), cleanObject(nextMessage));
       return;
     }
     set((current: any) => ({
-      messages: [...current.messages, nextMessage],
+      messages: sortMessagesByTimeline([...current.messages, nextMessage]),
       lastSaved: Date.now(),
     }));
   },
-  updateMessage: async (id: string, content: string) => set((state: any) => ({ messages: state.messages.map((message: Message) => message.id === id ? { ...message, content } : message) })),
+  updateMessage: async (id: string, content: string) => {
+    const state = get();
+    const nextMessages = state.messages.map((message: Message) => message.id === id ? { ...message, content } : message);
+    set({ messages: nextMessages });
+    if (state.isLive && state.currentRoleplayId) {
+      await setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'messages', id), { content }, { merge: true } as any).catch(console.error);
+    }
+  },
   toggleMessageCollapse: (id: string) => set((state: any) => ({ messages: state.messages.map((message: Message) => message.id === id ? { ...message, isCollapsed: !message.isCollapsed } : message) })),
   clearMessages: () => set({ messages: [] }),
   rewindToMessage: (id: string) => set((state: any) => {
