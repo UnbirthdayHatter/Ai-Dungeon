@@ -252,16 +252,17 @@ export function Settings() {
                     type="password"
                     value={apiKeys[provider]}
                     onChange={(e) => setApiKeys({ [provider]: e.target.value })}
-                    placeholder={`Enter your ${provider} API key...`}
+                    placeholder={`Leave blank to use the shared ${provider} key, or enter your own...`}
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-100 focus:outline-none focus:border-amber-500/50 pr-12"
                   />
                   <Key className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
                 </div>
-                <p className="text-[10px] text-zinc-500">Your API key is stored locally in your browser and never sent to our servers.</p>
+                <p className="text-[10px] text-zinc-500">Leave this blank to use the app&apos;s shared key. If you enter your own key, it overrides the shared key for your browser only.</p>
+                <p className="text-[10px] text-zinc-600">Your personal API key is stored locally in your browser so you can keep using your own quota when the shared key is low.</p>
                 {provider === 'gemini' && !apiKeys.gemini && (
                   <div className="mt-2 p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                     <p className="text-[10px] text-amber-400">
-                      <span className="font-bold">Note:</span> The shared Gemini key has a limited quota. If you experience "Resource Exhausted" or "Spending Cap" errors, please provide your own API key.
+                      <span className="font-bold">Note:</span> The shared Gemini key has a limited quota. If you experience "Resource Exhausted" or "Spending Cap" errors, add your own Gemini key here to override it.
                     </p>
                   </div>
                 )}
