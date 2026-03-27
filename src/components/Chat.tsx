@@ -189,6 +189,12 @@ export function Chat() {
     return PLAYER_COLORS[Math.abs(hash) % PLAYER_COLORS.length];
   };
 
+  const normalizeName = (value?: string) =>
+    (value || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+
   const activeSheet =
     characterLookupSheets.find(s => s.id === activeSheetId)
     || characterLookupSheets.find(s => s.ownerId === auth.currentUser?.uid)
@@ -836,16 +842,22 @@ export function Chat() {
                 );
               })() : 
                msg.role === 'assistant' ? (() => {
-                 const normalizedCharacterName = (msg.characterName || '').trim().toLowerCase();
+                 const normalizedCharacterName = normalizeName(msg.characterName);
                  const charSheet =
                    characterLookupSheets.find(s => s.id === msg.sheetId)
-                   || characterLookupSheets.find(s => s.name?.trim().toLowerCase() === normalizedCharacterName)
-                   || (!isAdventureScoped ? sheets.find(s => s.name?.trim().toLowerCase() === normalizedCharacterName) : null);
+                   || characterLookupSheets.find(s => normalizeName(s.name) === normalizedCharacterName)
+                   || (!isAdventureScoped ? sheets.find(s => normalizeName(s.name) === normalizedCharacterName) : null);
                  const loreEntry = lorebook.find((l) =>
-                   l.name?.trim().toLowerCase() === normalizedCharacterName
+                   normalizeName(l.name) === normalizedCharacterName
                    && (l.category || '').trim().toLowerCase() === 'npc'
-                 );
-                 const avatarUrl = charSheet?.avatarUrl || loreEntry?.avatarUrl || loreEntry?.imageUrl;
+                  );
+                 const fallbackLoreEntry = loreEntry || lorebook.find((l) => {
+                   const loreName = normalizeName(l.name);
+                   return loreName && normalizedCharacterName && (
+                     loreName.includes(normalizedCharacterName) || normalizedCharacterName.includes(loreName)
+                   );
+                 });
+                 const avatarUrl = charSheet?.avatarUrl || fallbackLoreEntry?.avatarUrl || fallbackLoreEntry?.imageUrl;
                  
                  if (avatarUrl) {
                    return <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />;

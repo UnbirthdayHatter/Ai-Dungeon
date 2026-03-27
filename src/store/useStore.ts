@@ -376,6 +376,24 @@ const sortMessagesByTimeline = (messages: Message[]) =>
     return a.id.localeCompare(b.id);
   });
 
+const syncSavedRoleplayMessages = (savedRoleplays: SavedRoleplay[], roleplayId: string | null, messages: Message[]) =>
+  roleplayId
+    ? savedRoleplays.map((roleplay) =>
+        roleplay.id === roleplayId
+          ? { ...roleplay, messages, updatedAt: Date.now() }
+          : roleplay
+      )
+    : savedRoleplays;
+
+const syncSavedRoleplaySheets = (savedRoleplays: SavedRoleplay[], roleplayId: string | null, sheets: Sheet[]) =>
+  roleplayId
+    ? savedRoleplays.map((roleplay) =>
+        roleplay.id === roleplayId
+          ? { ...roleplay, sheets, updatedAt: Date.now() }
+          : roleplay
+      )
+    : savedRoleplays;
+
 const postPresenceUpdate = async (payload: { roleplayId: string; userId?: string; name?: string; isTyping?: boolean; isAIGenerating?: boolean }) => {
   await fetch('/api/presence/update', {
     method: 'POST',
@@ -493,7 +511,7 @@ export const useStore = create<any>()((set, get) => ({
     if (!response.ok || !data?.imageUrl) {
       throw new Error(data?.error?.message || 'Failed to generate portrait.');
     }
-    get().updateLoreEntry(id, { avatarUrl: data.imageUrl as string });
+    get().updateLoreEntry(id, { avatarUrl: data.imageUrl as string, imageUrl: data.imageUrl as string });
   },
   setTheme: (theme: ThemeType) => set({ theme }),
   setSystemRules: (rules: string) => {
@@ -779,6 +797,7 @@ export const useStore = create<any>()((set, get) => ({
     set((state: any) => ({
       savedCharacters: state.savedCharacters.some((item: Sheet) => item.id === nextSheet.id) ? state.savedCharacters : [...state.savedCharacters, nextSheet],
       sheets: [...state.sheets, nextSheet],
+      savedRoleplays: syncSavedRoleplaySheets(state.savedRoleplays, state.currentRoleplayId, [...state.sheets, nextSheet]),
       activeSheetId: nextSheet.id,
     }));
   },
@@ -797,6 +816,11 @@ export const useStore = create<any>()((set, get) => ({
       savedCharacters: current.savedCharacters.map((sheet: Sheet) => sheet.id === id ? { ...sheet, ...updates } : sheet),
       sheets: current.sheets.map((sheet: Sheet) => sheet.id === id ? { ...sheet, ...updates } : sheet),
       sessionSheets: current.sessionSheets.map((sheet: Sheet) => sheet.id === id ? { ...sheet, ...updates, lastSeen: Date.now() } : sheet),
+      savedRoleplays: syncSavedRoleplaySheets(
+        current.savedRoleplays,
+        current.currentRoleplayId,
+        current.sheets.map((sheet: Sheet) => sheet.id === id ? { ...sheet, ...updates } : sheet)
+      ),
     }));
   },
   deleteSheet: (id: string) => {
@@ -812,6 +836,11 @@ export const useStore = create<any>()((set, get) => ({
       savedCharacters: current.savedCharacters.filter((sheet: Sheet) => sheet.id !== id),
       sheets: current.sheets.filter((sheet: Sheet) => sheet.id !== id),
       sessionSheets: current.sessionSheets.filter((sheet: Sheet) => sheet.id !== id),
+      savedRoleplays: syncSavedRoleplaySheets(
+        current.savedRoleplays,
+        current.currentRoleplayId,
+        current.sheets.filter((sheet: Sheet) => sheet.id !== id)
+      ),
       activeSheetId: current.activeSheetId === id ? null : current.activeSheetId,
     }));
   },
@@ -888,13 +917,21 @@ export const useStore = create<any>()((set, get) => ({
     }
     set((current: any) => ({
       messages: sortMessagesByTimeline([...current.messages, nextMessage]),
+      savedRoleplays: syncSavedRoleplayMessages(
+        current.savedRoleplays,
+        current.currentRoleplayId,
+        sortMessagesByTimeline([...current.messages, nextMessage])
+      ),
       lastSaved: Date.now(),
     }));
   },
   updateMessage: async (id: string, content: string) => {
     const state = get();
     const nextMessages = state.messages.map((message: Message) => message.id === id ? { ...message, content } : message);
-    set({ messages: nextMessages });
+    set((current: any) => ({
+      messages: nextMessages,
+      savedRoleplays: syncSavedRoleplayMessages(current.savedRoleplays, current.currentRoleplayId, nextMessages),
+    }));
     if (state.isLive && state.currentRoleplayId) {
       await setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'messages', id), { content }, { merge: true } as any).catch(console.error);
     }
