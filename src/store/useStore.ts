@@ -811,13 +811,6 @@ export const useStore = create<any>()((set, get) => ({
     const source = state.savedCharacters.find((sheet: Sheet) => sheet.id === sheetId) || state.sheets.find((sheet: Sheet) => sheet.id === sheetId);
     if (!source) return;
     const attached = { ...source, ownerId: user?.uid || source.ownerId, lastSeen: Date.now() };
-    if (user) {
-      setDoc(doc(db, 'users', user.uid, 'sheets', attached.id), cleanObject(attached), { merge: true } as any).catch(console.error);
-    }
-    if (state.currentRoleplayId) {
-      await setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'sheets', attached.id), cleanObject(attached), { merge: true } as any);
-      await updateDoc(doc(db, 'roleplays', state.currentRoleplayId), { activeSheetId: attached.id, updatedAt: Date.now() }).catch(console.error);
-    }
     set((current: any) => {
       const sessionSheets = current.sessionSheets.some((sheet: Sheet) => sheet.id === attached.id)
         ? current.sessionSheets.map((sheet: Sheet) => sheet.id === attached.id ? attached : sheet)
@@ -828,6 +821,13 @@ export const useStore = create<any>()((set, get) => ({
         activeSheetId: attached.id,
       };
     });
+    if (user) {
+      setDoc(doc(db, 'users', user.uid, 'sheets', attached.id), cleanObject(attached), { merge: true } as any).catch(console.error);
+    }
+    if (state.currentRoleplayId) {
+      await setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'sheets', attached.id), cleanObject(attached), { merge: true } as any).catch(console.error);
+      await updateDoc(doc(db, 'roleplays', state.currentRoleplayId), { activeSheetId: attached.id, updatedAt: Date.now() }).catch(console.error);
+    }
   },
   removeCharacterFromAdventure: (sheetId: string) => get().removeSheetFromRoleplay(get().currentRoleplayId || '', sheetId),
   hostSavedRoleplay: async (id) => {
