@@ -72,6 +72,7 @@ export function Chat() {
   } = useStore();
 
   const activeRoleplay = [...userRoleplays, ...joinedRoleplays].find(rp => rp.id === currentRoleplayId);
+  const currentUserId = auth.currentUser?.uid || '';
   const isAdmin = Boolean(isHost || activeRoleplay?.admins?.includes(auth.currentUser?.uid || ''));
   const isEditor = Boolean(activeRoleplay?.editors?.includes(auth.currentUser?.uid || ''));
   const canEditAIResponses = Boolean(aiEditEnabled && (isAdmin || isEditor));
@@ -148,7 +149,18 @@ export function Chat() {
     return () => clearInterval(interval);
   }, []);
 
-  const activeTypingUsers = (Object.values(typingUsers) as Array<{ timestamp: number; name: string }>).filter(u => now - u.timestamp < 60000);
+  useEffect(() => () => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    if (isTypingRef.current) {
+      setTyping(false);
+    }
+  }, [setTyping]);
+
+  const activeTypingUsers = Object.entries(typingUsers as Record<string, { isTyping?: boolean; timestamp: number; name: string }>)
+    .filter(([userId, value]) => userId !== currentUserId && value?.isTyping && now - value.timestamp < 60000)
+    .map(([, value]) => value);
 
   const handleLoreLinkClick = (id: string) => {
     setSelectedLoreId(id);
@@ -296,11 +308,13 @@ export function Chat() {
       content: messageContent,
       isCollapsed: false // OOC messages are visible by default, collapsible
     });
+    isTypingRef.current = false;
+    setTyping(false);
     
     if (isOocMode) setIsOocMode(false); // Toggle off after sending
 
     // Only generate AI response if we're not a guest in a multiplayer session, and auto-respond is enabled
-    if (!isOocMode && (!currentRoleplayId || (isHost && aiAutoRespond))) {
+    if (!isOocMode && (!isLive || (isHost && aiAutoRespond))) {
       generateAIResponse();
     }
   };
@@ -312,7 +326,7 @@ export function Chat() {
       await addMessage({ role: 'user', content: action });
     
       // Only generate AI response if we're not a guest in a multiplayer session, and auto-respond is enabled
-      if (!currentRoleplayId || (isHost && aiAutoRespond)) {
+      if (!isLive || (isHost && aiAutoRespond)) {
         generateAIResponse();
       }
     })();
@@ -481,7 +495,7 @@ export function Chat() {
       role: 'dice',
       content: message
     });
-    if (!currentRoleplayId || aiAutoRespond) {
+    if (!isLive || (isHost && aiAutoRespond)) {
       generateAIResponse();
     }
     
@@ -813,8 +827,8 @@ export function Chat() {
                   || characterLookupSheets.find(s => s.id === msg.sheetId)
                   || (!isAdventureScoped ? sheets.find(s => s.ownerId === msg.senderId) : null)
                   || (!isAdventureScoped ? sheets.find(s => s.id === msg.sheetId) : null)
-                  || (msg.senderId === auth.currentUser?.uid ? activeSheet : null);
-                const avatarUrl = messageSheet?.avatarUrl || activeSheet?.avatarUrl;
+                  || (msg.senderId === currentUserId ? activeSheet : null);
+                const avatarUrl = messageSheet?.avatarUrl || (msg.senderId === currentUserId ? activeSheet?.avatarUrl : undefined);
                 return avatarUrl ? (
                   <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
@@ -822,13 +836,16 @@ export function Chat() {
                 );
               })() : 
                msg.role === 'assistant' ? (() => {
-                 // In a live adventure, only resolve character portraits from sheets attached to that adventure.
+                 const normalizedCharacterName = (msg.characterName || '').trim().toLowerCase();
                  const charSheet =
                    characterLookupSheets.find(s => s.id === msg.sheetId)
-                   || characterLookupSheets.find(s => s.name === msg.characterName)
-                   || (!isAdventureScoped ? sheets.find(s => s.name === msg.characterName) : null);
-                 const loreEntry = lorebook.find(l => l.name === msg.characterName && l.category === 'NPC');
-                 const avatarUrl = charSheet?.avatarUrl || loreEntry?.avatarUrl;
+                   || characterLookupSheets.find(s => s.name?.trim().toLowerCase() === normalizedCharacterName)
+                   || (!isAdventureScoped ? sheets.find(s => s.name?.trim().toLowerCase() === normalizedCharacterName) : null);
+                 const loreEntry = lorebook.find((l) =>
+                   l.name?.trim().toLowerCase() === normalizedCharacterName
+                   && (l.category || '').trim().toLowerCase() === 'npc'
+                 );
+                 const avatarUrl = charSheet?.avatarUrl || loreEntry?.avatarUrl || loreEntry?.imageUrl;
                  
                  if (avatarUrl) {
                    return <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />;
@@ -871,9 +888,9 @@ export function Chat() {
                   {msg.isCollapsed ? '[Expand OOC]' : '[Collapse OOC]'}
                 </button>
               )}
-              {msg.characterName && !msg.isCollapsed && (
+              {(msg.role === 'assistant' && !msg.isCollapsed && (msg.characterName || msg.type === 'narrator')) && (
                 <div className="text-[10px] uppercase tracking-widest font-black mb-1 opacity-50">
-                  {msg.characterName}
+                  {msg.characterName || 'Narrator'}
                 </div>
               )}
               {editingMessageId === msg.id ? (

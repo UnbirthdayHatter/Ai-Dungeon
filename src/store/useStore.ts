@@ -1121,7 +1121,24 @@ export const useStore = create<any>()((set, get) => ({
   setTyping: (isTyping: boolean) => {
     const state = get();
     const userId = auth.currentUser?.uid || 'local';
-    const payload = { isTyping, timestamp: Date.now(), name: auth.currentUser?.displayName || 'Player' };
+    const attachedSheet = (state.sessionSheets as Sheet[]).find((sheet) => sheet.ownerId === auth.currentUser?.uid)
+      || (state.sheets as Sheet[]).find((sheet) => sheet.id === state.activeSheetId)
+      || (state.sheets as Sheet[]).find((sheet) => sheet.ownerId === auth.currentUser?.uid)
+      || (state.savedCharacters as Sheet[]).find((sheet) => sheet.id === state.activeSheetId)
+      || (state.savedCharacters as Sheet[]).find((sheet) => sheet.ownerId === auth.currentUser?.uid);
+    const payload = {
+      isTyping,
+      timestamp: Date.now(),
+      name: attachedSheet?.name || auth.currentUser?.displayName || 'Player'
+    };
+    if (!state.isLive || !state.currentRoleplayId || !auth.currentUser?.uid) {
+      set((current: any) => {
+        const nextTypingUsers = { ...current.typingUsers };
+        delete nextTypingUsers[userId];
+        return { typingUsers: nextTypingUsers };
+      });
+      return;
+    }
     if (state.isLive && state.currentRoleplayId && auth.currentUser?.uid) {
       if (isTyping) {
         writeTypingPresence(state.currentRoleplayId, userId, payload);
@@ -1129,12 +1146,15 @@ export const useStore = create<any>()((set, get) => ({
         postPresenceUpdate({ roleplayId: state.currentRoleplayId, userId, name: payload.name, isTyping: false });
       }
     }
-    set((current: any) => ({
-      typingUsers: {
-        ...current.typingUsers,
-        [userId]: payload
+    set((current: any) => {
+      const nextTypingUsers = { ...current.typingUsers };
+      if (isTyping) {
+        nextTypingUsers[userId] = payload;
+      } else {
+        delete nextTypingUsers[userId];
       }
-    }));
+      return { typingUsers: nextTypingUsers };
+    });
   },
   addCharacterToAdventure: async (sheetId: string) => {
     const state = get();
