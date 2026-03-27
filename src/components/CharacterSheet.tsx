@@ -40,6 +40,12 @@ export function CharacterSheet() {
   const [isGeneratingAvatar, setIsGeneratingAvatar] = useState(false);
   const [activeTab, setActiveTabState] = useState<'active' | 'saved' | 'rules'>('active');
 
+  useEffect(() => {
+    if (isAdventureScoped && sessionSheets.length === 0 && savedCharacters.length > 0 && activeTab === 'active') {
+      setActiveTabState('saved');
+    }
+  }, [isAdventureScoped, sessionSheets.length, savedCharacters.length, activeTab]);
+
   const resizeImage = (base64Str: string, maxWidth: number = 500, maxHeight: number = 500): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -288,10 +294,7 @@ export function CharacterSheet() {
     };
     addSheet(newSheet);
     setActiveSheet(newSheet.id);
-    if (isAdventureScoped) {
-      void addCharacterToAdventure(newSheet.id);
-    }
-    setActiveTabState('active');
+    setActiveTabState(isAdventureScoped ? 'saved' : 'active');
   };
 
   const { sheetTemplates, saveSheetAsTemplate, deleteTemplate, createSheetFromTemplate } = useStore();
@@ -348,7 +351,7 @@ export function CharacterSheet() {
     }
   };
 
-  if (!activeSheet && scopedSheets.length === 0 && (!isAdventureScoped ? savedCharacters.length === 0 : true)) {
+  if (!activeSheet && scopedSheets.length === 0 && savedCharacters.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-zinc-400">
         <User className="w-16 h-16 mb-4 text-zinc-600" />

@@ -17,6 +17,7 @@ export function SetupAdventure() {
     saveRoleplay,
     currentRoleplayName,
     setActiveTab,
+    setActiveSheet,
     apiKey, 
     provider, 
     apiKeys 
@@ -108,7 +109,7 @@ export function SetupAdventure() {
       proficiencies: [],
     };
     addSheet(newSheet);
-    void addCharacterToAdventure(newSheet.id);
+    setActiveSheet(newSheet.id);
     setActiveTab('character');
   };
 

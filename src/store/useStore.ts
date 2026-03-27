@@ -348,7 +348,7 @@ export const useStore = create<any>()((set, get) => ({
   savedRoleplays: [] as SavedRoleplay[],
   sheetTemplates: [] as SheetTemplate[],
   worldPresets: [] as WorldPreset[],
-  aiAutoRespond: false,
+  aiAutoRespond: true,
   aiEditEnabled: false,
   isHost: false,
   editors: [],
@@ -428,6 +428,7 @@ export const useStore = create<any>()((set, get) => ({
       joinCode: roleplay?.joinCode || state.joinCode,
       isLive: Boolean(roleplay),
       isHost: roleplay?.ownerId === auth.currentUser?.uid,
+      aiAutoRespond: roleplay ? true : state.aiAutoRespond,
     });
   },
   createRoleplay: async (name: string) => {
@@ -508,6 +509,7 @@ export const useStore = create<any>()((set, get) => ({
       joinCode: joinedRoleplay.joinCode,
       isLive: true,
       isHost: data.ownerId === user.uid,
+      aiAutoRespond: true,
     }));
   },
   syncRoleplay: (id: string) => {
@@ -520,10 +522,10 @@ export const useStore = create<any>()((set, get) => ({
       const currentUserId = auth.currentUser?.uid;
       set((state: any) => {
         const sessionSheets = state.sessionSheets as Sheet[];
-        const activeSheetId = data.activeSheetId
+        const activeSheetId = state.activeSheetId
           || sessionSheets.find((sheet) => sheet.ownerId === currentUserId)?.id
           || sessionSheets[0]?.id
-          || state.activeSheetId;
+          || null;
         return {
           currentRoleplayId: id,
           currentRoleplayName: data.name || state.currentRoleplayName,
@@ -649,12 +651,7 @@ export const useStore = create<any>()((set, get) => ({
     }
     set((state: any) => ({
       savedCharacters: state.savedCharacters.some((item: Sheet) => item.id === nextSheet.id) ? state.savedCharacters : [...state.savedCharacters, nextSheet],
-      sessionSheets: state.isLive && state.currentRoleplayId
-        ? (state.sessionSheets.some((item: Sheet) => item.id === nextSheet.id) ? state.sessionSheets : [...state.sessionSheets, nextSheet])
-        : state.sessionSheets,
-      sheets: state.isLive && state.currentRoleplayId
-        ? (state.sessionSheets.some((item: Sheet) => item.id === nextSheet.id) ? state.sessionSheets : [...state.sessionSheets, nextSheet])
-        : [...state.sheets, nextSheet],
+      sheets: [...state.sheets, nextSheet],
       activeSheetId: nextSheet.id,
     }));
   },
@@ -876,7 +873,7 @@ export const useStore = create<any>()((set, get) => ({
     }
     if (state.currentRoleplayId) {
       await setDoc(doc(db, 'roleplays', state.currentRoleplayId, 'sheets', attached.id), cleanObject(attached), { merge: true } as any).catch(console.error);
-      await updateDoc(doc(db, 'roleplays', state.currentRoleplayId), { activeSheetId: attached.id, updatedAt: Date.now() }).catch(console.error);
+      await updateDoc(doc(db, 'roleplays', state.currentRoleplayId), { updatedAt: Date.now() }).catch(console.error);
     }
   },
   removeCharacterFromAdventure: (sheetId: string) => get().removeSheetFromRoleplay(get().currentRoleplayId || '', sheetId),
@@ -1122,6 +1119,7 @@ export const useStore = create<any>()((set, get) => ({
       sessionId: null,
       isHost: isMultiplayer,
       isLive: isMultiplayer,
+      aiAutoRespond: true,
       activeSheetId: null,
       sheets: []
     };

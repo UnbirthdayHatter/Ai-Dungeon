@@ -183,6 +183,7 @@ export function Chat() {
   const lastSpokenMessageIdRef = useRef<string | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const currentAudioSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const lastAutoReplyMessageIdRef = useRef<string | null>(null);
 
   const handleSpeak = async (text: string, messageId: string) => {
     const key = ttsProvider === 'gemini' 
@@ -223,6 +224,18 @@ export function Chat() {
       setTtsLoadingId(null);
     }
   };
+
+  useEffect(() => {
+    if (!currentRoleplayId || !isHost || !aiAutoRespond || isAIGenerating || messages.length === 0) return;
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage) return;
+    if (lastMessage.id === lastAutoReplyMessageIdRef.current) return;
+    if (!['user', 'dice', 'ooc'].includes(lastMessage.role)) return;
+    if (lastMessage.senderId === auth.currentUser?.uid) return;
+
+    lastAutoReplyMessageIdRef.current = lastMessage.id;
+    generateAIResponse();
+  }, [messages, currentRoleplayId, isHost, aiAutoRespond, isAIGenerating, generateAIResponse]);
 
   useEffect(() => {
     scrollToBottom();
