@@ -38,6 +38,13 @@ export function Multiplayer() {
   const [newName, setNewName] = useState('');
 
   const activeRoleplay = userRoleplays.find(rp => rp.id === currentRoleplayId) || joinedRoleplays.find(rp => rp.id === currentRoleplayId);
+  const getRoleLabel = (ownerId?: string) => {
+    if (!ownerId) return 'Player';
+    if (ownerId === auth.currentUser?.uid) return 'You';
+    if (activeRoleplay?.admins?.includes(ownerId)) return 'Admin';
+    if (activeRoleplay?.editors?.includes(ownerId)) return 'Editor';
+    return 'Player';
+  };
 
   useEffect(() => {
     fetchUserRoleplays();
@@ -410,9 +417,23 @@ export function Multiplayer() {
                           {sheet.name || 'Unknown Hero'} 
                           {sheet.ownerId === auth.currentUser?.uid && ' (You)'}
                         </p>
-                        <p className="text-[10px] text-zinc-600">
-                          {sheet.ownerId === auth.currentUser?.uid ? 'Linked to your login' : 'Linked to player login'}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <span className={cn(
+                            "px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest",
+                            sheet.ownerId === auth.currentUser?.uid
+                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                              : activeRoleplay?.admins?.includes(sheet.ownerId || '')
+                                ? "bg-red-500/10 text-red-400 border-red-500/30"
+                                : activeRoleplay?.editors?.includes(sheet.ownerId || '')
+                                  ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                                  : "bg-zinc-800 text-zinc-400 border-zinc-700"
+                          )}>
+                            {getRoleLabel(sheet.ownerId)}
+                          </span>
+                          <span className="text-[10px] text-zinc-600">
+                            {sheet.ownerId === auth.currentUser?.uid ? 'Reserved to your character slot' : 'Reserved to another player'}
+                          </span>
+                        </div>
                         <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
                           {sheet.charClass || 'Adventurer'} • Level {sheet.level || 1}
                         </p>
@@ -487,7 +508,7 @@ export function Multiplayer() {
                 <h4 className="text-sm font-bold text-blue-400">Real-time Sync</h4>
                 <p className="text-xs text-zinc-500 leading-relaxed">
                   Multiplayer mode syncs messages, combat state, character sheets, and the lorebook for this single adventure.
-                  Characters stay tied to the player login that attached them here, so they do not cross over into other adventures.
+                  Each attached character stays reserved to one player inside this adventure, so they do not cross over into other adventures or other players' slots.
                 </p>
               </div>
             </div>

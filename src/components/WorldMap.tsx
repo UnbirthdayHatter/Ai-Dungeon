@@ -20,6 +20,7 @@ export function WorldMap() {
     updateLoreEntry, 
     isHost,
     currentRoleplayId,
+    currentLiveRoleplayId,
     userRoleplays,
     joinedRoleplays,
     refreshRoleplayCollections,
@@ -29,17 +30,17 @@ export function WorldMap() {
     contextAndRules
   } = useStore();
   
-  const activeRoleplay = [...userRoleplays, ...joinedRoleplays].find(rp => rp.id === currentRoleplayId);
+  const activeRoleplay = [...userRoleplays, ...joinedRoleplays].find(rp => rp.id === currentLiveRoleplayId);
   const canEdit = isHost || activeRoleplay?.admins?.includes(auth.currentUser?.uid || '') || activeRoleplay?.editors?.includes(auth.currentUser?.uid || '');
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [isGeneratingMap, setIsGeneratingMap] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   useEffect(() => {
-    if (currentRoleplayId) {
-      refreshRoleplayCollections(currentRoleplayId);
+    if (currentLiveRoleplayId) {
+      refreshRoleplayCollections(currentLiveRoleplayId);
     }
-  }, [currentRoleplayId, refreshRoleplayCollections]);
+  }, [currentLiveRoleplayId, refreshRoleplayCollections]);
 
   // Derive locations from lorebook entries that are tagged as locations
   const locations: Location[] = lorebook

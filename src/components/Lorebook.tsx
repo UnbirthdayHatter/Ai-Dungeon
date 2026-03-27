@@ -22,11 +22,12 @@ export function Lorebook() {
     loadRoleplay,
     setActiveTab,
     currentRoleplayId,
+    currentLiveRoleplayId,
     isHost,
     refreshRoleplayCollections
   } = useStore();
 
-  const activeRoleplay = [...userRoleplays, ...joinedRoleplays].find(rp => rp.id === currentRoleplayId);
+  const activeRoleplay = [...userRoleplays, ...joinedRoleplays].find(rp => rp.id === currentLiveRoleplayId);
   const canEdit = Boolean(isHost || activeRoleplay?.admins?.includes(auth.currentUser?.uid || ''));
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | 'All'>('All');
@@ -34,10 +35,10 @@ export function Lorebook() {
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (currentRoleplayId) {
-      refreshRoleplayCollections(currentRoleplayId);
+    if (currentLiveRoleplayId) {
+      refreshRoleplayCollections(currentLiveRoleplayId);
     }
-  }, [currentRoleplayId, refreshRoleplayCollections]);
+  }, [currentLiveRoleplayId, refreshRoleplayCollections]);
 
   const categories = ['All', 'Folder', 'NPC', 'Location', 'Lore', 'Monster', 'Quest', 'Item', 'Faction', 'Archive'];
 

@@ -527,6 +527,11 @@ export function CharacterSheet() {
                           </button>
                         )}
                       </div>
+                      {isAdventureScoped && (
+                        <p className="text-[11px] text-zinc-500">
+                          Multiplayer adventures reserve one attached character per player. Saved characters stay yours and can be reused in other adventures.
+                        </p>
+                      )}
                     </div>
                   );
                 })}

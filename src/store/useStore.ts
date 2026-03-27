@@ -1746,7 +1746,7 @@ When one player acts, do not invent simultaneous reactions or choices for the ot
 Keep the scene readable: be clear about which NPC is addressing which character and who is physically present.
 Respond to the party as a living scene, but leave every player-controlled character free to answer for themselves.
 Current attached player characters:
-${(state.sessionSheets as Sheet[]).map((sheet) => `- ${sheet.name || 'Unknown Character'} (login: ${sheet.ownerId || 'unknown'})`).join('\n') || '- No attached player characters yet.'}`
+${(state.sessionSheets as Sheet[]).map((sheet) => `- ${sheet.name || 'Unknown Character'}`).join('\n') || '- No attached player characters yet.'}`
         : '';
 
       const stateUpdateContext = `\n\nSTATE UPDATES:

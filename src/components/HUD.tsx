@@ -10,12 +10,29 @@ interface HUDProps {
 }
 
 export function HUD({ sheet, isCompact = false }: HUDProps) {
-  const { updateSheet, isHost, currentRoleplayId, togglePlayerPermission, editors, removeSheetFromRoleplay } = useStore();
+  const {
+    updateSheet,
+    isHost,
+    currentLiveRoleplayId,
+    togglePlayerPermission,
+    editors,
+    admins,
+    removeSheetFromRoleplay
+  } = useStore();
   if (!sheet) return null;
 
   const hpPercent = sheet.maxHp ? (sheet.hp || 0) / sheet.maxHp * 100 : 0;
   const isMe = sheet.ownerId === auth.currentUser?.uid;
   const isEditor = editors.includes(sheet.ownerId || '');
+  const isAdmin = admins.includes(sheet.ownerId || '');
+  const roleLabel = isMe ? 'You' : isAdmin ? 'Admin' : isEditor ? 'Editor' : 'Player';
+  const roleBadgeClass = isMe
+    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+    : isAdmin
+      ? 'bg-red-500/10 text-red-400 border-red-500/30'
+      : isEditor
+        ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+        : 'bg-zinc-800 text-zinc-400 border-zinc-700';
 
   // BitD Stats
   const stress = sheet.bitd?.stress || 0;
@@ -39,7 +56,7 @@ export function HUD({ sheet, isCompact = false }: HUDProps) {
       {isHost && !isMe && (
         <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <button
-            onClick={() => togglePlayerPermission(currentRoleplayId!, sheet.ownerId!, isEditor ? 'viewer' : 'editor')}
+            onClick={() => togglePlayerPermission(currentLiveRoleplayId!, sheet.ownerId!, isEditor ? 'viewer' : 'editor')}
             className={cn(
               "p-1.5 rounded-lg border shadow-lg transition-all",
               isEditor 
@@ -53,7 +70,7 @@ export function HUD({ sheet, isCompact = false }: HUDProps) {
           <button
             onClick={() => {
               if (confirm(`Remove ${sheet.name} from the session?`)) {
-                removeSheetFromRoleplay(currentRoleplayId!, sheet.id);
+                removeSheetFromRoleplay(currentLiveRoleplayId!, sheet.id);
               }
             }}
             className="p-1.5 bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg shadow-lg transition-all"
@@ -128,6 +145,16 @@ export function HUD({ sheet, isCompact = false }: HUDProps) {
             <span className="text-[10px] font-mono text-zinc-500">
               {sheet.type === 'bitd' ? `STRESS ${stress}/9` : `HP ${sheet.hp}/${sheet.maxHp}`}
             </span>
+          </div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className={cn("px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest", roleBadgeClass)}>
+              {roleLabel}
+            </span>
+            {isMe && (
+              <span className="text-[9px] uppercase tracking-widest text-zinc-500">
+                Reserved to this player
+              </span>
+            )}
           </div>
           
           {/* Stress/HP Bar */}
