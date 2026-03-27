@@ -386,6 +386,36 @@ const syncSavedRoleplayMessages = (savedRoleplays: SavedRoleplay[], roleplayId: 
       )
     : savedRoleplays;
 
+const GENERIC_ADVENTURE_NAMES = new Set([
+  'new adventure',
+  'untitled adventure',
+]);
+
+const isGenericAdventureName = (name?: string | null) => {
+  const normalized = (name || '').trim().toLowerCase();
+  return !normalized || GENERIC_ADVENTURE_NAMES.has(normalized) || normalized.startsWith('adventure log - ');
+};
+
+const sanitizeAdventureTitle = (rawTitle?: string | null) => {
+  const cleaned = (rawTitle || '')
+    .replace(/^[`"'“”'\s]+|[`"'“”'\s]+$/g, '')
+    .replace(/^title\s*:\s*/i, '')
+    .replace(/[\r\n]+/g, ' ')
+    .trim();
+  return cleaned.slice(0, 60).trim();
+};
+
+const buildAdventureTitleFallback = (mood?: string, firstLine?: string) => {
+  const moodTitle = (mood || '').trim();
+  const lead = (firstLine || '')
+    .replace(/^[\[\](){}"'`]+|[\[\](){}"'`]+$/g, '')
+    .trim()
+    .slice(0, 42);
+  if (lead) return lead;
+  if (moodTitle) return `${moodTitle} Adventure`.slice(0, 60);
+  return 'Untitled Adventure';
+};
+
 const syncSavedRoleplaySheets = (savedRoleplays: SavedRoleplay[], roleplayId: string | null, sheets: Sheet[]) =>
   roleplayId
     ? savedRoleplays.map((roleplay) =>
@@ -1118,23 +1148,23 @@ export const useStore = create<any>()((set, get) => ({
       lastSaved: now,
     });
 
-    if (state.isLive && state.currentRoleplayId) {
+    if (state.isLive && state.currentLiveRoleplayId) {
       const { getDocs } = await import('firebase/firestore');
       const [messageSnap, loreSnap, questSnap, timelineSnap] = await Promise.all([
-        getDocs(collection(db, 'roleplays', state.currentRoleplayId, 'messages')),
-        getDocs(collection(db, 'roleplays', state.currentRoleplayId, 'lorebook')),
-        getDocs(collection(db, 'roleplays', state.currentRoleplayId, 'quests')),
-        getDocs(collection(db, 'roleplays', state.currentRoleplayId, 'timeline')),
+        getDocs(collection(db, 'roleplays', state.currentLiveRoleplayId, 'messages')),
+        getDocs(collection(db, 'roleplays', state.currentLiveRoleplayId, 'lorebook')),
+        getDocs(collection(db, 'roleplays', state.currentLiveRoleplayId, 'quests')),
+        getDocs(collection(db, 'roleplays', state.currentLiveRoleplayId, 'timeline')),
       ]);
 
       await Promise.all([
-        ...messageSnap.docs.map((docSnap) => deleteDoc(doc(db, 'roleplays', state.currentRoleplayId, 'messages', docSnap.id)).catch(console.error)),
-        ...loreSnap.docs.map((docSnap) => deleteDoc(doc(db, 'roleplays', state.currentRoleplayId, 'lorebook', docSnap.id)).catch(console.error)),
-        ...questSnap.docs.map((docSnap) => deleteDoc(doc(db, 'roleplays', state.currentRoleplayId, 'quests', docSnap.id)).catch(console.error)),
-        ...timelineSnap.docs.map((docSnap) => deleteDoc(doc(db, 'roleplays', state.currentRoleplayId, 'timeline', docSnap.id)).catch(console.error)),
+        ...messageSnap.docs.map((docSnap) => deleteDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'messages', docSnap.id)).catch(console.error)),
+        ...loreSnap.docs.map((docSnap) => deleteDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'lorebook', docSnap.id)).catch(console.error)),
+        ...questSnap.docs.map((docSnap) => deleteDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'quests', docSnap.id)).catch(console.error)),
+        ...timelineSnap.docs.map((docSnap) => deleteDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'timeline', docSnap.id)).catch(console.error)),
       ]);
 
-      await updateDoc(doc(db, 'roleplays', state.currentRoleplayId), {
+      await updateDoc(doc(db, 'roleplays', state.currentLiveRoleplayId), {
         systemRules,
         contextAndRules,
         mood,
@@ -1148,13 +1178,13 @@ export const useStore = create<any>()((set, get) => ({
 
       await Promise.all(
         seededMessages.map((message) =>
-          setDoc(doc(db, 'roleplays', state.currentRoleplayId!, 'messages', message.id), cleanObject(message)).catch(console.error)
+          setDoc(doc(db, 'roleplays', state.currentLiveRoleplayId!, 'messages', message.id), cleanObject(message)).catch(console.error)
         )
       );
       return;
     }
 
-    const saveId = state.currentRoleplayId || makeId();
+    const saveId = state.currentSaveRoleplayId || makeId();
     const existingSaved = state.savedRoleplays.find((item: SavedRoleplay) => item.id === saveId);
     const saved: SavedRoleplay = {
       id: saveId,
@@ -1431,6 +1461,68 @@ export const useStore = create<any>()((set, get) => ({
         updateDoc(joinedRef, { name: newName }).catch(console.error);
       }
     }
+  },
+  autoNameCurrentAdventure: async (seedText?: string, force = false) => {
+    const state = get();
+    const targetId = state.currentLiveRoleplayId || state.currentSaveRoleplayId;
+    const shouldRename = force || isGenericAdventureName(state.currentRoleplayName);
+    if (!shouldRename) return state.currentRoleplayName;
+
+    const transcriptSeed = [
+      seedText || '',
+      state.systemRules || '',
+      state.contextAndRules || '',
+      ...state.messages.slice(0, 4).map((message: Message) => message.content || ''),
+    ]
+      .filter(Boolean)
+      .join('\n\n')
+      .trim()
+      .slice(0, 2000);
+
+    let nextTitle = '';
+    if (transcriptSeed) {
+      try {
+        const provider = state.provider || 'gemini';
+        const effectiveApiKey = state.apiKeys?.[provider]
+          || (provider === 'gemini' ? state.apiKeys?.gemini || state.apiKey || undefined : state.apiKey || undefined);
+
+        const response = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider,
+            apiKey: effectiveApiKey,
+            customEndpointUrl: state.customEndpointUrl,
+            systemPrompt: 'You create short, evocative tabletop adventure titles. Return only one title, no quotes, no punctuation beyond what belongs in the title, and keep it under 6 words.',
+            messages: [{
+              role: 'user',
+              content: `Create a short title for this adventure.\n\n${transcriptSeed}`,
+            }],
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (response.ok && data?.text) {
+          nextTitle = sanitizeAdventureTitle(data.text);
+        }
+      } catch (error) {
+        console.error('Failed to auto-name adventure:', error);
+      }
+    }
+
+    if (!nextTitle) {
+      const firstNarrativeLine = (seedText || state.contextAndRules || state.messages[0]?.content || '')
+        .split('\n')
+        .find((line: string) => line.trim().length > 0);
+      nextTitle = buildAdventureTitleFallback(state.mood, firstNarrativeLine);
+    }
+
+    if (!targetId) {
+      set({ currentRoleplayName: nextTitle });
+      return nextTitle;
+    }
+
+    await get().renameRoleplay(targetId, nextTitle);
+    return nextTitle;
   },
   newRoleplay: async (isMultiplayer = false) => {
     const state = get();
@@ -2032,6 +2124,10 @@ Do not take over the narrative; instead, support and enhance the player's vision
         }
       } else {
         get().addMessage({ role: 'assistant', content: cleanResponse });
+      }
+
+      if (isGenericAdventureName(get().currentRoleplayName)) {
+        void get().autoNameCurrentAdventure(cleanResponse);
       }
     } catch (error) {
       console.error('Error:', error);

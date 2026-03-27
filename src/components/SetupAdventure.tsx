@@ -42,6 +42,7 @@ export function SetupAdventure() {
     isLive,
     isHost,
     applyAdventureSetup,
+    autoNameCurrentAdventure,
   } = useStore();
 
   const [context, setContext] = useState('');
@@ -141,7 +142,7 @@ export function SetupAdventure() {
       Context/Rules: ${context}
       Adventure Type: ${adventureType}
       
-      Return as JSON: { "setting": "...", "plotHook": "...", "initialScene": "..." }`;
+      Return as JSON: { "title": "...", "setting": "...", "plotHook": "...", "initialScene": "..." }`;
 
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
@@ -182,6 +183,10 @@ export function SetupAdventure() {
         visualStyle,
         messages: nextMessages,
       });
+      await autoNameCurrentAdventure(
+        [generated.title, generated.setting, generated.plotHook, generated.initialScene].filter(Boolean).join('\n\n'),
+        true
+      );
       setActiveTab('chat');
     } catch (e) {
       console.error(e);
