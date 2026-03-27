@@ -17,7 +17,9 @@ export function SetupAdventure() {
     setSystemRules,
     setContextAndRules,
     setMood,
+    setVisualStyle,
     mood,
+    visualStyle,
     savedCharacters,
     addCharacterToAdventure,
     addSheet,
@@ -135,6 +137,7 @@ export function SetupAdventure() {
     try {
       const prompt = `Generate a Blades in the Dark campaign based on the following:
       Mood/Tone: ${mood}
+      Visual Style: ${visualStyle}
       Context/Rules: ${context}
       Adventure Type: ${adventureType}
       
@@ -176,6 +179,7 @@ export function SetupAdventure() {
         systemRules: nextSystemRules,
         contextAndRules: nextContextAndRules,
         mood,
+        visualStyle,
         messages: nextMessages,
       });
       setActiveTab('chat');
@@ -356,6 +360,19 @@ export function SetupAdventure() {
               className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100"
               placeholder="e.g., smoky desperation, tense intrigue, bitter victory"
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-zinc-400">Shared Visual Style (Optional)</label>
+            <input
+              value={visualStyle}
+              onChange={(e) => setVisualStyle(e.target.value)}
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-zinc-100"
+              placeholder="e.g., rain-soaked noir painting, lavish dark fantasy, cel-shaded sci-fi neon"
+            />
+            <p className="text-xs text-zinc-500">
+              Used by portrait and world image generation so the whole campaign shares a consistent art direction.
+            </p>
           </div>
 
           <div className="space-y-2">

@@ -92,6 +92,8 @@ export function Settings() {
     setSystemRules,
     mood,
     setMood,
+    visualStyle,
+    setVisualStyle,
     aiEditEnabled,
     setAiEditEnabled,
     isHost,
@@ -173,6 +175,20 @@ export function Settings() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3 md:col-span-2">
+              <label className="block text-xs font-bold text-zinc-500 uppercase">Campaign Visual Style</label>
+              <input
+                type="text"
+                value={visualStyle}
+                onChange={(e) => setVisualStyle(e.target.value)}
+                placeholder="e.g. gritty noir oil painting, painterly occult fantasy, anime cyberpunk neon"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-zinc-100 focus:outline-none focus:border-amber-500/50"
+              />
+              <p className="text-[10px] text-zinc-500">
+                Shared art direction for portraits and world images. Leave blank to let the current adventure tone guide visuals on its own.
+              </p>
+            </div>
+
             {/* Background Image */}
             <div className="space-y-3">
               <label className="block text-xs font-bold text-zinc-500 uppercase">Background Image</label>
@@ -635,12 +651,14 @@ export function Settings() {
                       <div key={preset.id} className="flex items-center justify-between p-3 bg-zinc-950 border border-zinc-800 rounded-xl">
                         <div>
                           <div className="font-medium text-zinc-200">{preset.name}</div>
-                          <div className="text-xs text-zinc-500 truncate max-w-xs">{preset.mood || 'No mood specified'}</div>
+                          <div className="text-xs text-zinc-500 truncate max-w-xs">
+                            {[preset.mood, preset.visualStyle].filter(Boolean).join(' · ') || 'No mood or style specified'}
+                          </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => {
-                              if (confirm('Load this preset? This will overwrite your current system rules and mood.')) {
+                              if (confirm('Load this preset? This will overwrite your current system rules, mood, and visual style.')) {
                                 loadWorldPreset(preset.id);
                               }
                             }}

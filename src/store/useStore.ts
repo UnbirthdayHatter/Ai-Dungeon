@@ -177,6 +177,7 @@ export type SavedRoleplay = {
   messages: Message[];
   systemRules: string;
   mood: string;
+  visualStyle?: string;
   lorebook: LoreEntry[];
   currentNPCs: CurrentNPC[];
   updatedAt: number;
@@ -211,6 +212,7 @@ export type WorldPreset = {
   systemRules: string;
   contextAndRules: string;
   mood: string;
+  visualStyle: string;
 };
 
 export type AiRulesPreset = 'classic' | 'strict_player_agency' | 'custom';
@@ -391,6 +393,7 @@ export const useStore = create<any>()((set, get) => ({
   systemRules: defaultSystemRules,
   contextAndRules: '',
   mood: '',
+  visualStyle: '',
   sheets: [] as Sheet[],
   sessionSheets: [] as Sheet[],
   savedCharacters: [] as Sheet[],
@@ -458,7 +461,33 @@ export const useStore = create<any>()((set, get) => ({
   setShowClocks: (show: boolean) => set({ showClocks: show }),
   setShowJournal: (show: boolean) => set({ showJournal: show }),
   setNotes: (notes: string) => set({ notes }),
-  generatePortrait: async () => {},
+  generatePortrait: async (id: string, prompt: string) => {
+    const state = get();
+    const apiKey = state.apiKeys.gemini || state.apiKey || undefined;
+    const tonePromptParts = [
+      state.mood ? `Adventure mood and tone: ${state.mood}.` : '',
+      state.visualStyle ? `Preferred campaign visual style: ${state.visualStyle}.` : '',
+      state.systemRules ? `Adventure setup and themes: ${state.systemRules}.` : '',
+      state.contextAndRules ? `Current adventure context: ${state.contextAndRules}.` : '',
+    ].filter(Boolean);
+    const themedPrompt = [
+      prompt,
+      tonePromptParts.length > 0
+        ? `Match the visual tone, fashion, atmosphere, lighting, and genre cues of this adventure. ${tonePromptParts.join(' ')}`
+        : 'Match the visual tone of the current adventure and keep the portrait consistent with its setting and atmosphere.',
+      'Portrait only, no text, no UI, no watermark.',
+    ].join(' ');
+    const response = await fetch('/api/ai/image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: themedPrompt, apiKey }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data?.imageUrl) {
+      throw new Error(data?.error?.message || 'Failed to generate portrait.');
+    }
+    get().updateLoreEntry(id, { avatarUrl: data.imageUrl as string });
+  },
   setTheme: (theme: ThemeType) => set({ theme }),
   setSystemRules: (rules: string) => {
     const state = get();
@@ -479,6 +508,13 @@ export const useStore = create<any>()((set, get) => ({
     set({ mood });
     if (state.currentRoleplayId && state.isHost) {
       updateDoc(doc(db, 'roleplays', state.currentRoleplayId), { mood, updatedAt: Date.now() }).catch(console.error);
+    }
+  },
+  setVisualStyle: (visualStyle: string) => {
+    const state = get();
+    set({ visualStyle });
+    if (state.currentRoleplayId && state.isHost) {
+      updateDoc(doc(db, 'roleplays', state.currentRoleplayId), { visualStyle, updatedAt: Date.now() }).catch(console.error);
     }
   },
   setCurrentRoleplayId: (id: string | null) => {
@@ -536,6 +572,7 @@ export const useStore = create<any>()((set, get) => ({
         const editors = (rp.editors || []).filter((id: string) => id !== userId);
         if (permission === 'admin') admins.push(userId);
         if (permission === 'editor') editors.push(userId);
+        if (rp.ownerId && !admins.includes(rp.ownerId)) admins.push(rp.ownerId);
         return { ...rp, admins, editors };
       };
       const nextState = {
@@ -545,7 +582,7 @@ export const useStore = create<any>()((set, get) => ({
       const roleplay = nextState.userRoleplays.find((rp: RoleplaySummary) => rp.id === roleplayId) || nextState.joinedRoleplays.find((rp: RoleplaySummary) => rp.id === roleplayId);
       if (roleplay) {
         updateDoc(doc(db, 'roleplays', roleplayId), {
-          admins: roleplay.admins || [],
+          admins: Array.from(new Set([...(roleplay.admins || []), roleplay.ownerId].filter(Boolean) as string[])),
           editors: roleplay.editors || [],
         }).catch(console.error);
       }
@@ -569,7 +606,7 @@ export const useStore = create<any>()((set, get) => ({
       updatedAt: data.updatedAt || Date.now(),
       archived: data.archived,
       editors: data.editors || [],
-      admins: data.admins || [],
+      admins: Array.from(new Set([...(data.admins || []), data.ownerId].filter(Boolean) as string[])),
       ownerId: data.ownerId,
     };
     await setDoc(doc(db, 'users', user.uid, 'joinedRoleplays', roleplayDoc.id), cleanObject(joinedRoleplay), { merge: true } as any).catch(console.error);
@@ -604,6 +641,7 @@ export const useStore = create<any>()((set, get) => ({
           currentRoleplayName: data.name || state.currentRoleplayName,
           joinCode: data.joinCode || state.joinCode,
           mood: data.mood || '',
+          visualStyle: data.visualStyle || '',
           systemRules: data.systemRules || state.systemRules,
           contextAndRules: data.contextAndRules || '',
           combat: data.combat || state.combat,
@@ -611,7 +649,7 @@ export const useStore = create<any>()((set, get) => ({
           currentNPCs: data.currentNPCs || [],
           isLive: true,
           isHost: data.ownerId === currentUserId,
-          admins: data.admins || [],
+          admins: Array.from(new Set([...(data.admins || []), data.ownerId].filter(Boolean) as string[])),
           editors: data.editors || [],
           activeSheetId,
         };
@@ -719,10 +757,10 @@ export const useStore = create<any>()((set, get) => ({
     });
   },
   fetchUserConfig: async () => {},
-  saveWorldPreset: (name: string) => set((state: any) => ({ worldPresets: [...state.worldPresets, { id: makeId(), name, systemRules: state.systemRules, contextAndRules: state.contextAndRules, mood: state.mood }] })),
+  saveWorldPreset: (name: string) => set((state: any) => ({ worldPresets: [...state.worldPresets, { id: makeId(), name, systemRules: state.systemRules, contextAndRules: state.contextAndRules, mood: state.mood, visualStyle: state.visualStyle }] })),
   loadWorldPreset: (id: string) => set((state: any) => {
     const preset = state.worldPresets.find((item: WorldPreset) => item.id === id);
-    return preset ? { systemRules: preset.systemRules, contextAndRules: preset.contextAndRules, mood: preset.mood } : {};
+    return preset ? { systemRules: preset.systemRules, contextAndRules: preset.contextAndRules, mood: preset.mood, visualStyle: preset.visualStyle || '' } : {};
   }),
   deleteWorldPreset: (id: string) => set((state: any) => ({ worldPresets: state.worldPresets.filter((item: WorldPreset) => item.id !== id) })),
   addSheet: (sheet: Sheet) => {
@@ -859,6 +897,7 @@ export const useStore = create<any>()((set, get) => ({
       messages: state.messages,
       systemRules: state.systemRules,
       mood: state.mood,
+      visualStyle: state.visualStyle,
       lorebook: state.lorebook,
       currentNPCs: state.currentNPCs,
       updatedAt: Date.now(),
@@ -904,6 +943,7 @@ export const useStore = create<any>()((set, get) => ({
       messages: forkedRoleplay.messages || [],
       systemRules: forkedRoleplay.systemRules || defaultSystemRules,
       mood: forkedRoleplay.mood || '',
+      visualStyle: forkedRoleplay.visualStyle || '',
       lorebook: forkedRoleplay.lorebook || [],
       currentNPCs: forkedRoleplay.currentNPCs || [],
       quests: forkedRoleplay.quests || [],
@@ -928,6 +968,7 @@ export const useStore = create<any>()((set, get) => ({
       messages: roleplay.messages || [],
       systemRules: roleplay.systemRules || defaultSystemRules,
       mood: roleplay.mood || '',
+      visualStyle: roleplay.visualStyle || '',
       lorebook: roleplay.lorebook || [],
       currentNPCs: roleplay.currentNPCs || [],
       quests: roleplay.quests || [],
@@ -945,11 +986,13 @@ export const useStore = create<any>()((set, get) => ({
     systemRules,
     contextAndRules,
     mood,
+    visualStyle,
     messages,
   }: {
     systemRules: string;
     contextAndRules: string;
     mood: string;
+    visualStyle: string;
     messages: Array<Omit<Message, 'id'>>;
   }) => {
     const state = get();
@@ -966,6 +1009,7 @@ export const useStore = create<any>()((set, get) => ({
       systemRules,
       contextAndRules,
       mood,
+      visualStyle,
       messages: seededMessages,
       lorebook: [],
       currentNPCs: [],
@@ -997,6 +1041,7 @@ export const useStore = create<any>()((set, get) => ({
         systemRules,
         contextAndRules,
         mood,
+        visualStyle,
         currentNPCs: [],
         combat: resetCombat,
         clocks: [],
@@ -1020,6 +1065,7 @@ export const useStore = create<any>()((set, get) => ({
       messages: seededMessages,
       systemRules,
       mood,
+      visualStyle,
       lorebook: [],
       currentNPCs: [],
       updatedAt: now,
@@ -1115,10 +1161,14 @@ export const useStore = create<any>()((set, get) => ({
       const roleplayRef = await addDoc(collection(db, 'roleplays'), {
         name: roleplay.name,
         ownerId: user.uid,
+        ownerName: user.displayName || 'User',
+        admins: [user.uid],
+        editors: [],
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         joinCode: hostedJoinCode,
         mood: roleplay.mood || '',
+        visualStyle: roleplay.visualStyle || '',
         combat: roleplay.combat || { active: false, turnIndex: 0, combatants: [] },
         systemRules: roleplay.systemRules || '',
         ambientAudioUrl: roleplay.ambientAudioUrl || '',
@@ -1171,7 +1221,7 @@ export const useStore = create<any>()((set, get) => ({
         ),
         userRoleplays: state.userRoleplays.some((rp: RoleplaySummary) => rp.id === newId)
           ? state.userRoleplays
-          : [...state.userRoleplays, { id: newId, name: roleplay.name, ownerId: user.uid, joinCode: hostedJoinCode, updatedAt: Date.now() }]
+          : [...state.userRoleplays, { id: newId, name: roleplay.name, ownerId: user.uid, joinCode: hostedJoinCode, updatedAt: Date.now(), admins: [user.uid], editors: [] }]
       }));
       await setDoc(doc(db, 'users', user.uid, 'savedRoleplays', id), { promotedToRoleplayId: newId }, { merge: true } as any).catch(console.error);
       return newId;
@@ -1280,6 +1330,8 @@ export const useStore = create<any>()((set, get) => ({
           name: 'New Adventure',
           ownerId: user.uid,
           ownerName: user.displayName || 'User',
+          admins: [user.uid],
+          editors: [],
           joinCode: liveJoinCode,
           updatedAt: Date.now(),
           createdAt: Date.now(),
@@ -1318,7 +1370,7 @@ export const useStore = create<any>()((set, get) => ({
         set((current: any) => ({
           userRoleplays: current.userRoleplays.some((rp: RoleplaySummary) => rp.id === newId)
             ? current.userRoleplays
-            : [...current.userRoleplays, { id: newId, name: 'New Adventure', ownerId: user.uid, joinCode: liveJoinCode, updatedAt: Date.now() }]
+            : [...current.userRoleplays, { id: newId, name: 'New Adventure', ownerId: user.uid, joinCode: liveJoinCode, updatedAt: Date.now(), admins: [user.uid], editors: [] }]
         }));
       } catch (e) {
         console.error("Failed to create new roleplay in Firestore:", e);
@@ -1332,6 +1384,7 @@ export const useStore = create<any>()((set, get) => ({
         content: 'Welcome to your new adventure. The slate is clean. Where would you like to begin?',
       }],
       mood: '',
+      visualStyle: '',
       lorebook: [],
       currentNPCs: [],
       quests: [],
@@ -1375,6 +1428,8 @@ export const useStore = create<any>()((set, get) => ({
         name: state.currentRoleplayName || 'New Adventure',
         ownerId: user.uid,
         ownerName: user.displayName || 'User',
+        admins: [user.uid],
+        editors: [],
         joinCode: promotedJoinCode,
         updatedAt: Date.now(),
         createdAt: Date.now(),
@@ -1389,6 +1444,7 @@ export const useStore = create<any>()((set, get) => ({
         messages: state.messages.map(m => ({ ...m })),
         notes: state.notes,
         mood: state.mood,
+        visualStyle: state.visualStyle,
         systemRules: state.systemRules,
         contextAndRules: state.contextAndRules
       });
@@ -1405,7 +1461,7 @@ export const useStore = create<any>()((set, get) => ({
           : current.savedRoleplays,
         userRoleplays: current.userRoleplays.some((rp: RoleplaySummary) => rp.id === roleplayRef.id)
           ? current.userRoleplays
-          : [...current.userRoleplays, { id: roleplayRef.id, name: state.currentRoleplayName || 'New Adventure', ownerId: user.uid, joinCode: promotedJoinCode, updatedAt: Date.now() }]
+          : [...current.userRoleplays, { id: roleplayRef.id, name: state.currentRoleplayName || 'New Adventure', ownerId: user.uid, joinCode: promotedJoinCode, updatedAt: Date.now(), admins: [user.uid], editors: [] }]
       }));
       if (sourceSavedRoleplayId) {
         await setDoc(doc(db, 'users', user.uid, 'savedRoleplays', sourceSavedRoleplayId), { promotedToRoleplayId: roleplayRef.id }, { merge: true } as any).catch(console.error);
@@ -1748,6 +1804,13 @@ Do not take over the narrative; instead, support and enhance the player's vision
                   if (s.currentRoleplayId) {
                     setDoc(doc(db, 'roleplays', s.currentRoleplayId, 'lorebook', id), cleanObject(entry));
                   }
+
+                  if ((entry.category || '').toLowerCase() === 'npc') {
+                    const portraitPrompt = `${entry.name}: ${entry.description || 'A character portrait'} a close up portrait with a blurry background`;
+                    get().generatePortrait(entry.id, portraitPrompt).catch((error: unknown) => {
+                      console.error('Auto-generating NPC portrait failed:', error);
+                    });
+                  }
                   
                   return entry;
                 });
@@ -1809,33 +1872,33 @@ Do not take over the narrative; instead, support and enhance the player's vision
         }
       }
 
-      // Split response into multiple messages if multiCharChat is enabled
-      if (state.multiCharChat) {
-        const parts = cleanResponse.split(/\[(.*?)\]:/g);
-        const newMessages: Omit<Message, 'id'>[] = [];
-        
-        for (let i = 1; i < parts.length; i += 2) {
-          const name = parts[i].trim();
-          const content = parts[i + 1]?.trim();
-          
-          if (content) {
-            newMessages.push({
-              role: 'assistant',
+      const taggedSegments = Array.from(
+        cleanResponse.matchAll(/\[(Narrator|[^\]]+)\]:\s*([\s\S]*?)(?=\n\s*\[(Narrator|[^\]]+)\]:|$)/g)
+      );
+      const shouldSplitTaggedResponse = state.multiCharChat || taggedSegments.length > 0;
+
+      if (shouldSplitTaggedResponse) {
+        const newMessages: Omit<Message, 'id'>[] = taggedSegments
+          .map((match) => {
+            const name = (match[1] || '').trim();
+            const content = (match[2] || '').trim();
+            if (!content) return null;
+            return {
+              role: 'assistant' as const,
               content,
-              characterName: name === 'Narrator' ? undefined : name,
-              type: name === 'Narrator' ? 'narrator' : 'character'
-            });
-          }
-        }
-        
+              characterName: /^narrator$/i.test(name) ? undefined : name,
+              type: /^narrator$/i.test(name) ? 'narrator' as const : 'character' as const,
+            };
+          })
+          .filter(Boolean) as Omit<Message, 'id'>[];
+
         if (newMessages.length > 0) {
           const baseTime = Date.now();
           newMessages.forEach((msg, index) => {
             get().addMessage({ ...msg, timestamp: baseTime + index });
           });
         } else {
-          // Fallback if no tags found
-          get().addMessage({ role: 'assistant', content: cleanResponse });
+          get().addMessage({ role: 'assistant', content: cleanResponse.replace(/\[(Narrator|[^\]]+)\]:\s*/g, '').trim() || cleanResponse });
         }
       } else {
         get().addMessage({ role: 'assistant', content: cleanResponse });

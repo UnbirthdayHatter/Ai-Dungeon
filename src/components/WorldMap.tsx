@@ -21,7 +21,11 @@ export function WorldMap() {
     currentRoleplayId,
     userRoleplays,
     joinedRoleplays,
-    refreshRoleplayCollections
+    refreshRoleplayCollections,
+    mood,
+    visualStyle,
+    systemRules,
+    contextAndRules
   } = useStore();
   
   const activeRoleplay = [...userRoleplays, ...joinedRoleplays].find(rp => rp.id === currentRoleplayId);
@@ -57,11 +61,25 @@ export function WorldMap() {
     if (!canEdit) return;
     setIsGeneratingImage(true);
     try {
+      const tonePromptParts = [
+        mood ? `Adventure mood and tone: ${mood}.` : '',
+        visualStyle ? `Preferred campaign visual style: ${visualStyle}.` : '',
+        systemRules ? `Adventure setup and themes: ${systemRules}.` : '',
+        contextAndRules ? `Current adventure context: ${contextAndRules}.` : '',
+      ].filter(Boolean);
+      const themedPrompt = [
+        `A high-quality environmental illustration of ${location.name}. ${location.description}.`,
+        `Focus on the place itself with epic scale, detailed environment, and cinematic lighting.`,
+        tonePromptParts.length > 0
+          ? `Match the visual tone, fashion, atmosphere, lighting, architecture, and genre cues of this adventure. ${tonePromptParts.join(' ')}`
+          : 'Match the visual tone of the current adventure and keep the location consistent with its setting and atmosphere.',
+        'No text, no UI, no watermark.',
+      ].join(' ');
       const response = await fetch('/api/ai/image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: `A high-quality fantasy landscape painting of ${location.name}. ${location.description}. Epic scale, detailed environment, cinematic lighting.`,
+          prompt: themedPrompt,
         }),
       });
       const data = await response.json().catch(() => ({}));
