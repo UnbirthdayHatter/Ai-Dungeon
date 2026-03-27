@@ -5,6 +5,7 @@ import { Save, FolderOpen, Trash2, Plus, Clock, MessageSquare } from 'lucide-rea
 export function Roleplays() {
   const { savedRoleplays, saveRoleplay, loadRoleplay, deleteRoleplay, newRoleplay, messages, currentRoleplayId } = useStore();
   const [saveName, setSaveName] = useState('');
+  const visibleSavedRoleplays = savedRoleplays.filter((rp: any) => !rp.promotedToRoleplayId);
 
   const handleSave = () => {
     if (!saveName.trim()) return;
@@ -89,7 +90,7 @@ export function Roleplays() {
           </div>
           <p className="text-sm text-zinc-500 mt-3">
             {currentRoleplayId 
-              ? `Currently syncing to: ${savedRoleplays.find(r => r.id === currentRoleplayId)?.name || 'Unknown'}`
+              ? `Currently syncing to: ${visibleSavedRoleplays.find(r => r.id === currentRoleplayId)?.name || 'Unknown'}`
               : `Currently active: ${messages.length} messages in history.`
             }
           </p>
@@ -98,14 +99,14 @@ export function Roleplays() {
         <div className="space-y-4">
           <h3 className="text-xl font-serif font-bold text-zinc-100">Saved Adventures</h3>
           
-          {savedRoleplays.length === 0 ? (
+          {visibleSavedRoleplays.length === 0 ? (
             <div className="text-center py-12 bg-zinc-900/50 border border-zinc-800/50 rounded-2xl border-dashed">
               <FolderOpen className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
               <p className="text-zinc-500">No saved roleplays yet.</p>
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {Array.from(new Map((savedRoleplays as Array<{ id: string; name: string; updatedAt: number; messages: any[]; mood?: string }>).map(rp => [rp.id, rp])).values()).map((rp) => (
+              {Array.from(new Map((visibleSavedRoleplays as Array<{ id: string; name: string; updatedAt: number; messages: any[]; mood?: string }>).map(rp => [rp.id, rp])).values()).map((rp) => (
                 <div key={rp.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-4">
                   <div className="flex justify-between items-start">
                     <div>
@@ -137,11 +138,11 @@ export function Roleplays() {
                       Load
                     </button>
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         const name = prompt('Enter a name for the forked adventure:', `${rp.name} (Fork)`);
                         if (name) {
-                          useStore.getState().forkRoleplay(rp.id, name);
-                          alert('Adventure forked successfully!');
+                          await useStore.getState().forkRoleplay(rp.id, name);
+                          alert('Adventure forked successfully and is now loaded as its own save.');
                         }
                       }}
                       className="px-3 py-2 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-500 rounded-lg border border-indigo-500/20 transition-all flex items-center gap-2 text-xs font-bold uppercase tracking-widest"

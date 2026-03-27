@@ -1,4 +1,4 @@
-import { useStore, ProviderType, ThemeType } from '@/store/useStore';
+import { useStore, ProviderType, ThemeType, AiRulesPreset } from '@/store/useStore';
 import { THEME_CLASSES } from '@/constants';
 import { cn } from '@/lib/utils';
 import { 
@@ -30,6 +30,24 @@ const THEMES: { id: ThemeType; name: string; color: string }[] = [
   { id: 'parchment', name: 'Parchment (Sepia)', color: 'bg-orange-200' },
   { id: 'midnight', name: 'Midnight (Blue)', color: 'bg-blue-600' },
   { id: 'sepia', name: 'Antique Sepia', color: 'bg-[#8d6e63]' },
+];
+
+const AI_RULESET_OPTIONS: Array<{ id: AiRulesPreset; name: string; description: string }> = [
+  {
+    id: 'strict_player_agency',
+    name: 'Strict Player Agency',
+    description: 'Best for collaborative RP. Protects player character control, keeps narration in third person, and leaves clear space for replies.',
+  },
+  {
+    id: 'classic',
+    name: 'Classic Narrator',
+    description: 'A lighter-touch storyteller preset with fewer hard restrictions.',
+  },
+  {
+    id: 'custom',
+    name: 'Custom Rules',
+    description: 'Write your own narrator behavior rules. Leave blank to fall back to the strict preset.',
+  },
 ];
 
 export function Settings() {
@@ -78,7 +96,11 @@ export function Settings() {
     setAiEditEnabled,
     isHost,
     kokoroUrl,
-    setKokoroUrl
+    setKokoroUrl,
+    aiRulesPreset,
+    setAiRulesPreset,
+    customAiRules,
+    setCustomAiRules
   } = useStore();
   
   const themeClasses = THEME_CLASSES[theme] || THEME_CLASSES.classic;
@@ -201,6 +223,53 @@ export function Settings() {
                 </button>
               </div>
               <p className="text-[10px] text-zinc-500">Looping background audio. Use YouTube links for "Tavern Ambience", etc.</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 text-zinc-100 font-bold uppercase tracking-wider text-sm">
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            AI Narration Rules
+          </div>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-zinc-500 uppercase">Ruleset Preset</label>
+              <select
+                value={aiRulesPreset}
+                onChange={(e) => setAiRulesPreset(e.target.value as AiRulesPreset)}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-100 focus:outline-none focus:border-amber-500/50"
+              >
+                {AI_RULESET_OPTIONS.map((option) => (
+                  <option key={option.id} value={option.id}>{option.name}</option>
+                ))}
+              </select>
+              <p className="text-xs text-zinc-500">
+                {AI_RULESET_OPTIONS.find((option) => option.id === aiRulesPreset)?.description}
+              </p>
+              <p className="text-[10px] text-zinc-600">
+                Multiplayer handling is added automatically when a live session is active, so the AI knows there are multiple human players in the scene.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-zinc-500 uppercase">
+                {aiRulesPreset === 'custom' ? 'Custom Narration Rules' : 'Active Rules Preview'}
+              </label>
+              <textarea
+                value={aiRulesPreset === 'custom'
+                  ? customAiRules
+                  : AI_RULESET_OPTIONS.find((option) => option.id === aiRulesPreset)?.id === 'classic'
+                    ? `ENDINGS:\n- End on the present beat and leave space for the player.\n\nCHARACTER CONTROL:\n- Do not take over player choices.\n- Control NPCs, pressure, and the world around them.\n\nWRITING STYLE:\n- Write in third person and stay grounded in what is explicit.`
+                    : `ENDINGS:\n- End after the current beat without prompting the player.\n\nCHARACTER CONTROL:\n- Never write the player's dialogue, thoughts, reactions, intentions, or decisions.\n- Only control NPCs, the world, and visible external consequences.\n\nWRITING STYLE:\n- Always write in third person.\n- Leave room for the user to respond and avoid soft-forcing.`
+                }
+                onChange={(e) => {
+                  if (aiRulesPreset === 'custom') setCustomAiRules(e.target.value);
+                }}
+                readOnly={aiRulesPreset !== 'custom'}
+                className="w-full min-h-44 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-100 focus:outline-none focus:border-amber-500/50 read-only:text-zinc-400"
+                placeholder="Write custom AI narration rules here..."
+              />
             </div>
           </div>
         </section>

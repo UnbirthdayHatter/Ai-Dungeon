@@ -64,7 +64,7 @@ export function Sidebar({ activeTab }: SidebarProps) {
   ] as const;
 
   const sortedSaved = Array.from(new globalThis.Map((savedRoleplays as Array<{ id: string; name: string; archived?: boolean; updatedAt?: number }>).map(rp => [rp.id, rp])).values())
-    .filter(rp => !rp.archived)
+    .filter(rp => !rp.archived && !(rp as any).promotedToRoleplayId)
     .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
     
   const sortedMultiplayer = Array.from(new globalThis.Map(([...userRoleplays, ...joinedRoleplays] as Array<{ id: string; name: string; archived?: boolean; updatedAt?: number }>).map(rp => [rp.id, rp])).values())

@@ -191,6 +191,7 @@ export type SavedRoleplay = {
   notes?: string;
   archived?: boolean;
   isPublic?: boolean;
+  promotedToRoleplayId?: string;
 };
 
 export type RoleplaySummary = {
@@ -211,6 +212,8 @@ export type WorldPreset = {
   contextAndRules: string;
   mood: string;
 };
+
+export type AiRulesPreset = 'classic' | 'strict_player_agency' | 'custom';
 
 export type TypingUser = {
   isTyping: boolean;
@@ -265,6 +268,73 @@ export type AppState = any;
 const defaultSystemRules = 'You are a collaborative tabletop RPG narrator.';
 const SOUNDSCAPES: Record<string, string> = {};
 const makeId = () => Math.random().toString(36).substring(2, 11);
+const readStorageValue = (key: string, fallback: string) => {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    return window.localStorage.getItem(key) || fallback;
+  } catch {
+    return fallback;
+  }
+};
+const writeStorageValue = (key: string, value: string) => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Ignore local persistence failures.
+  }
+};
+const AI_RULE_PRESETS: Record<Exclude<AiRulesPreset, 'custom'>, string> = {
+  classic: `ENDINGS:
+- End your response after the present beat of action.
+- Leave room for the player to answer, speak, or act next.
+
+CHARACTER CONTROL:
+- Never write the player's dialogue or lock in their choices.
+- Keep control of NPCs, the environment, scene pressure, and consequences.
+
+WRITING STYLE:
+- Write in third person.
+- Stay grounded in what is explicit in the scene.
+- Avoid meta commentary and visible system jargon unless mechanics are enabled elsewhere in the prompt.`,
+  strict_player_agency: `ENDINGS:
+- End your response after describing the current outcome, environment, pressure, or NPC behavior.
+- Do not ask "What do you do?", "How do you proceed?", or "What is your next move?"
+- Do not prompt the player for their next action.
+- Leave space for the player to choose what happens through their own character.
+
+CHARACTER CONTROL:
+- Never write for the user's character.
+- Do not write their dialogue, actions, thoughts, feelings, reactions, body language, decisions, or intentions.
+- Do not assume anything about the user's character.
+- Never state what they feel, want, think, notice, remember, realize, or intend unless the user explicitly wrote it.
+- Do not force outcomes onto the user's character.
+- Do not make them comply, hesitate, step back, lean in, blush, freeze, panic, trust, submit, agree, or otherwise react unless the user explicitly says they do.
+- Do not put words in the user's mouth.
+- Never generate dialogue for the user's character.
+- Do not describe automatic reactions for the user's character.
+- Even small reactions such as flinching, shivering, swallowing, staring, stiffening, relaxing, or going silent must not be invented by the AI.
+- Only control NPCs, the environment, and external events.
+- The AI may write its own characters, scene details, atmosphere, world events, and visible consequences external to the user's character.
+- When referring to the user's character, use only what is explicit.
+- Only mention details the user has directly stated or that are plainly visible and already established in the scene.
+- When uncertain, do less.
+- If there is any doubt whether something belongs to the user's character, do not write it.
+
+WRITING STYLE:
+- Always write in third person.
+- Narration, description, and character actions must be written in third person.
+- Leave room for the user to respond.
+- End replies in a way that leaves the user free to choose what their character says or does next.
+- Do not soft-force.
+- Avoid phrasing that pressures or implies the user's character must react in a certain way, such as "drawing them in," "making them shiver," "forcing them to pause," or "leaving them speechless."
+- Respond only to what is on the page.
+- Treat only explicit roleplay text from the user as canon. Do not invent off-screen actions, motives, or reactions for their character.`,
+};
+const getAiRulesText = (preset: AiRulesPreset, customRules: string) =>
+  preset === 'custom'
+    ? (customRules.trim() || AI_RULE_PRESETS.strict_player_agency)
+    : AI_RULE_PRESETS[preset];
 const userSheetWriteQueue = new Map<string, ReturnType<typeof debounce>>();
 const roleplaySheetWriteQueue = new Map<string, ReturnType<typeof debounce>>();
 const savedRoleplayWriteQueue = new Map<string, ReturnType<typeof debounce>>();
@@ -361,6 +431,8 @@ export const useStore = create<any>()((set, get) => ({
   joinCode: null,
   isLive: false,
   multiCharChat: false,
+  aiRulesPreset: readStorageValue('aiRulesPreset', 'strict_player_agency') as AiRulesPreset,
+  customAiRules: readStorageValue('customAiRules', ''),
   requireRolls: false,
   suggestedLoot: [] as any[],
   isAIGenerating: false,
@@ -601,6 +673,14 @@ export const useStore = create<any>()((set, get) => ({
   setTtsProvider: (provider: 'gemini' | 'openai' | 'kokoro') => set({ ttsProvider: provider }),
   setDiceSkin: (skin: string) => set({ diceSkin: skin }),
   setIsCopilotMode: (enabled: boolean) => set({ isCopilotMode: enabled }),
+  setAiRulesPreset: (preset: AiRulesPreset) => {
+    writeStorageValue('aiRulesPreset', preset);
+    set({ aiRulesPreset: preset });
+  },
+  setCustomAiRules: (rules: string) => {
+    writeStorageValue('customAiRules', rules);
+    set({ customAiRules: rules });
+  },
   setIsOocMode: (enabled: boolean) => set({ isOocMode: enabled }),
   setSessionId: (id: string | null) => set({ sessionId: id }),
   fetchUserSheets: async () => {
@@ -772,6 +852,7 @@ export const useStore = create<any>()((set, get) => ({
     const state = get();
     const user = auth.currentUser;
     const id = state.currentRoleplayId || makeId();
+    const existingSaved = state.savedRoleplays.find((item: SavedRoleplay) => item.id === id);
     const saved = {
       id,
       name,
@@ -787,6 +868,7 @@ export const useStore = create<any>()((set, get) => ({
       combat: state.combat,
       clocks: state.clocks,
       notes: state.notes,
+      promotedToRoleplayId: existingSaved?.promotedToRoleplayId,
     };
     if (user) {
       getSavedRoleplayWriter(id)(user.uid, saved);
@@ -798,10 +880,44 @@ export const useStore = create<any>()((set, get) => ({
       lastSaved: Date.now(),
     }));
   },
-  forkRoleplay: (id: string, name: string) => {
-    const roleplay = get().savedRoleplays.find((item: SavedRoleplay) => item.id === id);
-    if (!roleplay) return;
-    set((state: any) => ({ savedRoleplays: [...state.savedRoleplays, { ...roleplay, id: makeId(), name, updatedAt: Date.now() }] }));
+  forkRoleplay: async (id: string, name: string) => {
+    const state = get();
+    const user = auth.currentUser;
+    const roleplay = state.savedRoleplays.find((item: SavedRoleplay) => item.id === id);
+    if (!roleplay) return null;
+    const forkId = makeId();
+    const now = Date.now();
+    const forkedRoleplay: SavedRoleplay = {
+      ...roleplay,
+      id: forkId,
+      name,
+      updatedAt: now,
+      promotedToRoleplayId: undefined,
+    };
+    if (user) {
+      getSavedRoleplayWriter(forkId)(user.uid, forkedRoleplay);
+    }
+    set((current: any) => ({
+      savedRoleplays: [...current.savedRoleplays.filter((item: SavedRoleplay) => item.id !== forkId), forkedRoleplay],
+      currentRoleplayId: forkId,
+      currentRoleplayName: name,
+      messages: forkedRoleplay.messages || [],
+      systemRules: forkedRoleplay.systemRules || defaultSystemRules,
+      mood: forkedRoleplay.mood || '',
+      lorebook: forkedRoleplay.lorebook || [],
+      currentNPCs: forkedRoleplay.currentNPCs || [],
+      quests: forkedRoleplay.quests || [],
+      timeline: forkedRoleplay.timeline || [],
+      combat: forkedRoleplay.combat || { active: false, turnIndex: 0, combatants: [] },
+      clocks: forkedRoleplay.clocks || [],
+      notes: forkedRoleplay.notes || '',
+      sheets: forkedRoleplay.sheets || [],
+      sessionSheets: forkedRoleplay.sheets || [],
+      activeSheetId: forkedRoleplay.sheets?.[0]?.id || null,
+      isLive: false,
+      lastSaved: now,
+    }));
+    return forkId;
   },
   loadRoleplay: (id: string) => set((state: any) => {
     const roleplay = state.savedRoleplays.find((item: SavedRoleplay) => item.id === id);
@@ -825,6 +941,104 @@ export const useStore = create<any>()((set, get) => ({
       isLive: false,
     };
   }),
+  applyAdventureSetup: async ({
+    systemRules,
+    contextAndRules,
+    mood,
+    messages,
+  }: {
+    systemRules: string;
+    contextAndRules: string;
+    mood: string;
+    messages: Array<Omit<Message, 'id'>>;
+  }) => {
+    const state = get();
+    const user = auth.currentUser;
+    const now = Date.now();
+    const seededMessages = messages.map((message, index) => ({
+      id: makeId(),
+      timestamp: now + index,
+      ...message,
+    })) as Message[];
+    const resetCombat = { active: false, turnIndex: 0, combatants: [] };
+
+    set({
+      systemRules,
+      contextAndRules,
+      mood,
+      messages: seededMessages,
+      lorebook: [],
+      currentNPCs: [],
+      quests: [],
+      timeline: [],
+      combat: resetCombat,
+      clocks: [],
+      notes: '',
+      lastSaved: now,
+    });
+
+    if (state.isLive && state.currentRoleplayId) {
+      const { getDocs } = await import('firebase/firestore');
+      const [messageSnap, loreSnap, questSnap, timelineSnap] = await Promise.all([
+        getDocs(collection(db, 'roleplays', state.currentRoleplayId, 'messages')),
+        getDocs(collection(db, 'roleplays', state.currentRoleplayId, 'lorebook')),
+        getDocs(collection(db, 'roleplays', state.currentRoleplayId, 'quests')),
+        getDocs(collection(db, 'roleplays', state.currentRoleplayId, 'timeline')),
+      ]);
+
+      await Promise.all([
+        ...messageSnap.docs.map((docSnap) => deleteDoc(doc(db, 'roleplays', state.currentRoleplayId, 'messages', docSnap.id)).catch(console.error)),
+        ...loreSnap.docs.map((docSnap) => deleteDoc(doc(db, 'roleplays', state.currentRoleplayId, 'lorebook', docSnap.id)).catch(console.error)),
+        ...questSnap.docs.map((docSnap) => deleteDoc(doc(db, 'roleplays', state.currentRoleplayId, 'quests', docSnap.id)).catch(console.error)),
+        ...timelineSnap.docs.map((docSnap) => deleteDoc(doc(db, 'roleplays', state.currentRoleplayId, 'timeline', docSnap.id)).catch(console.error)),
+      ]);
+
+      await updateDoc(doc(db, 'roleplays', state.currentRoleplayId), {
+        systemRules,
+        contextAndRules,
+        mood,
+        currentNPCs: [],
+        combat: resetCombat,
+        clocks: [],
+        notes: '',
+        updatedAt: now,
+      }).catch(console.error);
+
+      await Promise.all(
+        seededMessages.map((message) =>
+          setDoc(doc(db, 'roleplays', state.currentRoleplayId!, 'messages', message.id), cleanObject(message)).catch(console.error)
+        )
+      );
+      return;
+    }
+
+    const saveId = state.currentRoleplayId || makeId();
+    const existingSaved = state.savedRoleplays.find((item: SavedRoleplay) => item.id === saveId);
+    const saved: SavedRoleplay = {
+      id: saveId,
+      name: state.currentRoleplayName || 'New Adventure',
+      messages: seededMessages,
+      systemRules,
+      mood,
+      lorebook: [],
+      currentNPCs: [],
+      updatedAt: now,
+      sheets: state.sheets,
+      quests: [],
+      timeline: [],
+      combat: resetCombat,
+      clocks: [],
+      notes: '',
+      promotedToRoleplayId: existingSaved?.promotedToRoleplayId,
+    };
+    if (user) {
+      getSavedRoleplayWriter(saveId)(user.uid, saved);
+    }
+    set((current: any) => ({
+      currentRoleplayId: saveId,
+      savedRoleplays: [...current.savedRoleplays.filter((item: SavedRoleplay) => item.id !== saveId), saved],
+    }));
+  },
   setAiAutoRespond: (autoRespond: boolean) => set({ aiAutoRespond: autoRespond }),
   setAiEditEnabled: (enabled: boolean) => set({ aiEditEnabled: enabled }),
   setRequireRolls: (requireRolls: boolean) => set({ requireRolls }),
@@ -952,10 +1166,14 @@ export const useStore = create<any>()((set, get) => ({
         currentRoleplayId: newId,
         currentRoleplayName: roleplay.name,
         joinCode: hostedJoinCode,
+        savedRoleplays: state.savedRoleplays.map((saved: SavedRoleplay) =>
+          saved.id === id ? { ...saved, promotedToRoleplayId: newId } : saved
+        ),
         userRoleplays: state.userRoleplays.some((rp: RoleplaySummary) => rp.id === newId)
           ? state.userRoleplays
           : [...state.userRoleplays, { id: newId, name: roleplay.name, ownerId: user.uid, joinCode: hostedJoinCode, updatedAt: Date.now() }]
       }));
+      await setDoc(doc(db, 'users', user.uid, 'savedRoleplays', id), { promotedToRoleplayId: newId }, { merge: true } as any).catch(console.error);
       return newId;
     } catch (e) {
       console.error("Failed to host saved roleplay:", e);
@@ -1147,6 +1365,9 @@ export const useStore = create<any>()((set, get) => ({
     const state = get();
     const user = auth.currentUser;
     if (!user) throw new Error('Must be logged in to promote to multiplayer.');
+    const sourceSavedRoleplayId = state.savedRoleplays.some((rp: SavedRoleplay) => rp.id === state.currentRoleplayId)
+      ? state.currentRoleplayId
+      : null;
 
     try {
       const promotedJoinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -1177,10 +1398,18 @@ export const useStore = create<any>()((set, get) => ({
       // Sync with the new live roleplay
       state.syncRoleplay(roleplayRef.id);
       set((current: any) => ({
+        savedRoleplays: sourceSavedRoleplayId
+          ? current.savedRoleplays.map((saved: SavedRoleplay) =>
+              saved.id === sourceSavedRoleplayId ? { ...saved, promotedToRoleplayId: roleplayRef.id } : saved
+            )
+          : current.savedRoleplays,
         userRoleplays: current.userRoleplays.some((rp: RoleplaySummary) => rp.id === roleplayRef.id)
           ? current.userRoleplays
           : [...current.userRoleplays, { id: roleplayRef.id, name: state.currentRoleplayName || 'New Adventure', ownerId: user.uid, joinCode: promotedJoinCode, updatedAt: Date.now() }]
       }));
+      if (sourceSavedRoleplayId) {
+        await setDoc(doc(db, 'users', user.uid, 'savedRoleplays', sourceSavedRoleplayId), { promotedToRoleplayId: roleplayRef.id }, { merge: true } as any).catch(console.error);
+      }
       
       // Also add to user's roleplays list so it shows in sidebar
       const userDocRef = doc(db, 'users', user.uid);
@@ -1271,27 +1500,28 @@ ${activeSheet?.customText || ''}
 
       const rollContext = state.requireRolls 
         ? `\nGAME MECHANICS (ROLLS ENABLED):
-You are a Game Master. Use Blades in the Dark mechanics.
-When the player attempts an action with a chance of failure, you MUST ask them to make an Action Roll (e.g., "Roll Skirmish" or "Roll Prowl").
-Only call for rolls when the outcome is uncertain and meaningful. Do not ask for rolls constantly.
-When a roll is needed, present it as narrator text ONLY. State the action that fits best and, if relevant, the position, effect, and stakes. Keep this concise and outside of dialogue.
-Do not resolve the action until they provide the roll result.
-When they provide a roll result, you must interpret it based on the Blades in the Dark rules:
-- 6: Critical Success (if multiple 6s) or Full Success. They do it well without consequences.
-- 4/5: Partial Success. They do it, but there's a consequence (harm, stress, heat, or a complication).
-- 1-3: Bad Outcome. Things go wrong. They don't achieve their goal and face a consequence.
-
-COMBAT MECHANICS:
-- Combat in BitD is handled via Action Rolls (Skirmish, Wreck, etc.).
-- There is no Initiative roll. The narrative dictates who acts first.
-- Track enemy resistance and harm narratively.
-- When the player takes harm, describe it vividly and update their harm track if needed.
-- NEVER resolve the player's actions without them rolling first.`
+Use Blades in the Dark style and structure.
+Frame scenes, risks, consequences, opportunities, and action in a way that fits Blades in the Dark.
+Use fiction first. Describe what is happening in the scene first. Only after that, if needed, introduce mechanics in narrator text.
+Only call for rolls when the outcome is uncertain and meaningful. Do not ask for rolls constantly. Let simple conversation, setup, and low-stakes actions happen naturally.
+When a roll is needed, present it as narrator text only. State the action that fits best and, if relevant, the position, effect, and stakes. Keep this concise and outside of dialogue.
+Only the narrator handles mechanics. Rolls, action choices, position, effect, consequences, resistance, clocks, stress, harm, and all other mechanics must only be introduced by narrator text, never by characters.
+Never put mechanics in dialogue. No character may ask for a roll, mention a stat, discuss a check, or refer to game systems out loud.
+Keep character dialogue fully in-world. Characters must speak naturally as people in the scene. They must never say game terms like "roll," "check," "Skirmish," "Prowl," "position," "effect," "stress," or any other mechanical language.
+NPCs may create pressure, but never ask for rolls. NPCs may threaten, bargain, stall, attack, lie, or demand things, but they must never tell the player to roll or speak in meta terms.
+Do not resolve the action until the player provides the roll result.
+When the roll result is provided, interpret it using Blades in the Dark principles:
+- 6: full success
+- 4/5: partial success with consequence
+- 1-3: bad outcome
+Narrate consequences in-world. After a roll, describe outcomes, complications, danger, progress, or harm through scene narration, not through character speech about mechanics.`
         : `\nGAME MECHANICS (ROLLS DISABLED):
-You are a collaborative storyteller. Do not ask the player to roll dice for ANY reason.
-Resolve all actions narratively based on their character's actions, stress, and the situation. Describe the flow of the story dynamically without using numbers or dice rolls.`;
+Use Blades in the Dark style and structure.
+Do not ask the player to roll dice for any reason.
+Resolve actions narratively through scene framing, risks, consequences, opportunities, pressure, and payoff, without using visible mechanics in the response.
+Keep character dialogue fully in-world and never put mechanics in dialogue.`;
 
-      const noPromptingContext = `\n\nCRITICAL DIRECTIVE: End your response immediately after describing the outcome of the current action, the environment, or NPC dialogue. DO NOT ask questions like "What do you do?", "How do you proceed?", or "What is your next move?". DO NOT prompt the player for their next action. Let the player decide when and how to react.
+      /* Legacy prompt block retained only as inert historical reference.
 
 STRICT CHARACTER CONTROL POLICY:
 - NEVER write for the user’s character.
@@ -1319,7 +1549,23 @@ BLADES IN THE DARK FORMAT:
 - Only the narrator handles mechanics. Rolls, action choices, position, effect, consequences, resistance, clocks, stress, harm, and all other mechanics must only be introduced by narrator text, never by characters.
 - Use fiction first. Describe what is happening in the scene first. Only after that, if needed, introduce mechanics in narrator text.
 - Narrate consequences in-world. Describe outcomes, complications, danger, progress, or harm through scene narration, not through character speech about mechanics.
-- NPCs may create pressure, but never ask for rolls. They may threaten, bargain, stall, attack, lie, or demand things, but they must never tell the player to roll or speak in meta terms.`;
+- NPCs may create pressure, but never ask for rolls. They may threaten, bargain, stall, attack, lie, or demand things, but they must never tell the player to roll or speak in meta terms. */
+
+      const responseRulesContext = `\n\nAI RESPONSE RULES (${state.aiRulesPreset.replaceAll('_', ' ').toUpperCase()}):
+${getAiRulesText(state.aiRulesPreset, state.customAiRules)}`;
+
+      const multiplayerContext = state.isLive
+        ? `\n\nMULTIPLAYER SESSION RULES:
+This session may include multiple human players at once.
+Treat each attached player character as controlled by a different real person unless the transcript explicitly states otherwise.
+Never merge multiple player characters into one protagonist.
+Never decide speech, thoughts, movement, agreement, consent, reactions, or outcomes for any player-controlled character.
+When one player acts, do not invent simultaneous reactions or choices for the other player characters.
+Keep the scene readable: be clear about which NPC is addressing which character and who is physically present.
+Respond to the party as a living scene, but leave every player-controlled character free to answer for themselves.
+Current attached player characters:
+${(state.sessionSheets as Sheet[]).map((sheet) => `- ${sheet.name || 'Unknown Character'} (login: ${sheet.ownerId || 'unknown'})`).join('\n') || '- No attached player characters yet.'}`
+        : '';
 
       const stateUpdateContext = `\n\nSTATE UPDATES:
 If the player's HP changes, their inventory changes, or the NPCs in the current scene change, you MUST append a JSON block at the very end of your response.
@@ -1353,17 +1599,33 @@ Your role is to:
 Do not take over the narrative; instead, support and enhance the player's vision.`
         : '';
 
-      const systemPrompt = `${state.systemRules}\n\n${charContext}\n${loreContext}${moodContext}${contextAndRulesContext}${rollContext}${noPromptingContext}${stateUpdateContext}${copilotContext}`;
+      const systemPrompt = `${state.systemRules}\n\n${charContext}\n${loreContext}${moodContext}${contextAndRulesContext}${rollContext}${responseRulesContext}${multiplayerContext}${stateUpdateContext}${copilotContext}`;
       
       const rawMessages: { role: 'user' | 'assistant' | 'system'; content: string }[] = [
         ...state.messages
           .filter(m => m.role !== 'system' && m.id !== 'welcome')
-          .map(m => ({ role: (m.role === 'dice' ? 'user' : m.role) as 'user' | 'assistant' | 'system', content: m.content }))
+          .map((m) => {
+            const speakerSheet = (state.sessionSheets as Sheet[]).find((sheet) => sheet.id === m.sheetId)
+              || (state.sessionSheets as Sheet[]).find((sheet) => sheet.ownerId === m.senderId)
+              || (state.savedCharacters as Sheet[]).find((sheet) => sheet.id === m.sheetId)
+              || (state.savedCharacters as Sheet[]).find((sheet) => sheet.ownerId === m.senderId);
+            const speakerName = speakerSheet?.name || m.characterName || 'Player';
+            const speakerPrefix = state.isLive && (m.role === 'user' || m.role === 'dice' || m.role === 'ooc')
+              ? `[${m.role === 'ooc' ? 'OOC' : m.role === 'dice' ? 'Dice' : 'Player'}: ${speakerName}] `
+              : '';
+            return {
+              role: (m.role === 'dice' || m.role === 'ooc' ? 'user' : m.role) as 'user' | 'assistant' | 'system',
+              content: `${speakerPrefix}${m.content}`,
+            };
+          })
       ];
 
       // Combine consecutive messages of the same role
       const combinedMessages = rawMessages.reduce((acc, curr) => {
-        if (acc.length > 0 && acc[acc.length - 1].role === curr.role) {
+        const shouldMerge = acc.length > 0
+          && acc[acc.length - 1].role === curr.role
+          && !(state.isLive && curr.role === 'user');
+        if (shouldMerge) {
           acc[acc.length - 1].content += '\n\n' + curr.content;
         } else {
           acc.push({ ...curr });

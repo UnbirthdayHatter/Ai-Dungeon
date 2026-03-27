@@ -601,7 +601,7 @@ export function Chat() {
             <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">Session Active</p>
           </div>
 
-          {savedRoleplays.length > 0 && (
+          {savedRoleplays.filter((rp: any) => !rp.promotedToRoleplayId).length > 0 && (
             <div className="relative ml-4">
               <button
                 onClick={() => setShowResumeDropdown(!showResumeDropdown)}
@@ -618,7 +618,7 @@ export function Chat() {
                     <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-2">Saved Adventures</span>
                   </div>
                   <div className="max-h-64 overflow-y-auto">
-                    {Array.from(new Map((savedRoleplays as Array<{ id: string; name: string; updatedAt: number }>).map(rp => [rp.id, rp])).values()).map((rp) => (
+                    {Array.from(new Map((savedRoleplays as Array<{ id: string; name: string; updatedAt: number; promotedToRoleplayId?: string }>).filter(rp => !rp.promotedToRoleplayId).map(rp => [rp.id, rp])).values()).map((rp) => (
                       <button
                         key={rp.id}
                         onClick={() => {
