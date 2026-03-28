@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import '@3d-dice/dice-box/dist/style.css';
 import { useStore } from '@/store/useStore';
+import { Tester1ThreeDice } from './Tester1ThreeDice';
 
 interface Dice3DProps {
   results: number[];
@@ -1375,5 +1376,9 @@ function StandardDice3D({ results, diceType, total, label, modifier = 0, highlig
 }
 
 export function Dice3D(props: Dice3DProps) {
+  const { diceSkin } = useStore();
+  if (diceSkin === 'tester1' && props.diceType === 6) {
+    return <Tester1ThreeDice {...props} />;
+  }
   return <StandardDice3D {...props} />;
 }
