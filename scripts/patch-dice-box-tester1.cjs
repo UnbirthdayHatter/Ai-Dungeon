@@ -10,45 +10,7 @@ const targetPath = path.join(
   'world.onscreen.js',
 );
 
-function replaceOnce(source, search, replacement, label) {
-  if (!source.includes(search)) {
-    throw new Error(`Unable to find expected ${label} patch target in ${targetPath}`);
-  }
-  return source.replace(search, replacement);
-}
-
-function replaceRegexOnce(source, pattern, replacement, label) {
-  if (!pattern.test(source)) {
-    throw new Error(`Unable to find expected ${label} patch target in ${targetPath}`);
-  }
-  return source.replace(pattern, replacement);
-}
-
-function main() {
-  if (!fs.existsSync(targetPath)) {
-    console.warn(`[patch-dice-box-tester1] Skipping: ${targetPath} not found`);
-    return;
-  }
-
-  let source = fs.readFileSync(targetPath, 'utf8');
-
-  if (source.includes('animatedEmissiveMaterials')) {
-    console.log('[patch-dice-box-tester1] Patch already applied');
-    return;
-  }
-
-  source = replaceRegexOnce(
-    source,
-    /  constructor\(e\) \{\s+xe\(this, "loadedThemes", \{\}\);\s+xe\(this, "themeData", \{\}\);\s+this\.scene = e\.scene;\s+  \}\s+  async loadStandardMaterial\(e\) \{/m,
-    `  constructor(e) {
-    xe(this, "loadedThemes", {});
-    xe(this, "themeData", {});
-    xe(this, "animatedEmissiveMaterials", []);
-    xe(this, "animatedEmissiveObserver", null);
-    xe(this, "animatedEmissiveTime", 0);
-    this.scene = e.scene;
-  }
-  registerAnimatedEmissive(e, t, i) {
+const animatedHelper = `  registerAnimatedEmissive(e, t, i) {
     if (e !== "tester1" || !t.length)
       return;
     const r = (i == null ? void 0 : i.emissivePulse) || {}, s = Array.isArray(i == null ? void 0 : i.emissiveColor) ? i.emissiveColor : [1, 0.72, 0.35];
@@ -78,30 +40,84 @@ function main() {
       });
     }));
   }
-  async loadStandardMaterial(e) {`,
-    'constructor/registerAnimatedEmissive block',
-  );
+`;
 
-  source = replaceRegexOnce(
-    source,
-    /    const \{ theme: t, material: i \} = e, r = new g\(t, this\.scene\);\s+    i\.diffuseTexture && \(r\.diffuseTexture = await this\.getTexture\("diffuse", e\)\), i\.bumpTexture && \(r\.bumpTexture = await this\.getTexture\("bump", e\)\), i\.specularTexture && \(r\.specularTexture = await this\.getTexture\("specular", e\)\), i\.emissiveTexture && \(r\.emissiveTexture = await this\.getTexture\("emissive", e\), r\.emissiveColor = new he\(1, 0\.72, 0\.35\), r\.useEmissiveAsIllumination = !0\), r\.allowShaderHotSwapping = !1;\s+  \}/m,
-    `    const { theme: t, material: i } = e, r = new g(t, this.scene);
-    i.diffuseTexture && (r.diffuseTexture = await this.getTexture("diffuse", e)), i.bumpTexture && (r.bumpTexture = await this.getTexture("bump", e)), i.specularTexture && (r.specularTexture = await this.getTexture("specular", e)), i.emissiveTexture && (r.emissiveTexture = await this.getTexture("emissive", e), r.emissiveColor = new he(1, 0.72, 0.35), r.useEmissiveAsIllumination = !0), r.allowShaderHotSwapping = !1, this.registerAnimatedEmissive(t, [r], i);
-  }`,
-    'loadStandardMaterial',
-  );
-
-  source = replaceRegexOnce(
-    source,
-    /    const n = r\.clone\(t \+ "_dark"\);\s+    i\.diffuseTexture && i\.diffuseTexture\.dark && \(s\.material\.diffuseTexture = e\.material\.diffuseTexture\.dark, n\.diffuseTexture = await this\.getTexture\("diffuse", s\)\), i\.emissiveTexture && i\.emissiveTexture\.dark && \(s\.material\.emissiveTexture = e\.material\.emissiveTexture\.dark, n\.emissiveTexture = await this\.getTexture\("emissive", s\), n\.emissiveColor = new he\(1, 0\.72, 0\.35\), n\.useEmissiveAsIllumination = !0\), n\.AddAttribute\("customColor"\);\s+  \}/m,
-    `    const n = r.clone(t + "_dark");
-    i.diffuseTexture && i.diffuseTexture.dark && (s.material.diffuseTexture = e.material.diffuseTexture.dark, n.diffuseTexture = await this.getTexture("diffuse", s)), i.emissiveTexture && i.emissiveTexture.dark && (s.material.emissiveTexture = e.material.emissiveTexture.dark, n.emissiveTexture = await this.getTexture("emissive", s), n.emissiveColor = new he(1, 0.72, 0.35), n.useEmissiveAsIllumination = !0), n.AddAttribute("customColor"), this.registerAnimatedEmissive(t, [r, n], i);
-  }`,
-    'loadColorMaterial',
-  );
-
-  fs.writeFileSync(targetPath, source, 'utf8');
-  console.log('[patch-dice-box-tester1] Applied patch successfully');
+function warn(message) {
+  console.warn(`[patch-dice-box-tester1] ${message}`);
 }
 
-main();
+function main() {
+  if (!fs.existsSync(targetPath)) {
+    warn(`Skipping: ${targetPath} not found`);
+    return;
+  }
+
+  let source = fs.readFileSync(targetPath, 'utf8');
+
+  if (source.includes('animatedEmissiveMaterials')) {
+    console.log('[patch-dice-box-tester1] Patch already applied');
+    return;
+  }
+
+  let patched = false;
+
+  if (source.includes('xe(this, "themeData", {});')) {
+    source = source.replace(
+      'xe(this, "themeData", {});',
+      `xe(this, "themeData", {});\n    xe(this, "animatedEmissiveMaterials", []);\n    xe(this, "animatedEmissiveObserver", null);\n    xe(this, "animatedEmissiveTime", 0);`,
+    );
+    patched = true;
+  } else {
+    warn('Constructor anchor not found; skipping animated emissive field injection');
+  }
+
+  if (source.includes('  async loadStandardMaterial(e) {') && !source.includes('registerAnimatedEmissive(e, t, i)')) {
+    source = source.replace('  async loadStandardMaterial(e) {', `${animatedHelper}  async loadStandardMaterial(e) {`);
+    patched = true;
+  } else if (!source.includes('registerAnimatedEmissive(e, t, i)')) {
+    warn('loadStandardMaterial anchor not found; skipping helper insertion');
+  }
+
+  source = source.replace(
+    /async loadStandardMaterial\(e\)\s*\{([\s\S]*?)r\.allowShaderHotSwapping = !1;/,
+    (match, body) => {
+      if (match.includes('this.registerAnimatedEmissive(')) {
+        return match;
+      }
+      patched = true;
+      return `async loadStandardMaterial(e) {${body}r.allowShaderHotSwapping = !1, this.registerAnimatedEmissive(t, [r], i);`;
+    },
+  );
+
+  source = source.replace(
+    /async loadColorMaterial\(e\)\s*\{([\s\S]*?)n\.AddAttribute\("customColor"\);/,
+    (match, body) => {
+      if (match.includes('this.registerAnimatedEmissive(')) {
+        return match;
+      }
+      patched = true;
+      return `async loadColorMaterial(e) {${body}n.AddAttribute("customColor"), this.registerAnimatedEmissive(t, [r, n], i);`;
+    },
+  );
+
+  if (!source.includes('this.registerAnimatedEmissive(t, [r], i);')) {
+    warn('Did not patch loadStandardMaterial; Tester1 emissive animation may be unavailable');
+  }
+  if (!source.includes('this.registerAnimatedEmissive(t, [r, n], i);')) {
+    warn('Did not patch loadColorMaterial; Tester1 emissive animation may be unavailable');
+  }
+
+  fs.writeFileSync(targetPath, source, 'utf8');
+  if (patched) {
+    console.log('[patch-dice-box-tester1] Patch applied');
+  } else {
+    warn('No changes were applied');
+  }
+}
+
+try {
+  main();
+} catch (error) {
+  warn(error instanceof Error ? error.message : String(error));
+  warn('Continuing without patch so install does not fail');
+}
