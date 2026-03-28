@@ -228,6 +228,18 @@ export function Chat() {
     || characterLookupSheets[0]
     || sheets[0];
   const partyCount = sessionSheets.length > 0 ? sessionSheets.length : (activeSheet ? 1 : 0);
+  const partyMembers = sessionSheets.length > 0 ? sessionSheets : (activeSheet ? [activeSheet] : []);
+  const adminCount = isLive
+    ? partyMembers.filter((sheet) => sheet.ownerId && activeRoleplay?.admins?.includes(sheet.ownerId)).length
+    : (activeSheet ? 1 : 0);
+  const editorCount = partyMembers.filter((sheet) => sheet.ownerId && activeRoleplay?.editors?.includes(sheet.ownerId)).length;
+  const playerCount = Math.max(partyCount - adminCount - editorCount, 0);
+  const typingCount = activeTypingUsers.length;
+  const readyCount = partyMembers.filter((sheet) => {
+    if (!isLive) return true;
+    if (sheet.ownerId && (typingUsers as Record<string, { isTyping?: boolean; timestamp?: number }>)[sheet.ownerId]?.isTyping) return false;
+    return Boolean(sheet.lastSeen && now - sheet.lastSeen < 120000);
+  }).length;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -666,6 +678,34 @@ export function Chat() {
             {partyCount} {partyCount === 1 ? 'member' : 'members'}
           </span>
         </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+            <div className="text-[9px] uppercase tracking-widest text-zinc-500 font-black">Current Focus</div>
+            <div className="mt-1 text-sm font-bold text-zinc-100 truncate">
+              {activeSheet?.name || 'No character'}
+            </div>
+            <div className="text-[10px] text-zinc-500 uppercase tracking-widest mt-1 truncate">
+              {activeSheet?.bitd?.playbook || activeSheet?.charClass || activeSheet?.race || 'Adventure overview'}
+            </div>
+          </div>
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+            <div className="text-[9px] uppercase tracking-widest text-zinc-500 font-black">Table Summary</div>
+            <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+              <div>
+                <div className="text-sm font-black text-zinc-100">{readyCount}</div>
+                <div className="text-[9px] uppercase tracking-widest text-zinc-500">Ready</div>
+              </div>
+              <div>
+                <div className="text-sm font-black text-blue-300">{typingCount}</div>
+                <div className="text-[9px] uppercase tracking-widest text-zinc-500">Typing</div>
+              </div>
+              <div>
+                <div className="text-sm font-black text-amber-300">{adminCount + editorCount}</div>
+                <div className="text-[9px] uppercase tracking-widest text-zinc-500">Leads</div>
+              </div>
+            </div>
+          </div>
+        </div>
         {isLive && (
           <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-400 space-y-3">
             <div className="flex items-center justify-between gap-2">
@@ -707,6 +747,17 @@ export function Chat() {
               <span className="text-zinc-500 uppercase tracking-widest text-[10px] font-black">Session Presence</span>
               <span className="text-zinc-500 text-[10px] uppercase tracking-widest">
                 {connectedPlayers.length} connected
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2 text-[10px] uppercase tracking-widest">
+              <span className="px-2 py-1 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+                {adminCount} admin{adminCount === 1 ? '' : 's'}
+              </span>
+              <span className="px-2 py-1 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+                {editorCount} editor{editorCount === 1 ? '' : 's'}
+              </span>
+              <span className="px-2 py-1 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+                {playerCount} player{playerCount === 1 ? '' : 's'}
               </span>
             </div>
             {activeTypingUsers.length > 0 ? (

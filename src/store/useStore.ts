@@ -386,6 +386,35 @@ const syncSavedRoleplayMessages = (savedRoleplays: SavedRoleplay[], roleplayId: 
       )
     : savedRoleplays;
 
+const persistSavedRoleplayMessages = (
+  savedRoleplays: SavedRoleplay[],
+  roleplayId: string | null,
+  userId: string | undefined,
+  messages: Message[]
+) => {
+  if (!roleplayId || !userId) return;
+  const saved = savedRoleplays.find((roleplay) => roleplay.id === roleplayId);
+  if (!saved) return;
+  getSavedRoleplayWriter(roleplayId)(userId, {
+    ...saved,
+    messages,
+    updatedAt: Date.now(),
+  });
+};
+
+const persistLiveMessagePatch = (roleplayId: string | null, messageId: string, patch: Record<string, any>) => {
+  if (!roleplayId) return;
+  setDoc(doc(db, 'roleplays', roleplayId, 'messages', messageId), cleanObject(patch), { merge: true } as any).catch(console.error);
+};
+
+const pruneLiveMessages = (roleplayId: string | null, messages: Message[]) => {
+  if (!roleplayId) return;
+  messages.forEach((message) => {
+    deleteDoc(doc(db, 'roleplays', roleplayId, 'messages', message.id)).catch(console.error);
+  });
+  updateDoc(doc(db, 'roleplays', roleplayId), { updatedAt: Date.now() }).catch(console.error);
+};
+
 const GENERIC_ADVENTURE_NAMES = new Set([
   'new adventure',
   'untitled adventure',
@@ -592,6 +621,13 @@ export const useStore = create<any>()((set, get) => ({
         isLive: false,
         isHost: false,
         sessionSheets: [],
+        sheets: [],
+        activeSheetId: null,
+        typingUsers: {},
+        connectedPlayers: [],
+        admins: [],
+        editors: [],
+        isAIGenerating: false,
       });
       return;
     }
@@ -994,16 +1030,9 @@ export const useStore = create<any>()((set, get) => ({
       lastSaved: current.currentSaveRoleplayId ? Date.now() : current.lastSaved,
     }));
     if (state.isLive && state.currentLiveRoleplayId) {
-      await setDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'messages', id), { content }, { merge: true } as any).catch(console.error);
+      persistLiveMessagePatch(state.currentLiveRoleplayId, id, { content });
     } else if (state.currentSaveRoleplayId && auth.currentUser) {
-      const saved = state.savedRoleplays.find((roleplay: SavedRoleplay) => roleplay.id === state.currentSaveRoleplayId);
-      if (saved) {
-        getSavedRoleplayWriter(state.currentSaveRoleplayId)(auth.currentUser.uid, {
-          ...saved,
-          messages: nextMessages,
-          updatedAt: Date.now(),
-        });
-      }
+      persistSavedRoleplayMessages(state.savedRoleplays, state.currentSaveRoleplayId, auth.currentUser.uid, nextMessages);
     }
   },
   toggleMessageCollapse: (id: string) => {
@@ -1015,22 +1044,11 @@ export const useStore = create<any>()((set, get) => ({
       lastSaved: current.currentSaveRoleplayId ? Date.now() : current.lastSaved,
     }));
     if (!state.isLive && state.currentSaveRoleplayId && auth.currentUser) {
-      const saved = state.savedRoleplays.find((roleplay: SavedRoleplay) => roleplay.id === state.currentSaveRoleplayId);
-      if (saved) {
-        getSavedRoleplayWriter(state.currentSaveRoleplayId)(auth.currentUser.uid, {
-          ...saved,
-          messages: nextMessages,
-          updatedAt: Date.now(),
-        });
-      }
+      persistSavedRoleplayMessages(state.savedRoleplays, state.currentSaveRoleplayId, auth.currentUser.uid, nextMessages);
     } else if (state.isLive && state.currentLiveRoleplayId) {
       const nextMessage = nextMessages.find((message: Message) => message.id === id);
       if (nextMessage) {
-        setDoc(
-          doc(db, 'roleplays', state.currentLiveRoleplayId, 'messages', id),
-          { isCollapsed: nextMessage.isCollapsed, updatedAt: Date.now() },
-          { merge: true } as any
-        ).catch(console.error);
+        persistLiveMessagePatch(state.currentLiveRoleplayId, id, { isCollapsed: nextMessage.isCollapsed, updatedAt: Date.now() as any });
       }
     }
   },
@@ -1042,20 +1060,9 @@ export const useStore = create<any>()((set, get) => ({
       lastSaved: current.currentSaveRoleplayId ? Date.now() : current.lastSaved,
     }));
     if (!state.isLive && state.currentSaveRoleplayId && auth.currentUser) {
-      const saved = state.savedRoleplays.find((roleplay: SavedRoleplay) => roleplay.id === state.currentSaveRoleplayId);
-      if (saved) {
-        getSavedRoleplayWriter(state.currentSaveRoleplayId)(auth.currentUser.uid, {
-          ...saved,
-          messages: [],
-          updatedAt: Date.now(),
-        });
-      }
+      persistSavedRoleplayMessages(state.savedRoleplays, state.currentSaveRoleplayId, auth.currentUser.uid, []);
     } else if (state.isLive && state.currentLiveRoleplayId) {
-      const messagesToDelete = state.messages.filter((message: Message) => message.id !== 'welcome');
-      messagesToDelete.forEach((message: Message) => {
-        deleteDoc(doc(db, 'roleplays', state.currentLiveRoleplayId!, 'messages', message.id)).catch(console.error);
-      });
-      updateDoc(doc(db, 'roleplays', state.currentLiveRoleplayId), { updatedAt: Date.now() }).catch(console.error);
+      pruneLiveMessages(state.currentLiveRoleplayId, state.messages.filter((message: Message) => message.id !== 'welcome'));
     }
   },
   rewindToMessage: (id: string) => {
@@ -1069,20 +1076,9 @@ export const useStore = create<any>()((set, get) => ({
       lastSaved: current.currentSaveRoleplayId ? Date.now() : current.lastSaved,
     }));
     if (!state.isLive && state.currentSaveRoleplayId && auth.currentUser) {
-      const saved = state.savedRoleplays.find((roleplay: SavedRoleplay) => roleplay.id === state.currentSaveRoleplayId);
-      if (saved) {
-        getSavedRoleplayWriter(state.currentSaveRoleplayId)(auth.currentUser.uid, {
-          ...saved,
-          messages: nextMessages,
-          updatedAt: Date.now(),
-        });
-      }
+      persistSavedRoleplayMessages(state.savedRoleplays, state.currentSaveRoleplayId, auth.currentUser.uid, nextMessages);
     } else if (state.isLive && state.currentLiveRoleplayId) {
-      const removedMessages = state.messages.slice(index + 1);
-      removedMessages.forEach((message: Message) => {
-        deleteDoc(doc(db, 'roleplays', state.currentLiveRoleplayId!, 'messages', message.id)).catch(console.error);
-      });
-      updateDoc(doc(db, 'roleplays', state.currentLiveRoleplayId), { updatedAt: Date.now() }).catch(console.error);
+      pruneLiveMessages(state.currentLiveRoleplayId, state.messages.slice(index + 1));
     }
   },
   branchFromMessage: (_id: string, branchName: string) => set({ currentRoleplayName: branchName }),
@@ -1521,7 +1517,7 @@ export const useStore = create<any>()((set, get) => ({
     const state = get();
     const user = auth.currentUser;
     if (state.currentSaveRoleplayId === id || state.currentLiveRoleplayId === id || state.currentRoleplayId === id) {
-      set({ currentRoleplayId: null, currentSaveRoleplayId: null, currentLiveRoleplayId: null, joinCode: null });
+      get().setCurrentRoleplayId(null);
     }
     if (user) {
       // If it's a saved roleplay (local to user)
