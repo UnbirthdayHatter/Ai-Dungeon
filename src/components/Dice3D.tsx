@@ -827,6 +827,66 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
             </div>
           )}
           {diceSkin === 'wacky' && (
+            <div className="pointer-events-none absolute inset-0 z-[25] overflow-hidden mix-blend-screen">
+              {[
+                { left: '16%', top: '30%', size: 240, duration: 5.2, delay: 0, colors: ['rgba(236,72,153,0.0)', 'rgba(236,72,153,0.34)', 'rgba(34,211,238,0.3)', 'rgba(250,204,21,0.28)', 'rgba(236,72,153,0.0)'] },
+                { left: '56%', top: '18%', size: 260, duration: 4.6, delay: 0.5, colors: ['rgba(34,211,238,0.0)', 'rgba(34,211,238,0.34)', 'rgba(163,230,53,0.28)', 'rgba(236,72,153,0.28)', 'rgba(34,211,238,0.0)'] },
+              ].map((ring, index) => (
+                <motion.div
+                  key={`wacky-orbit-${index}`}
+                  className="absolute rounded-full blur-md"
+                  style={{
+                    left: ring.left,
+                    top: ring.top,
+                    width: `${ring.size}px`,
+                    height: `${ring.size}px`,
+                    background: `conic-gradient(from 0deg, ${ring.colors.join(', ')})`,
+                    maskImage: 'radial-gradient(circle, transparent 0 42%, black 50% 68%, transparent 78%)',
+                    WebkitMaskImage: 'radial-gradient(circle, transparent 0 42%, black 50% 68%, transparent 78%)',
+                    opacity: 0.78,
+                  }}
+                  animate={{ rotate: [0, 360], scale: [0.92, 1.04, 0.96], opacity: [0.42, 0.8, 0.5] }}
+                  transition={{ duration: ring.duration, delay: ring.delay, repeat: Infinity, ease: 'linear' }}
+                />
+              ))}
+              {Array.from({ length: 22 }).map((_, index) => (
+                <motion.div
+                  key={`wacky-shed-${index}`}
+                  className="absolute"
+                  style={{
+                    left: `${20 + ((index * 7) % 62)}%`,
+                    top: `${18 + ((index * 11) % 28)}%`,
+                    width: `${6 + (index % 3) * 2}px`,
+                    height: `${34 + (index % 4) * 12}px`,
+                    background: index % 4 === 0
+                      ? 'linear-gradient(180deg, rgba(236,72,153,0.95), rgba(236,72,153,0.18), rgba(236,72,153,0))'
+                      : index % 4 === 1
+                        ? 'linear-gradient(180deg, rgba(34,211,238,0.95), rgba(34,211,238,0.18), rgba(34,211,238,0))'
+                        : index % 4 === 2
+                          ? 'linear-gradient(180deg, rgba(250,204,21,0.9), rgba(250,204,21,0.18), rgba(250,204,21,0))'
+                          : 'linear-gradient(180deg, rgba(163,230,53,0.9), rgba(163,230,53,0.18), rgba(163,230,53,0))',
+                    borderRadius: '999px',
+                    filter: 'blur(0.2px)',
+                    boxShadow: index % 4 === 0
+                      ? '0 0 14px rgba(236,72,153,0.36)'
+                      : index % 4 === 1
+                        ? '0 0 14px rgba(34,211,238,0.34)'
+                        : index % 4 === 2
+                          ? '0 0 14px rgba(250,204,21,0.32)'
+                          : '0 0 14px rgba(163,230,53,0.3)',
+                  }}
+                  animate={{
+                    x: [0, -10 + (index % 5) * 5, 16 - (index % 4) * 4],
+                    y: [0, 42 + (index % 3) * 24, 96 + (index % 4) * 26],
+                    opacity: [0, 0.92, 0],
+                    scaleY: [0.8, 1.18, 0.92],
+                  }}
+                  transition={{ duration: 1.15 + (index % 5) * 0.12, repeat: Infinity, delay: index * 0.045, ease: 'easeOut' }}
+                />
+              ))}
+            </div>
+          )}
+          {diceSkin === 'wacky' && (
             <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
               {Array.from({ length: 18 }).map((_, index) => (
                 <motion.div
