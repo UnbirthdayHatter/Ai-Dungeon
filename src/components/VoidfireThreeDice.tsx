@@ -76,7 +76,7 @@ float fbm(vec2 p) {
 void main() {
   vec2 uv = vUv * 3.1 + vec2(uSeed * 2.3, uSeed * 1.1);
   float t = uTime * 0.24;
-  vec2 crackUv = vUv * 0.58 + vec2(uSeed * 0.07, uSeed * 0.05);
+  vec2 crackUv = vUv * 0.22 + vec2(uSeed * 0.07, uSeed * 0.05);
   vec2 distortion = vec2(
     fbm(uv * 0.9 + vec2(t * 0.12, -t * 0.06)),
     fbm(uv * 0.9 + vec2(-t * 0.08, t * 0.1))
