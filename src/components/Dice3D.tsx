@@ -28,11 +28,7 @@ const DICE_SKINS: Record<string, { theme: string; themeColor: string; accent: st
   voidfire: { theme: 'voidfire', themeColor: '#a855f7', accent: '#e9d5ff', glow: 'rgba(168,85,247,0.45)' },
   toxic: { theme: 'toxic', themeColor: '#84cc16', accent: '#d9f99d', glow: 'rgba(132,204,22,0.45)' },
   glitchpop: { theme: 'glitchpop', themeColor: '#ec4899', accent: '#f9a8d4', glow: 'rgba(236,72,153,0.45)' },
-  wacky: { theme: 'wacky_a', themeColor: '#22d3ee', accent: '#fef08a', glow: 'rgba(34,211,238,0.45)' },
-};
-
-const ANIMATED_THEME_FRAMES: Record<string, string[]> = {
-  wacky: ['wacky_a', 'wacky_b', 'wacky_c', 'wacky_d'],
+  wacky: { theme: 'wacky', themeColor: '#22d3ee', accent: '#fef08a', glow: 'rgba(34,211,238,0.45)' },
 };
 
 function getDiceCanvasMotion(diceSkin: string, glow: string) {
@@ -268,7 +264,6 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
     let cancelled = false;
     let diceBox: { init: () => Promise<unknown>; roll: (notation: string) => Promise<unknown>; clear: () => void; onRollComplete?: (results?: unknown) => void; updateConfig?: (config: Record<string, unknown>) => Promise<unknown> | unknown } | null = null;
     let resizeObserver: ResizeObserver | null = null;
-    let animatedThemeInterval: number | null = null;
     settledRef.current = false;
     resolvedResultsRef.current = results;
 
@@ -322,18 +317,6 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
         if (diceBox.updateConfig) {
           await diceBox.updateConfig({ theme: skin.theme, themeColor: skin.themeColor });
         }
-        const animatedFrames = ANIMATED_THEME_FRAMES[diceSkin];
-        if (animatedFrames && animatedFrames.length > 1 && diceBox.updateConfig) {
-          let frameIndex = 0;
-          animatedThemeInterval = window.setInterval(() => {
-            if (cancelled || settledRef.current || !diceBox?.updateConfig) return;
-            frameIndex = (frameIndex + 1) % animatedFrames.length;
-            void diceBox.updateConfig({
-              theme: animatedFrames[frameIndex],
-              themeColor: skin.themeColor,
-            });
-          }, 180);
-        }
         const syncCanvasResolution = () => {
           const canvas = document.querySelector<HTMLCanvasElement>(`#${containerIdRef.current} canvas`);
           const tray = trayRef.current;
@@ -369,9 +352,6 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
       cancelled = true;
       if (completeTimeoutRef.current) {
         window.clearTimeout(completeTimeoutRef.current);
-      }
-      if (animatedThemeInterval) {
-        window.clearInterval(animatedThemeInterval);
       }
       resizeObserver?.disconnect();
       try {
@@ -822,41 +802,63 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
           {diceSkin === 'wacky' && (
             <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_24%,rgba(236,72,153,0.18),transparent_20%),radial-gradient(circle_at_74%_18%,rgba(34,211,238,0.18),transparent_20%),radial-gradient(circle_at_50%_80%,rgba(250,204,21,0.16),transparent_24%),linear-gradient(180deg,rgba(12,6,22,0.18),rgba(18,10,26,0.52)_56%,rgba(8,6,18,0.84))]" />
+              {Array.from({ length: 16 }).map((_, index) => (
+                <motion.div
+                  key={`wacky-floor-stripe-${index}`}
+                  className="absolute rounded-full blur-xl"
+                  style={{
+                    left: `${-12 + index * 8}%`,
+                    bottom: `${8 + ((index * 3) % 22)}%`,
+                    width: `${220 + (index % 3) * 80}px`,
+                    height: `${18 + (index % 2) * 8}px`,
+                    background: index % 4 === 0
+                      ? 'linear-gradient(90deg, rgba(236,72,153,0), rgba(236,72,153,0.28), rgba(236,72,153,0))'
+                      : index % 4 === 1
+                        ? 'linear-gradient(90deg, rgba(34,211,238,0), rgba(34,211,238,0.28), rgba(34,211,238,0))'
+                        : index % 4 === 2
+                          ? 'linear-gradient(90deg, rgba(250,204,21,0), rgba(250,204,21,0.24), rgba(250,204,21,0))'
+                          : 'linear-gradient(90deg, rgba(163,230,53,0), rgba(163,230,53,0.22), rgba(163,230,53,0))',
+                    rotate: `${-14 + (index % 6) * 5}deg`,
+                  }}
+                  animate={{ x: [0, 30, -16, 0], opacity: [0.08, 0.26, 0.1], scaleX: [0.82, 1.12, 0.9] }}
+                  transition={{ duration: 2.8 + (index % 4) * 0.3, repeat: Infinity, delay: index * 0.08, ease: 'easeInOut' }}
+                />
+              ))}
             </div>
           )}
           {diceSkin === 'wacky' && (
             <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
-              {Array.from({ length: 20 }).map((_, index) => (
+              {Array.from({ length: 18 }).map((_, index) => (
                 <motion.div
-                  key={`wacky-bar-${index}`}
+                  key={`wacky-stripe-${index}`}
                   className="absolute rounded-full blur-[1px]"
                   style={{
-                    left: `${(index * 11) % 92}%`,
-                    top: `${8 + ((index * 17) % 78)}%`,
-                    width: `${50 + (index % 4) * 34}px`,
-                    height: `${4 + (index % 3) * 4}px`,
+                    left: `${-10 + (index * 9) % 104}%`,
+                    top: `${10 + ((index * 13) % 72)}%`,
+                    width: `${100 + (index % 4) * 44}px`,
+                    height: `${8 + (index % 3) * 5}px`,
                     background: index % 4 === 0
-                      ? 'linear-gradient(90deg, rgba(236,72,153,0), rgba(236,72,153,0.86), transparent)'
+                      ? 'linear-gradient(90deg, rgba(236,72,153,0), rgba(236,72,153,0.9), rgba(125,211,252,0.28), transparent)'
                       : index % 4 === 1
-                        ? 'linear-gradient(90deg, rgba(34,211,238,0), rgba(34,211,238,0.86), transparent)'
+                        ? 'linear-gradient(90deg, rgba(34,211,238,0), rgba(34,211,238,0.92), rgba(250,204,21,0.26), transparent)'
                         : index % 4 === 2
-                          ? 'linear-gradient(90deg, rgba(250,204,21,0), rgba(250,204,21,0.82), transparent)'
-                          : 'linear-gradient(90deg, rgba(163,230,53,0), rgba(163,230,53,0.82), transparent)',
-                    rotate: `${-20 + (index % 6) * 8}deg`,
+                          ? 'linear-gradient(90deg, rgba(250,204,21,0), rgba(250,204,21,0.88), rgba(236,72,153,0.24), transparent)'
+                          : 'linear-gradient(90deg, rgba(163,230,53,0), rgba(163,230,53,0.84), rgba(34,211,238,0.24), transparent)',
+                    rotate: `${-28 + (index % 7) * 9}deg`,
                   }}
-                  animate={{ x: [0, 22, -12, 0], opacity: [0.16, 0.82, 0.18], scaleX: [0.9, 1.18, 0.92] }}
-                  transition={{ duration: 1 + (index % 4) * 0.16, repeat: Infinity, delay: index * 0.05 }}
+                  animate={{ x: [0, 60, -32, 0], opacity: [0.06, 0.7, 0.12], scaleX: [0.78, 1.24, 0.84] }}
+                  transition={{ duration: 1.15 + (index % 4) * 0.14, repeat: Infinity, delay: index * 0.06 }}
                 />
               ))}
-              {Array.from({ length: 24 }).map((_, index) => (
+              {Array.from({ length: 32 }).map((_, index) => (
                 <motion.div
-                  key={`wacky-pop-${index}`}
-                  className="absolute rounded-full"
+                  key={`wacky-confetti-${index}`}
+                  className="absolute rounded-sm"
                   style={{
-                    left: `${4 + ((index * 13) % 92)}%`,
-                    top: `${6 + ((index * 19) % 80)}%`,
-                    width: `${index % 5 === 0 ? 14 : 6}px`,
-                    height: `${index % 5 === 0 ? 14 : 6}px`,
+                    left: `${6 + ((index * 11) % 88)}%`,
+                    top: `${14 + ((index * 17) % 66)}%`,
+                    width: `${4 + (index % 4) * 3}px`,
+                    height: `${10 + (index % 3) * 4}px`,
                     background: index % 4 === 0
                       ? 'rgba(236,72,153,0.9)'
                       : index % 4 === 1
@@ -869,11 +871,37 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
                       : index % 4 === 1
                         ? '0 0 16px rgba(34,211,238,0.5)'
                         : index % 4 === 2
-                          ? '0 0 16px rgba(250,204,21,0.48)'
-                          : '0 0 16px rgba(163,230,53,0.48)',
+                        ? '0 0 16px rgba(250,204,21,0.48)'
+                        : '0 0 16px rgba(163,230,53,0.48)',
+                    rotate: `${(index * 29) % 360}deg`,
                   }}
-                  animate={{ opacity: [0.08, 0.92, 0.14], scale: [0.7, 1.6, 0.84] }}
-                  transition={{ duration: 0.9 + (index % 4) * 0.14, repeat: Infinity, delay: index * 0.04 }}
+                  animate={{
+                    x: [0, -18 - (index % 3) * 10, 26 + (index % 4) * 12],
+                    y: [0, -26 - (index % 4) * 12, 18 + (index % 3) * 10],
+                    rotate: [`${(index * 29) % 360}deg`, `${((index * 29) % 360) + 180}deg`, `${((index * 29) % 360) + 320}deg`],
+                    opacity: [0, 0.96, 0],
+                    scale: [0.8, 1.18, 0.9],
+                  }}
+                  transition={{ duration: 1.2 + (index % 5) * 0.1, repeat: Infinity, delay: index * 0.03, ease: 'easeOut' }}
+                />
+              ))}
+              {Array.from({ length: 14 }).map((_, index) => (
+                <motion.div
+                  key={`wacky-trail-${index}`}
+                  className="absolute h-12 rounded-full blur-lg"
+                  style={{
+                    left: `${14 + ((index * 7) % 68)}%`,
+                    top: `${18 + ((index * 9) % 50)}%`,
+                    width: `${120 + (index % 3) * 50}px`,
+                    background: index % 3 === 0
+                      ? 'linear-gradient(90deg, rgba(236,72,153,0), rgba(236,72,153,0.24), rgba(34,211,238,0.06), rgba(236,72,153,0))'
+                      : index % 3 === 1
+                        ? 'linear-gradient(90deg, rgba(34,211,238,0), rgba(34,211,238,0.24), rgba(250,204,21,0.06), rgba(34,211,238,0))'
+                        : 'linear-gradient(90deg, rgba(250,204,21,0), rgba(250,204,21,0.22), rgba(163,230,53,0.08), rgba(250,204,21,0))',
+                    rotate: `${-18 + (index % 5) * 8}deg`,
+                  }}
+                  animate={{ x: [0, 40, -20, 0], opacity: [0, 0.3, 0], scaleX: [0.82, 1.22, 0.9] }}
+                  transition={{ duration: 1.3 + (index % 4) * 0.12, repeat: Infinity, delay: index * 0.05, ease: 'easeOut' }}
                 />
               ))}
             </div>
