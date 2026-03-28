@@ -47,7 +47,7 @@ foreach ($file in @('default.json', 'normal.png', 'specular.jpg')) {
   Copy-Item (Join-Path $defaultThemePath $file) (Join-Path $themePath $file) -Force
 }
 
-magick -size ${size}x${size} xc:"#5f656f" `
+magick -size ${size}x${size} xc:"#4f5661" `
   -sparse-color Voronoi $pointSpec `
   -colorspace sRGB `
   -blur 0x1 `
@@ -90,25 +90,37 @@ magick $seams `
   '(' $shading '-alpha' 'off' ')' '-compose' 'SoftLight' '-composite' `
   '(' $seams '-fill' '#1e2128' '-colorize' '100' ')' '-compose' 'Multiply' '-composite' `
   '(' $cracks '-fill' '#c9d4e3' '-colorize' '100' ')' '-compose' 'Screen' '-composite' `
-  '-modulate' '94,70,94' `
-  '-sigmoidal-contrast' '5x48%' `
-  '-sharpen' '0x1' `
+  '(' -size ${size}x${size} radial-gradient:'#94a3b8-#334155' ')' '-compose' 'SoftLight' '-composite' `
+  '-fill' '#6b7280' '-colorize' '18' `
+  '-brightness-contrast' '-8x22' `
+  '-sigmoidal-contrast' '6x46%' `
+  '-sharpen' '0x1.2' `
+  '-type' 'TrueColor' `
   $preparedLight
 
 & magick $preparedLight `
-  '-modulate' '62,88,100' `
-  '-brightness-contrast' '-6x12' `
+  '-fill' '#334155' '-colorize' '20' `
+  '-modulate' '54,88,100' `
+  '-brightness-contrast' '-14x18' `
+  '-type' 'TrueColor' `
   $preparedDark
 
-& magick $defaultLight $preparedLight `
-  '-compose' 'SoftLight' '-composite' `
-  '-sharpen' '0x0.8' `
+& magick $preparedLight `
+  '(' $defaultLight '-alpha' 'off' '-evaluate' 'Multiply' '0.16' ')' '-compose' 'Screen' '-composite' `
+  '-brightness-contrast' '-34x28' `
+  '-modulate' '48,118,100' `
+  '-sigmoidal-contrast' '6x44%' `
+  '-sharpen' '0x1.2' `
+  '-type' 'TrueColor' `
   $lightOut
 
-& magick $defaultDark $preparedDark `
-  '-compose' 'Overlay' '-composite' `
-  '-brightness-contrast' '4x8' `
-  '-sharpen' '0x0.8' `
+& magick $preparedDark `
+  '(' $defaultDark '-alpha' 'off' '-evaluate' 'Multiply' '0.18' ')' '-compose' 'Screen' '-composite' `
+  '-brightness-contrast' '-30x24' `
+  '-modulate' '40,120,100' `
+  '-sigmoidal-contrast' '6x42%' `
+  '-sharpen' '0x1.2' `
+  '-type' 'TrueColor' `
   $darkOut
 
 Write-Output "Generated Tester1 ImageMagick stone texture at $themePath"
