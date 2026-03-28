@@ -82,6 +82,10 @@ export function Settings() {
     setTtsProvider,
     diceSkin,
     setDiceSkin,
+    dice3DScale,
+    setDice3DScale,
+    dice3DAutoCloseMs,
+    setDice3DAutoCloseMs,
     isCopilotMode,
     setIsCopilotMode,
     worldPresets,
@@ -380,7 +384,7 @@ export function Settings() {
             <div className="flex items-center justify-between border-t border-zinc-800 pt-6">
               <div>
                 <h4 className="text-zinc-100 font-bold">Dice Roll FX</h4>
-                <p className="text-xs text-zinc-500">Visual feedback (ping animation) when clicking roll buttons.</p>
+                <p className="text-xs text-zinc-500">Show the cinematic dice tray when rolling from chat or the dice console.</p>
               </div>
               <button
                 onClick={() => setShowDiceFX(!showDiceFX)}
@@ -714,6 +718,44 @@ export function Settings() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="space-y-3 border-t border-zinc-800 pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-zinc-100 font-bold">3D Dice Tray Size</h4>
+                  <p className="text-xs text-zinc-500">Increase this if you want bigger dice in the tray.</p>
+                </div>
+                <span className="text-xs font-mono text-zinc-400">{dice3DScale.toFixed(0)}</span>
+              </div>
+              <input
+                type="range"
+                min="5"
+                max="16"
+                step="1"
+                value={dice3DScale}
+                onChange={(e) => setDice3DScale(parseInt(e.target.value, 10))}
+                className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+              />
+            </div>
+
+            <div className="space-y-3 border-t border-zinc-800 pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-zinc-100 font-bold">3D Dice Result Linger</h4>
+                  <p className="text-xs text-zinc-500">How long the result stays on screen before the tray closes.</p>
+                </div>
+                <span className="text-xs font-mono text-zinc-400">{(dice3DAutoCloseMs / 1000).toFixed(1)}s</span>
+              </div>
+              <input
+                type="range"
+                min="1200"
+                max="6000"
+                step="200"
+                value={dice3DAutoCloseMs}
+                onChange={(e) => setDice3DAutoCloseMs(parseInt(e.target.value, 10))}
+                className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+              />
             </div>
           </div>
         </section>

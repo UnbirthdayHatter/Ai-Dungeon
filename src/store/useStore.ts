@@ -520,6 +520,8 @@ export const useStore = create<any>()((set, get) => ({
   selectedVoice: 'alloy',
   ttsProvider: 'gemini',
   diceSkin: 'classic',
+  dice3DScale: 10,
+  dice3DAutoCloseMs: 2600,
   isCopilotMode: false,
   isOocMode: false,
   sessionId: null,
@@ -856,6 +858,8 @@ export const useStore = create<any>()((set, get) => ({
   setSelectedVoice: (voice: string) => set({ selectedVoice: voice }),
   setTtsProvider: (provider: 'gemini' | 'openai' | 'kokoro') => set({ ttsProvider: provider }),
   setDiceSkin: (skin: string) => set({ diceSkin: skin }),
+  setDice3DScale: (scale: number) => set({ dice3DScale: Math.min(16, Math.max(5, scale)) }),
+  setDice3DAutoCloseMs: (duration: number) => set({ dice3DAutoCloseMs: Math.min(6000, Math.max(1200, duration)) }),
   setIsCopilotMode: (enabled: boolean) => set({ isCopilotMode: enabled }),
   setAiRulesPreset: (preset: AiRulesPreset) => {
     writeStorageValue('aiRulesPreset', preset);

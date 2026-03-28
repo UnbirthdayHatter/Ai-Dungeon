@@ -22,11 +22,17 @@ const DICE_SKINS: Record<string, { themeColor: string; accent: string; glow: str
 };
 
 export function Dice3D({ results, diceType, total, label, modifier = 0, highlight = 'sum', onComplete }: Dice3DProps) {
-  const { diceSkin } = useStore();
+  const { diceSkin, dice3DScale, dice3DAutoCloseMs } = useStore();
   const containerIdRef = useRef(`dice-box-${Math.random().toString(36).slice(2, 10)}`);
   const completeTimeoutRef = useRef<number | null>(null);
+  const onCompleteRef = useRef(onComplete);
+  const settledRef = useRef(false);
   const [phase, setPhase] = useState<'initializing' | 'rolling' | 'settled' | 'failed'>('initializing');
   const skin = DICE_SKINS[diceSkin] || DICE_SKINS.default;
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   const effectiveResults = useMemo(() => (results.length > 0 ? results : [total || 0]), [results, total]);
   const notation = useMemo(() => {
@@ -44,14 +50,17 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
   useEffect(() => {
     let cancelled = false;
     let diceBox: { init: () => Promise<unknown>; roll: (notation: string) => Promise<unknown>; clear: () => void; onRollComplete?: () => void; updateConfig?: (config: Record<string, unknown>) => Promise<unknown> | unknown } | null = null;
+    settledRef.current = false;
 
     const finish = () => {
+      if (settledRef.current) return;
+      settledRef.current = true;
       if (completeTimeoutRef.current) {
         window.clearTimeout(completeTimeoutRef.current);
       }
       completeTimeoutRef.current = window.setTimeout(() => {
-        onComplete();
-      }, 2400);
+        onCompleteRef.current();
+      }, dice3DAutoCloseMs);
     };
 
     const startRoll = async () => {
@@ -63,7 +72,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
           assetPath: '/assets/',
           theme: 'default',
           themeColor: skin.themeColor,
-          scale: 6,
+          scale: dice3DScale,
           gravity: 1.2,
           offscreen: true,
         });
@@ -101,7 +110,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
         // Ignore cleanup issues from the dice renderer during unmount.
       }
     };
-  }, [notation, onComplete, skin.themeColor]);
+  }, [dice3DAutoCloseMs, dice3DScale, notation, skin.themeColor]);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md overflow-hidden pointer-events-none">
@@ -117,7 +126,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
         </div>
 
         <div
-          className="relative h-[28rem] w-full overflow-hidden rounded-[2rem] border border-white/10 bg-zinc-950/80 shadow-[0_0_60px_rgba(0,0,0,0.45)]"
+          className="relative h-[34rem] w-full overflow-hidden rounded-[2rem] border border-white/10 bg-zinc-950/80 shadow-[0_0_60px_rgba(0,0,0,0.45)]"
           style={{ boxShadow: `0 0 50px ${skin.glow}` }}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_45%)]" />
