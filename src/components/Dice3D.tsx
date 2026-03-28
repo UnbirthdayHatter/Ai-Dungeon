@@ -28,6 +28,7 @@ const DICE_SKINS: Record<string, { theme: string; themeColor: string; accent: st
   voidfire: { theme: 'voidfire', themeColor: '#f97316', accent: '#fdba74', glow: 'rgba(249,115,22,0.45)' },
   toxic: { theme: 'toxic', themeColor: '#84cc16', accent: '#d9f99d', glow: 'rgba(132,204,22,0.45)' },
   glitchpop: { theme: 'glitchpop', themeColor: '#ec4899', accent: '#f9a8d4', glow: 'rgba(236,72,153,0.45)' },
+  wacky: { theme: 'wacky', themeColor: '#22d3ee', accent: '#fef08a', glow: 'rgba(34,211,238,0.45)' },
 };
 
 function getDiceCanvasMotion(diceSkin: string, glow: string) {
@@ -106,6 +107,21 @@ function getDiceCanvasMotion(diceSkin: string, glow: string) {
           x: [0, 1.5, -1.5, 0],
         },
         transition: { duration: 1.8, repeat: Infinity, ease: 'easeInOut' as const },
+      };
+    case 'wacky':
+      return {
+        style: {
+          filter: 'brightness(1.1) saturate(1.52) contrast(1.12) drop-shadow(0 0 12px rgba(34,211,238,0.2))',
+        },
+        animate: {
+          filter: [
+            'brightness(1.02) saturate(1.32) contrast(1.04) hue-rotate(-12deg) drop-shadow(0 0 8px rgba(236,72,153,0.14))',
+            'brightness(1.24) saturate(1.68) contrast(1.16) hue-rotate(16deg) drop-shadow(0 0 22px rgba(34,211,238,0.24))',
+            'brightness(1.12) saturate(1.44) contrast(1.1) hue-rotate(4deg) drop-shadow(0 0 14px rgba(250,204,21,0.18))',
+          ],
+          rotate: [0, 0.4, -0.4, 0],
+        },
+        transition: { duration: 1.7, repeat: Infinity, ease: 'easeInOut' as const },
       };
     default:
       return {
@@ -779,6 +795,65 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
                   }}
                   animate={{ opacity: [0.08, 0.34, 0.1], scale: [0.8, 1.22, 0.9] }}
                   transition={{ duration: 1.9 + (index % 3) * 0.25, repeat: Infinity, delay: index * 0.08 }}
+                />
+              ))}
+            </div>
+          )}
+          {diceSkin === 'wacky' && (
+            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_24%,rgba(236,72,153,0.18),transparent_20%),radial-gradient(circle_at_74%_18%,rgba(34,211,238,0.18),transparent_20%),radial-gradient(circle_at_50%_80%,rgba(250,204,21,0.16),transparent_24%),linear-gradient(180deg,rgba(12,6,22,0.18),rgba(18,10,26,0.52)_56%,rgba(8,6,18,0.84))]" />
+            </div>
+          )}
+          {diceSkin === 'wacky' && (
+            <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
+              {Array.from({ length: 20 }).map((_, index) => (
+                <motion.div
+                  key={`wacky-bar-${index}`}
+                  className="absolute rounded-full blur-[1px]"
+                  style={{
+                    left: `${(index * 11) % 92}%`,
+                    top: `${8 + ((index * 17) % 78)}%`,
+                    width: `${50 + (index % 4) * 34}px`,
+                    height: `${4 + (index % 3) * 4}px`,
+                    background: index % 4 === 0
+                      ? 'linear-gradient(90deg, rgba(236,72,153,0), rgba(236,72,153,0.86), transparent)'
+                      : index % 4 === 1
+                        ? 'linear-gradient(90deg, rgba(34,211,238,0), rgba(34,211,238,0.86), transparent)'
+                        : index % 4 === 2
+                          ? 'linear-gradient(90deg, rgba(250,204,21,0), rgba(250,204,21,0.82), transparent)'
+                          : 'linear-gradient(90deg, rgba(163,230,53,0), rgba(163,230,53,0.82), transparent)',
+                    rotate: `${-20 + (index % 6) * 8}deg`,
+                  }}
+                  animate={{ x: [0, 22, -12, 0], opacity: [0.16, 0.82, 0.18], scaleX: [0.9, 1.18, 0.92] }}
+                  transition={{ duration: 1 + (index % 4) * 0.16, repeat: Infinity, delay: index * 0.05 }}
+                />
+              ))}
+              {Array.from({ length: 24 }).map((_, index) => (
+                <motion.div
+                  key={`wacky-pop-${index}`}
+                  className="absolute rounded-full"
+                  style={{
+                    left: `${4 + ((index * 13) % 92)}%`,
+                    top: `${6 + ((index * 19) % 80)}%`,
+                    width: `${index % 5 === 0 ? 14 : 6}px`,
+                    height: `${index % 5 === 0 ? 14 : 6}px`,
+                    background: index % 4 === 0
+                      ? 'rgba(236,72,153,0.9)'
+                      : index % 4 === 1
+                        ? 'rgba(34,211,238,0.9)'
+                        : index % 4 === 2
+                          ? 'rgba(250,204,21,0.88)'
+                          : 'rgba(163,230,53,0.88)',
+                    boxShadow: index % 4 === 0
+                      ? '0 0 16px rgba(236,72,153,0.52)'
+                      : index % 4 === 1
+                        ? '0 0 16px rgba(34,211,238,0.5)'
+                        : index % 4 === 2
+                          ? '0 0 16px rgba(250,204,21,0.48)'
+                          : '0 0 16px rgba(163,230,53,0.48)',
+                  }}
+                  animate={{ opacity: [0.08, 0.92, 0.14], scale: [0.7, 1.6, 0.84] }}
+                  transition={{ duration: 0.9 + (index % 4) * 0.14, repeat: Infinity, delay: index * 0.04 }}
                 />
               ))}
             </div>

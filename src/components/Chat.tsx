@@ -27,6 +27,7 @@ const CHAT_DICE_SKINS: Array<{ id: string; name: string }> = [
   { id: 'voidfire', name: 'Voidfire' },
   { id: 'toxic', name: 'Toxic' },
   { id: 'glitchpop', name: 'Glitchpop' },
+  { id: 'wacky', name: 'Wacky' },
 ];
 
 export function Chat() {

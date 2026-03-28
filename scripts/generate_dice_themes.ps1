@@ -18,7 +18,8 @@ $themes = @(
   @{ Id = 'aurora'; Name = 'Aurora'; Pattern = 'aurora' },
   @{ Id = 'voidfire'; Name = 'Voidfire'; Pattern = 'voidfire' },
   @{ Id = 'toxic'; Name = 'Toxic'; Pattern = 'toxic' },
-  @{ Id = 'glitchpop'; Name = 'Glitchpop'; Pattern = 'glitch' }
+  @{ Id = 'glitchpop'; Name = 'Glitchpop'; Pattern = 'glitch' },
+  @{ Id = 'wacky'; Name = 'Wacky'; Pattern = 'wacky' }
 )
 
 function New-BrushColor([int]$value, [int]$alpha = 255) {
@@ -72,9 +73,18 @@ function Apply-ToneOverlay($graphics, [string]$pattern, [bool]$isLight, [int]$wi
       $shade.Dispose()
     }
     'voidfire' {
-      $shade = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 92 } else { 70 }), 10, 5, 16))
+      $shade = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 112 } else { 84 }), 14, 6, 28))
       $graphics.FillRectangle($shade, $rect)
       $shade.Dispose()
+
+      $glowBrush = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
+        ([System.Drawing.Point]::new(0, 0)),
+        ([System.Drawing.Point]::new($width, $height)),
+        ([System.Drawing.Color]::FromArgb($(if ($isLight) { 42 } else { 28 }), 168, 85, 247)),
+        ([System.Drawing.Color]::FromArgb(0, 30, 10, 46))
+      )
+      $graphics.FillRectangle($glowBrush, $rect)
+      $glowBrush.Dispose()
     }
     'toxic' {
       $shade = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 78 } else { 56 }), 8, 16, 4))
@@ -83,6 +93,11 @@ function Apply-ToneOverlay($graphics, [string]$pattern, [bool]$isLight, [int]$wi
     }
     'glitch' {
       $shade = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 66 } else { 48 }), 12, 8, 16))
+      $graphics.FillRectangle($shade, $rect)
+      $shade.Dispose()
+    }
+    'wacky' {
+      $shade = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 48 } else { 36 }), 14, 10, 24))
       $graphics.FillRectangle($shade, $rect)
       $shade.Dispose()
     }
@@ -201,7 +216,7 @@ function Draw-Pattern($graphics, [string]$pattern, $random, [bool]$isLight, [int
     }
     'voidfire' {
       for ($i = 0; $i -lt 22; $i++) {
-        $gray = if ($isLight) { $random.Next(180, 250) } else { $random.Next(210, 255) }
+        $gray = if ($isLight) { $random.Next(195, 255) } else { $random.Next(220, 255) }
         $pen = New-PatternPen $gray ($random.Next(70, 150)) (($random.NextDouble() * 4.2) + 1.8)
         $points = New-Object 'System.Drawing.Point[]' 6
         for ($p = 0; $p -lt 6; $p++) {
@@ -210,7 +225,15 @@ function Draw-Pattern($graphics, [string]$pattern, $random, [bool]$isLight, [int
         $graphics.DrawCurve($pen, $points, 0.55)
         $pen.Dispose()
       }
-      Draw-NoiseDots $graphics 280 4 160 235 28 66 $random $width $height
+      for ($i = 0; $i -lt 160; $i++) {
+        $size = $random.Next(4, 12)
+        $x = $random.Next(0, $width)
+        $y = $random.Next(0, $height)
+        $flareBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($random.Next(18, 54), 192, 132, 252))
+        $graphics.FillEllipse($flareBrush, $x, $y, $size, $size)
+        $flareBrush.Dispose()
+      }
+      Draw-NoiseDots $graphics 320 4 210 255 34 84 $random $width $height
     }
     'toxic' {
       for ($i = 0; $i -lt 24; $i++) {
@@ -231,6 +254,35 @@ function Draw-Pattern($graphics, [string]$pattern, $random, [bool]$isLight, [int
         $brush.Dispose()
       }
       Draw-NoiseDots $graphics 180 3 210 255 40 95 $random $width $height
+    }
+    'wacky' {
+      for ($i = 0; $i -lt 64; $i++) {
+        $color = switch ($i % 5) {
+          0 { [System.Drawing.Color]::FromArgb($random.Next(48, 110), 255, 64, 129) }
+          1 { [System.Drawing.Color]::FromArgb($random.Next(48, 110), 34, 211, 238) }
+          2 { [System.Drawing.Color]::FromArgb($random.Next(48, 110), 250, 204, 21) }
+          3 { [System.Drawing.Color]::FromArgb($random.Next(48, 110), 163, 230, 53) }
+          default { [System.Drawing.Color]::FromArgb($random.Next(48, 110), 168, 85, 247) }
+        }
+        $brush = New-Object System.Drawing.SolidBrush($color)
+        if ($i % 2 -eq 0) {
+          $graphics.FillEllipse($brush, $random.Next(0, $width), $random.Next(0, $height), $random.Next(20, 120), $random.Next(12, 80))
+        } else {
+          $graphics.FillRectangle($brush, $random.Next(0, $width), $random.Next(0, $height), $random.Next(24, 160), $random.Next(4, 28))
+        }
+        $brush.Dispose()
+      }
+      for ($i = 0; $i -lt 18; $i++) {
+        $gray = $random.Next(210, 255)
+        $pen = New-PatternPen $gray ($random.Next(36, 90)) (($random.NextDouble() * 3.4) + 1.4)
+        $points = New-Object 'System.Drawing.Point[]' 5
+        for ($p = 0; $p -lt 5; $p++) {
+          $points[$p] = New-Object System.Drawing.Point($random.Next(0, $width), $random.Next(0, $height))
+        }
+        $graphics.DrawCurve($pen, $points, 0.5)
+        $pen.Dispose()
+      }
+      Draw-NoiseDots $graphics 260 4 220 255 40 110 $random $width $height
     }
     default {
       for ($i = 0; $i -lt 20; $i++) {
