@@ -15,6 +15,14 @@
       "dark": "emissive-dark.png"
     },
     "emissiveLevel": 1.7,
+    "emissiveColor": [1, 0.78, 0.42],
+    "emissivePulse": {
+      "base": 1.85,
+      "variation": 0.52,
+      "frequency": 2.6,
+      "flicker": 0.16,
+      "phaseOffset": 0.7
+    },
     "diffuseLevel": 1.1,
     "bumpTexture": "normal.png",
     "bumpLevel": 0.85,

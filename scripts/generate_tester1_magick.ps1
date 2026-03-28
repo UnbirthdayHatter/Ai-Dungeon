@@ -102,18 +102,18 @@ magick -size ${size}x${size} plasma:fractal `
 
 magick $defaultLight `
   -colorspace gray `
-  -threshold 78% `
-  -blur 0x6 `
-  -fill '#ffb347' -colorize 100 `
-  -modulate 100,185,100 `
+  -threshold 72% `
+  -blur 0x3.4 `
+  -fill '#fff0bd' -colorize 100 `
+  -modulate 100,220,100 `
   $numberGlowLight
 
 magick $defaultDark `
   -colorspace gray `
-  -threshold 74% `
-  -blur 0x7 `
-  -fill '#ff8a1a' -colorize 100 `
-  -modulate 100,190,100 `
+  -threshold 68% `
+  -blur 0x3.8 `
+  -fill '#ffd27a' -colorize 100 `
+  -modulate 100,230,100 `
   $numberGlowDark
 
 & magick $base `
@@ -162,9 +162,10 @@ magick $defaultDark `
   '(' $cracks '-fill' '#ff5a00' '-colorize' '100' ')' '-compose' 'Screen' '-composite' `
   '(' $cracks '-fill' '#ffd16f' '-colorize' '100' -blur '0x1.8' ')' '-compose' 'Screen' '-composite' `
   '(' $numberGlowLight '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
+  '(' $numberGlowLight '-alpha' 'off' -evaluate 'Multiply' '1.45' -blur '0x0.8' ')' '-compose' 'Screen' '-composite' `
   '(' $embers '-alpha' 'off' -evaluate 'Multiply' '0.85' ')' '-compose' 'Screen' '-composite' `
   '-modulate' '100,170,100' `
-  '-brightness-contrast' '6x30' `
+  '-brightness-contrast' '10x38' `
   '-type' 'TrueColor' `
   $emissiveLight
 
@@ -172,9 +173,10 @@ magick $defaultDark `
   '(' $cracks '-fill' '#ff5a00' '-colorize' '100' ')' '-compose' 'Screen' '-composite' `
   '(' $cracks '-fill' '#ffd16f' '-colorize' '100' -blur '0x2.1' ')' '-compose' 'Screen' '-composite' `
   '(' $numberGlowDark '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
+  '(' $numberGlowDark '-alpha' 'off' -evaluate 'Multiply' '1.55' -blur '0x0.9' ')' '-compose' 'Screen' '-composite' `
   '(' $embers '-alpha' 'off' -evaluate 'Multiply' '0.9' ')' '-compose' 'Screen' '-composite' `
   '-modulate' '100,178,100' `
-  '-brightness-contrast' '10x34' `
+  '-brightness-contrast' '14x42' `
   '-type' 'TrueColor' `
   $emissiveDark
 
