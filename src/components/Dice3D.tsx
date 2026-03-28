@@ -256,18 +256,67 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_45%)]" />
           {diceSkin === 'celestial' && (
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              {Array.from({ length: 16 }).map((_, index) => (
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_24%,rgba(56,189,248,0.15),transparent_22%),radial-gradient(circle_at_72%_18%,rgba(129,140,248,0.18),transparent_24%),radial-gradient(circle_at_50%_82%,rgba(168,85,247,0.18),transparent_28%),linear-gradient(180deg,rgba(9,11,28,0.16),rgba(4,8,22,0.44)_56%,rgba(2,6,23,0.68))]" />
+              {Array.from({ length: 4 }).map((_, index) => (
                 <motion.div
-                  key={`sparkle-${index}`}
-                  className="absolute h-2 w-2 rounded-full bg-indigo-200/80 blur-[1px]"
+                  key={`celestial-nebula-${index}`}
+                  className="absolute rounded-full blur-3xl"
                   style={{
-                    left: `${8 + ((index * 13) % 84)}%`,
-                    top: `${10 + ((index * 17) % 70)}%`,
+                    left: `${-6 + index * 22}%`,
+                    top: `${8 + (index % 2) * 24}%`,
+                    width: `${280 + (index % 2) * 120}px`,
+                    height: `${140 + (index % 3) * 36}px`,
+                    background: index % 2 === 0
+                      ? 'radial-gradient(circle, rgba(56,189,248,0.2), rgba(99,102,241,0.14), rgba(0,0,0,0) 72%)'
+                      : 'radial-gradient(circle, rgba(168,85,247,0.22), rgba(99,102,241,0.12), rgba(0,0,0,0) 74%)',
                   }}
-                  animate={{ opacity: [0.15, 0.85, 0.2], scale: [0.8, 1.35, 0.9] }}
-                  transition={{ duration: 1.8 + (index % 3) * 0.45, repeat: Infinity, delay: index * 0.08 }}
+                  animate={{ x: [0, 26, -18, 0], y: [0, -10, 12, 0], opacity: [0.2, 0.46, 0.24] }}
+                  transition={{ duration: 8 + index * 1.2, repeat: Infinity, ease: 'easeInOut', delay: index * 0.35 }}
                 />
               ))}
+              {Array.from({ length: 24 }).map((_, index) => (
+                <motion.div
+                  key={`sparkle-${index}`}
+                  className="absolute rounded-full bg-indigo-100/90"
+                  style={{
+                    left: `${4 + ((index * 17) % 92)}%`,
+                    top: `${6 + ((index * 19) % 80)}%`,
+                    width: `${index % 5 === 0 ? 8 : index % 3 === 0 ? 5 : 3}px`,
+                    height: `${index % 5 === 0 ? 8 : index % 3 === 0 ? 5 : 3}px`,
+                    boxShadow: index % 4 === 0
+                      ? '0 0 16px rgba(191,219,254,0.7)'
+                      : '0 0 10px rgba(165,180,252,0.45)',
+                  }}
+                  animate={{
+                    opacity: [0.12, index % 4 === 0 ? 1 : 0.72, 0.16],
+                    scale: [0.72, index % 4 === 0 ? 1.7 : 1.3, 0.84],
+                  }}
+                  transition={{ duration: 1.6 + (index % 4) * 0.5, repeat: Infinity, delay: index * 0.07 }}
+                />
+              ))}
+              {Array.from({ length: 8 }).map((_, index) => (
+                <motion.div
+                  key={`star-streak-${index}`}
+                  className="absolute h-[2px] rounded-full"
+                  style={{
+                    left: `${10 + ((index * 11) % 78)}%`,
+                    top: `${12 + ((index * 9) % 64)}%`,
+                    width: `${46 + (index % 3) * 22}px`,
+                    background: 'linear-gradient(90deg, rgba(255,255,255,0), rgba(191,219,254,0.88), rgba(255,255,255,0))',
+                    rotate: `${-24 + (index % 5) * 11}deg`,
+                    boxShadow: '0 0 12px rgba(125,211,252,0.28)',
+                  }}
+                  animate={{ opacity: [0, 0.62, 0], x: [0, 18, 30], y: [0, -6, -10] }}
+                  transition={{ duration: 2.8 + (index % 3) * 0.4, repeat: Infinity, delay: index * 0.4 }}
+                />
+              ))}
+              <svg className="absolute inset-0 h-full w-full opacity-45" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <g stroke="rgba(165,180,252,0.22)" strokeWidth="0.22" fill="none">
+                  <path d="M18 28 L27 22 L39 30 L48 26" />
+                  <path d="M63 24 L72 18 L80 25 L88 22" />
+                  <path d="M22 66 L31 60 L41 68 L50 64" />
+                </g>
+              </svg>
             </div>
           )}
           {diceSkin === 'bloodstone' && (
