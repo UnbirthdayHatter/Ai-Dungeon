@@ -1,11 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { Save, FolderOpen, Trash2, Plus, Clock, MessageSquare } from 'lucide-react';
 
 export function Roleplays() {
-  const { savedRoleplays, saveRoleplay, loadRoleplay, deleteRoleplay, newRoleplay, messages, currentSaveRoleplayId } = useStore();
+  const { savedRoleplays, saveRoleplay, loadRoleplay, deleteRoleplay, newRoleplay, messages, currentSaveRoleplayId, currentRoleplayName } = useStore();
   const [saveName, setSaveName] = useState('');
   const visibleSavedRoleplays = savedRoleplays.filter((rp: any) => !rp.promotedToRoleplayId);
+
+  useEffect(() => {
+    if (!currentSaveRoleplayId) {
+      setSaveName('');
+      return;
+    }
+    const currentSave = visibleSavedRoleplays.find((rp: any) => rp.id === currentSaveRoleplayId);
+    setSaveName(currentSave?.name || currentRoleplayName || '');
+  }, [currentRoleplayName, currentSaveRoleplayId, visibleSavedRoleplays]);
 
   const handleSave = () => {
     if (!saveName.trim()) return;

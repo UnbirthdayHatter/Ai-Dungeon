@@ -48,7 +48,8 @@ export function Sidebar({ activeTab }: SidebarProps) {
     archiveRoleplay,
     renameRoleplay,
     newRoleplay,
-    currentRoleplayId,
+    currentSaveRoleplayId,
+    currentLiveRoleplayId,
     kokoroUrl
   } = useStore();
   const themeClasses = THEME_CLASSES[theme] || THEME_CLASSES.classic;
@@ -168,7 +169,8 @@ export function Sidebar({ activeTab }: SidebarProps) {
                     {subItems.map((item) => {
                       const isMultiplayerTab = tab.id === 'multiplayer';
                       const isOwned = !isMultiplayerTab || userRoleplays.some(r => r.id === item.id);
-                      const isCurrent = currentRoleplayId === item.id;
+                      const selectedAdventureId = isMultiplayerTab ? currentLiveRoleplayId : currentSaveRoleplayId;
+                      const isCurrent = selectedAdventureId === item.id;
                       
                       return (
                         <div key={item.id} className="group relative min-w-0 pr-2">
