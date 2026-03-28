@@ -86,7 +86,7 @@ function getDiceCanvasMotion(diceSkin: string, glow: string) {
         animate: {
           filter: [
             'brightness(0.96) saturate(1.08) contrast(1.02) hue-rotate(4deg) drop-shadow(0 0 10px rgba(168,85,247,0.12))',
-            'brightness(1.16) saturate(1.3) contrast(1.14) hue-rotate(18deg) drop-shadow(0 0 22px rgba(249,115,22,0.18))',
+            'brightness(1.16) saturate(1.3) contrast(1.14) hue-rotate(18deg) drop-shadow(0 0 22px rgba(192,132,252,0.2))',
             'brightness(1.02) saturate(1.16) contrast(1.08) hue-rotate(10deg) drop-shadow(0 0 14px rgba(217,70,239,0.18))',
           ],
           x: [0, 1.2, -1.2, 0],
@@ -221,6 +221,157 @@ function ToxicRipple({
         />
       </svg>
     </motion.div>
+  );
+}
+
+function GlowBlobField({
+  prefix,
+  count,
+  className = 'absolute rounded-full blur-2xl',
+  getStyle,
+  getAnimate,
+  getTransition,
+}: {
+  prefix: string;
+  count: number;
+  className?: string;
+  getStyle: (index: number) => React.CSSProperties;
+  getAnimate: (index: number) => any;
+  getTransition: (index: number) => any;
+}) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, index) => (
+        <motion.div
+          key={`${prefix}-${index}`}
+          className={className}
+          style={getStyle(index)}
+          animate={getAnimate(index)}
+          transition={getTransition(index)}
+        />
+      ))}
+    </>
+  );
+}
+
+function LinearTrailField({
+  prefix,
+  count,
+  className = 'absolute rounded-full blur-lg',
+  getStyle,
+  getAnimate,
+  getTransition,
+}: {
+  prefix: string;
+  count: number;
+  className?: string;
+  getStyle: (index: number) => React.CSSProperties;
+  getAnimate: (index: number) => any;
+  getTransition: (index: number) => any;
+}) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, index) => (
+        <motion.div
+          key={`${prefix}-${index}`}
+          className={className}
+          style={getStyle(index)}
+          animate={getAnimate(index)}
+          transition={getTransition(index)}
+        />
+      ))}
+    </>
+  );
+}
+
+function VoidfireEffects() {
+  return (
+    <>
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(88,28,135,0.28),transparent_34%),radial-gradient(circle_at_18%_18%,rgba(76,29,149,0.24),transparent_24%),radial-gradient(circle_at_78%_24%,rgba(124,58,237,0.18),transparent_22%),linear-gradient(180deg,rgba(12,5,24,0.24),rgba(18,8,32,0.62)_58%,rgba(7,3,16,0.9))]" />
+        <GlowBlobField
+          prefix="voidfire-goo"
+          count={8}
+          getStyle={(index) => ({
+            left: `${-8 + index * 14}%`,
+            bottom: `${2 + ((index * 5) % 16)}%`,
+            width: `${220 + (index % 3) * 70}px`,
+            height: `${56 + (index % 2) * 20}px`,
+            background: index % 2 === 0
+              ? 'radial-gradient(circle, rgba(88,28,135,0.28), rgba(91,33,182,0.12), transparent 72%)'
+              : 'radial-gradient(circle, rgba(76,29,149,0.26), rgba(31,11,58,0.08), transparent 74%)',
+          })}
+          getAnimate={() => ({ x: [0, 14, -8, 0], opacity: [0.1, 0.26, 0.12], scaleX: [0.88, 1.1, 0.94] })}
+          getTransition={(index) => ({ duration: 3.4 + (index % 4) * 0.3, repeat: Infinity, delay: index * 0.18, ease: 'easeInOut' })}
+        />
+        <GlowBlobField
+          prefix="voidfire-pool"
+          count={14}
+          className="absolute h-24 w-24 rounded-full blur-2xl"
+          getStyle={(index) => ({
+            left: `${6 + ((index * 7) % 84)}%`,
+            bottom: `${-4 + ((index * 5) % 22)}%`,
+            background: index % 2 === 0
+              ? 'radial-gradient(circle, rgba(168,85,247,0.28), rgba(139,92,246,0.18), transparent 70%)'
+              : 'radial-gradient(circle, rgba(217,70,239,0.24), rgba(168,85,247,0.1), transparent 72%)',
+          })}
+          getAnimate={() => ({ y: [0, -80, -20], opacity: [0.15, 0.6, 0.08], scale: [0.8, 1.4, 0.9] })}
+          getTransition={(index) => ({ duration: 2.8 + (index % 4) * 0.35, repeat: Infinity, delay: index * 0.12 })}
+        />
+      </div>
+      <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
+        <LinearTrailField
+          prefix="voidfire-trail"
+          count={12}
+          getStyle={(index) => ({
+            right: `${-2 + (index % 3) * 2}%`,
+            top: `${16 + ((index * 6) % 58)}%`,
+            width: `${110 + (index % 4) * 34}px`,
+            height: '56px',
+            background: index % 2 === 0
+              ? 'linear-gradient(90deg, rgba(147,51,234,0), rgba(168,85,247,0.38), rgba(196,181,253,0.18), rgba(0,0,0,0))'
+              : 'linear-gradient(90deg, rgba(217,70,239,0), rgba(217,70,239,0.34), rgba(129,140,248,0.18), rgba(0,0,0,0))',
+            rotate: `${-18 + (index % 5) * 7}deg`,
+          })}
+          getAnimate={() => ({ x: [0, -120, -36], opacity: [0, 0.46, 0], scaleX: [0.82, 1.2, 0.94] })}
+          getTransition={(index) => ({ duration: 1.4 + (index % 4) * 0.18, repeat: Infinity, delay: index * 0.1 })}
+        />
+        <GlowBlobField
+          prefix="voidfire-ember"
+          count={10}
+          className="absolute rounded-full blur-md"
+          getStyle={(index) => ({
+            left: `${10 + ((index * 11) % 78)}%`,
+            bottom: `${10 + ((index * 7) % 22)}%`,
+            width: `${12 + (index % 3) * 8}px`,
+            height: `${12 + (index % 4) * 7}px`,
+            background: index % 2 === 0
+              ? 'radial-gradient(circle, rgba(216,180,254,0.82), rgba(147,51,234,0.34), rgba(147,51,234,0) 74%)'
+              : 'radial-gradient(circle, rgba(129,140,248,0.58), rgba(91,33,182,0.26), rgba(91,33,182,0) 74%)',
+            boxShadow: index % 2 === 0
+              ? '0 0 14px rgba(216,180,254,0.24)'
+              : '0 0 14px rgba(168,85,247,0.22)',
+          })}
+          getAnimate={() => ({ y: [0, -22, -6], opacity: [0.08, 0.64, 0.12], scale: [0.7, 1.24, 0.84] })}
+          getTransition={(index) => ({ duration: 1.8 + (index % 3) * 0.2, repeat: Infinity, delay: index * 0.12 })}
+        />
+        <GlowBlobField
+          prefix="voidfire-smoke"
+          count={8}
+          getStyle={(index) => ({
+            left: `${8 + ((index * 13) % 80)}%`,
+            bottom: `${18 + ((index * 6) % 18)}%`,
+            width: `${96 + (index % 3) * 26}px`,
+            height: `${44 + (index % 4) * 12}px`,
+            background: index % 2 === 0
+              ? 'radial-gradient(circle, rgba(76,29,149,0.22), rgba(30,27,75,0.08), transparent 74%)'
+              : 'radial-gradient(circle, rgba(88,28,135,0.2), rgba(24,24,27,0.06), transparent 76%)',
+          })}
+          getAnimate={() => ({ x: [0, 18, -10, 0], y: [0, -26, -8, 0], opacity: [0.08, 0.28, 0.1], scale: [0.88, 1.18, 0.94] })}
+          getTransition={(index) => ({ duration: 3.1 + (index % 3) * 0.32, repeat: Infinity, ease: 'easeInOut', delay: index * 0.18 })}
+        />
+      </div>
+    </>
   );
 }
 
@@ -559,106 +710,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
               ))}
             </div>
           )}
-          {diceSkin === 'voidfire' && (
-            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(88,28,135,0.28),transparent_34%),radial-gradient(circle_at_18%_18%,rgba(76,29,149,0.24),transparent_24%),radial-gradient(circle_at_78%_24%,rgba(124,58,237,0.18),transparent_22%),linear-gradient(180deg,rgba(12,5,24,0.24),rgba(18,8,32,0.62)_58%,rgba(7,3,16,0.9))]" />
-              {Array.from({ length: 8 }).map((_, index) => (
-                <motion.div
-                  key={`voidfire-goo-${index}`}
-                  className="absolute rounded-full blur-2xl"
-                  style={{
-                    left: `${-8 + index * 14}%`,
-                    bottom: `${2 + ((index * 5) % 16)}%`,
-                    width: `${220 + (index % 3) * 70}px`,
-                    height: `${56 + (index % 2) * 20}px`,
-                    background: index % 2 === 0
-                      ? 'radial-gradient(circle, rgba(88,28,135,0.28), rgba(91,33,182,0.12), transparent 72%)'
-                      : 'radial-gradient(circle, rgba(76,29,149,0.26), rgba(31,11,58,0.08), transparent 74%)',
-                  }}
-                  animate={{ x: [0, 14, -8, 0], opacity: [0.1, 0.26, 0.12], scaleX: [0.88, 1.1, 0.94] }}
-                  transition={{ duration: 3.4 + (index % 4) * 0.3, repeat: Infinity, delay: index * 0.18, ease: 'easeInOut' }}
-                />
-              ))}
-              {Array.from({ length: 14 }).map((_, index) => (
-                <motion.div
-                  key={`voidfire-${index}`}
-                  className="absolute h-24 w-24 rounded-full blur-2xl"
-                  style={{
-                    left: `${6 + ((index * 7) % 84)}%`,
-                    bottom: `${-4 + ((index * 5) % 22)}%`,
-                    background: index % 2 === 0
-                      ? 'radial-gradient(circle, rgba(249,115,22,0.26), rgba(168,85,247,0.18), transparent 70%)'
-                      : 'radial-gradient(circle, rgba(217,70,239,0.28), rgba(249,115,22,0.1), transparent 72%)',
-                  }}
-                  animate={{ y: [0, -80, -20], opacity: [0.15, 0.6, 0.08], scale: [0.8, 1.4, 0.9] }}
-                  transition={{ duration: 2.8 + (index % 4) * 0.35, repeat: Infinity, delay: index * 0.12 }}
-                />
-              ))}
-            </div>
-          )}
-          {diceSkin === 'voidfire' && (
-            <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
-              {Array.from({ length: 12 }).map((_, index) => (
-                <motion.div
-                  key={`voidfire-trail-${index}`}
-                  className="absolute h-14 rounded-full blur-lg"
-                  style={{
-                    right: `${-2 + (index % 3) * 2}%`,
-                    top: `${16 + ((index * 6) % 58)}%`,
-                    width: `${110 + (index % 4) * 34}px`,
-                    background: index % 2 === 0
-                      ? 'linear-gradient(90deg, rgba(147,51,234,0), rgba(168,85,247,0.34), rgba(196,181,253,0.16), rgba(0,0,0,0))'
-                      : 'linear-gradient(90deg, rgba(217,70,239,0), rgba(217,70,239,0.3), rgba(129,140,248,0.16), rgba(0,0,0,0))',
-                    rotate: `${-18 + (index % 5) * 7}deg`,
-                  }}
-                  animate={{ x: [0, -120, -36], opacity: [0, 0.46, 0], scaleX: [0.82, 1.2, 0.94] }}
-                  transition={{ duration: 1.4 + (index % 4) * 0.18, repeat: Infinity, delay: index * 0.1 }}
-                />
-              ))}
-              {Array.from({ length: 10 }).map((_, index) => (
-                <motion.div
-                  key={`voidfire-ember-${index}`}
-                  className="absolute rounded-full blur-md"
-                  style={{
-                    left: `${10 + ((index * 11) % 78)}%`,
-                    bottom: `${10 + ((index * 7) % 22)}%`,
-                    width: `${12 + (index % 3) * 8}px`,
-                    height: `${12 + (index % 4) * 7}px`,
-                    background: index % 2 === 0
-                      ? 'radial-gradient(circle, rgba(216,180,254,0.82), rgba(147,51,234,0.34), rgba(147,51,234,0) 74%)'
-                      : 'radial-gradient(circle, rgba(129,140,248,0.58), rgba(91,33,182,0.26), rgba(91,33,182,0) 74%)',
-                    boxShadow: index % 2 === 0
-                      ? '0 0 14px rgba(216,180,254,0.24)'
-                      : '0 0 14px rgba(168,85,247,0.22)',
-                  }}
-                  animate={{ y: [0, -22, -6], opacity: [0.08, 0.64, 0.12], scale: [0.7, 1.24, 0.84] }}
-                  transition={{ duration: 1.8 + (index % 3) * 0.2, repeat: Infinity, delay: index * 0.12 }}
-                />
-              ))}
-              {Array.from({ length: 8 }).map((_, index) => (
-                <motion.div
-                  key={`voidfire-smoke-${index}`}
-                  className="absolute rounded-full blur-2xl"
-                  style={{
-                    left: `${8 + ((index * 13) % 80)}%`,
-                    bottom: `${18 + ((index * 6) % 18)}%`,
-                    width: `${96 + (index % 3) * 26}px`,
-                    height: `${44 + (index % 4) * 12}px`,
-                    background: index % 2 === 0
-                      ? 'radial-gradient(circle, rgba(76,29,149,0.22), rgba(30,27,75,0.08), transparent 74%)'
-                      : 'radial-gradient(circle, rgba(88,28,135,0.2), rgba(24,24,27,0.06), transparent 76%)',
-                  }}
-                  animate={{
-                    x: [0, 18, -10, 0],
-                    y: [0, -26, -8, 0],
-                    opacity: [0.08, 0.28, 0.1],
-                    scale: [0.88, 1.18, 0.94],
-                  }}
-                  transition={{ duration: 3.1 + (index % 3) * 0.32, repeat: Infinity, ease: 'easeInOut', delay: index * 0.18 }}
-                />
-              ))}
-            </div>
-          )}
+          {diceSkin === 'voidfire' && <VoidfireEffects />}
           {diceSkin === 'toxic' && (
             <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(163,230,53,0.22),transparent_38%),radial-gradient(circle_at_20%_0%,rgba(74,222,128,0.16),transparent_24%),linear-gradient(180deg,rgba(9,20,6,0.18),rgba(10,28,8,0.44)_58%,rgba(16,56,10,0.62))]" />
