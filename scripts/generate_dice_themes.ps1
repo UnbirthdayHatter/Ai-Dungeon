@@ -20,6 +20,7 @@ $themes = @(
   @{ Id = 'toxic'; Name = 'Toxic'; Pattern = 'toxic' },
   @{ Id = 'glitchpop'; Name = 'Glitchpop'; Pattern = 'glitch' },
   @{ Id = 'wacky'; Name = 'Wacky'; Pattern = 'wacky' },
+  @{ Id = 'tester1'; Name = 'Tester1'; Pattern = 'cobblestone' },
   @{ Id = 'wacky_a'; Name = 'Wacky A'; Pattern = 'wacky' },
   @{ Id = 'wacky_b'; Name = 'Wacky B'; Pattern = 'wacky' },
   @{ Id = 'wacky_c'; Name = 'Wacky C'; Pattern = 'wacky' },
@@ -104,6 +105,20 @@ function Apply-ToneOverlay($graphics, [string]$pattern, [bool]$isLight, [int]$wi
       $shade = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 48 } else { 36 }), 14, 10, 24))
       $graphics.FillRectangle($shade, $rect)
       $shade.Dispose()
+    }
+    'cobblestone' {
+      $shade = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 66 } else { 48 }), 20, 20, 22))
+      $graphics.FillRectangle($shade, $rect)
+      $shade.Dispose()
+
+      $glowBrush = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
+        ([System.Drawing.Point]::new(0, 0)),
+        ([System.Drawing.Point]::new($width, $height)),
+        ([System.Drawing.Color]::FromArgb($(if ($isLight) { 26 } else { 18 }), 148, 163, 184)),
+        ([System.Drawing.Color]::FromArgb(0, 36, 36, 40))
+      )
+      $graphics.FillRectangle($glowBrush, $rect)
+      $glowBrush.Dispose()
     }
   }
 }
@@ -295,6 +310,52 @@ function Draw-Pattern($graphics, [string]$pattern, $random, [bool]$isLight, [int
         $pen.Dispose()
       }
       Draw-NoiseDots $graphics 260 4 220 255 40 110 $random $width $height
+    }
+    'cobblestone' {
+      for ($row = 0; $row -lt 7; $row++) {
+        $stonesInRow = 4 + ($row % 2)
+        $baseY = [int](($row / 7.0) * $height) - 10
+        for ($col = 0; $col -lt $stonesInRow; $col++) {
+          $stoneWidth = [int](($width / $stonesInRow) * (0.78 + ($random.NextDouble() * 0.24)))
+          $stoneHeight = [int](($height / 7.0) * (0.72 + ($random.NextDouble() * 0.26)))
+          $offsetX = if ($row % 2 -eq 0) { 0 } else { [int](($width / $stonesInRow) * 0.35) }
+          $x = [int](($col / [Math]::Max(1, $stonesInRow)) * $width) + $offsetX - 16 + $random.Next(-8, 10)
+          $y = $baseY + $random.Next(-6, 8)
+          $stoneRect = New-Object System.Drawing.Rectangle($x, $y, $stoneWidth, $stoneHeight)
+
+          $fillGray = if ($isLight) { $random.Next(126, 170) } else { $random.Next(150, 210) }
+          $fillBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($random.Next(34, 68), $fillGray, $fillGray, ($fillGray + $random.Next(-8, 14))))
+          $graphics.FillEllipse($fillBrush, $stoneRect)
+          $fillBrush.Dispose()
+
+          $edgeGray = if ($isLight) { $random.Next(150, 205) } else { $random.Next(200, 240) }
+          $pen = New-PatternPen $edgeGray ($random.Next(42, 88)) (($random.NextDouble() * 2.2) + 1.2)
+          $graphics.DrawEllipse($pen, $stoneRect)
+          $pen.Dispose()
+
+          for ($i = 0; $i -lt 3; $i++) {
+            $crackPen = New-PatternPen ($edgeGray - $random.Next(10, 26)) ($random.Next(18, 40)) (($random.NextDouble() * 1.2) + 0.4)
+            $x1 = $x + $random.Next(8, [Math]::Max(10, $stoneWidth - 8))
+            $y1 = $y + $random.Next(8, [Math]::Max(10, $stoneHeight - 8))
+            $x2 = [Math]::Min($width, [Math]::Max(0, $x1 + $random.Next(-18, 18)))
+            $y2 = [Math]::Min($height, [Math]::Max(0, $y1 + $random.Next(-18, 18)))
+            $graphics.DrawLine($crackPen, $x1, $y1, $x2, $y2)
+            $crackPen.Dispose()
+          }
+        }
+      }
+
+      for ($i = 0; $i -lt 24; $i++) {
+        $mortarPen = New-PatternPen ($(if ($isLight) { $random.Next(90, 120) } else { $random.Next(130, 170) })) ($random.Next(22, 46)) (($random.NextDouble() * 1.6) + 0.8)
+        $points = New-Object 'System.Drawing.Point[]' 4
+        for ($p = 0; $p -lt 4; $p++) {
+          $points[$p] = New-Object System.Drawing.Point($random.Next(0, $width), $random.Next(0, $height))
+        }
+        $graphics.DrawCurve($mortarPen, $points, 0.45)
+        $mortarPen.Dispose()
+      }
+
+      Draw-NoiseDots $graphics 340 3 150 225 18 44 $random $width $height
     }
     default {
       for ($i = 0; $i -lt 20; $i++) {

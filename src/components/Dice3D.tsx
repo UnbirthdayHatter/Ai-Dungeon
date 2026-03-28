@@ -29,7 +29,7 @@ const DICE_SKINS: Record<string, { theme: string; themeColor: string; accent: st
   toxic: { theme: 'toxic', themeColor: '#84cc16', accent: '#d9f99d', glow: 'rgba(132,204,22,0.45)' },
   glitchpop: { theme: 'glitchpop', themeColor: '#ec4899', accent: '#f9a8d4', glow: 'rgba(236,72,153,0.45)' },
   wacky: { theme: 'wacky', themeColor: '#22d3ee', accent: '#fef08a', glow: 'rgba(34,211,238,0.45)' },
-  tester1: { theme: 'wacky', themeColor: '#f43f5e', accent: '#fef08a', glow: 'rgba(244,63,94,0.45)' },
+  tester1: { theme: 'tester1', themeColor: '#94a3b8', accent: '#e2e8f0', glow: 'rgba(148,163,184,0.4)' },
 };
 
 function getDiceCanvasMotion(diceSkin: string, glow: string) {
