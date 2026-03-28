@@ -1316,7 +1316,7 @@ export const useStore = create<any>()((set, get) => ({
       promotedToRoleplayId: existingSaved?.promotedToRoleplayId,
     };
     if (user) {
-      getSavedRoleplayWriter(saveId)(user.uid, saved);
+      await setDoc(doc(db, 'users', user.uid, 'savedRoleplays', saveId), cleanObject(saved), { merge: true } as any).catch(console.error);
     }
     set((current: any) => ({
       currentRoleplayId: saveId,
