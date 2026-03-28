@@ -14,11 +14,16 @@ interface Dice3DProps {
 }
 
 const DICE_SKINS: Record<string, { themeColor: string; accent: string; glow: string }> = {
+  classic: { themeColor: '#f59e0b', accent: '#fde68a', glow: 'rgba(245,158,11,0.35)' },
   default: { themeColor: '#f59e0b', accent: '#fde68a', glow: 'rgba(245,158,11,0.35)' },
   obsidian: { themeColor: '#71717a', accent: '#d4d4d8', glow: 'rgba(39,39,42,0.5)' },
   ivory: { themeColor: '#d6d3d1', accent: '#fafaf9', glow: 'rgba(214,211,209,0.35)' },
   celestial: { themeColor: '#6366f1', accent: '#c7d2fe', glow: 'rgba(99,102,241,0.35)' },
   bloodstone: { themeColor: '#b91c1c', accent: '#fecaca', glow: 'rgba(185,28,28,0.35)' },
+  emerald: { themeColor: '#10b981', accent: '#a7f3d0', glow: 'rgba(16,185,129,0.35)' },
+  sapphire: { themeColor: '#2563eb', accent: '#bfdbfe', glow: 'rgba(37,99,235,0.35)' },
+  amethyst: { themeColor: '#9333ea', accent: '#e9d5ff', glow: 'rgba(147,51,234,0.35)' },
+  rosegold: { themeColor: '#fb7185', accent: '#fecdd3', glow: 'rgba(251,113,133,0.35)' },
 };
 
 export function Dice3D({ results, diceType, total, label, modifier = 0, highlight = 'sum', onComplete }: Dice3DProps) {
@@ -87,6 +92,12 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
         if (diceBox.updateConfig) {
           await diceBox.updateConfig({ themeColor: skin.themeColor });
         }
+        const canvas = document.querySelector<HTMLCanvasElement>(`#${containerIdRef.current} canvas`);
+        if (canvas) {
+          canvas.style.width = '100%';
+          canvas.style.height = '100%';
+          canvas.style.display = 'block';
+        }
         setPhase('rolling');
         await diceBox.roll(notation);
       } catch (error) {
@@ -114,7 +125,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md overflow-hidden pointer-events-none">
-      <div className="pointer-events-auto flex w-full max-w-6xl flex-col items-center gap-6 px-4">
+      <div className="pointer-events-auto flex w-full max-w-[110rem] flex-col items-center gap-6 px-4">
         <div className="text-center space-y-2">
           <div className="text-white/80 font-black text-xs uppercase tracking-[0.45em]">
             {label || `D${diceType} Roll`}
@@ -126,10 +137,42 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
         </div>
 
         <div
-          className="relative h-[34rem] w-full overflow-hidden rounded-[2rem] border border-white/10 bg-zinc-950/80 shadow-[0_0_60px_rgba(0,0,0,0.45)]"
+          className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-white/10 bg-zinc-950/80 shadow-[0_0_60px_rgba(0,0,0,0.45)]"
           style={{ boxShadow: `0 0 50px ${skin.glow}` }}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_45%)]" />
+          {diceSkin === 'celestial' && (
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              {Array.from({ length: 16 }).map((_, index) => (
+                <motion.div
+                  key={`sparkle-${index}`}
+                  className="absolute h-2 w-2 rounded-full bg-indigo-200/80 blur-[1px]"
+                  style={{
+                    left: `${8 + ((index * 13) % 84)}%`,
+                    top: `${10 + ((index * 17) % 70)}%`,
+                  }}
+                  animate={{ opacity: [0.15, 0.85, 0.2], scale: [0.8, 1.35, 0.9] }}
+                  transition={{ duration: 1.8 + (index % 3) * 0.45, repeat: Infinity, delay: index * 0.08 }}
+                />
+              ))}
+            </div>
+          )}
+          {diceSkin === 'bloodstone' && (
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              {Array.from({ length: 12 }).map((_, index) => (
+                <motion.div
+                  key={`ember-${index}`}
+                  className="absolute h-3 w-3 rounded-full bg-red-400/40 blur-sm"
+                  style={{
+                    left: `${12 + ((index * 11) % 76)}%`,
+                    bottom: `${6 + ((index * 9) % 28)}%`,
+                  }}
+                  animate={{ opacity: [0.1, 0.55, 0.12], y: [0, -16, -6] }}
+                  transition={{ duration: 2.2 + (index % 4) * 0.3, repeat: Infinity, delay: index * 0.1 }}
+                />
+              ))}
+            </div>
+          )}
           <div className="absolute inset-x-6 top-5 z-10 flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-zinc-500">
             <span>Dice Tray</span>
             <span>{notation}</span>

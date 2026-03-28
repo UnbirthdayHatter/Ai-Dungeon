@@ -50,6 +50,19 @@ const AI_RULESET_OPTIONS: Array<{ id: AiRulesPreset; name: string; description: 
   },
 ];
 
+const DICE_SKIN_OPTIONS = [
+  { id: 'classic', name: 'Classic Amber', preview: 'from-amber-400 via-orange-500 to-amber-700', pip: 'text-amber-50', note: 'original warm glow' },
+  { id: 'default', name: 'Sunforged', preview: 'from-amber-400 via-orange-500 to-amber-700', pip: 'text-amber-50', note: 'warm amber glow' },
+  { id: 'obsidian', name: 'Obsidian', preview: 'from-zinc-500 via-zinc-800 to-black', pip: 'text-zinc-100', note: 'dark stone' },
+  { id: 'ivory', name: 'Ivory', preview: 'from-stone-50 via-stone-200 to-stone-400', pip: 'text-zinc-900', note: 'bone and parchment' },
+  { id: 'celestial', name: 'Celestial', preview: 'from-indigo-300 via-indigo-500 to-violet-700', pip: 'text-indigo-50', note: 'sparkling night sky' },
+  { id: 'bloodstone', name: 'Bloodstone', preview: 'from-rose-400 via-red-600 to-red-950', pip: 'text-rose-50', note: 'embers and crimson' },
+  { id: 'emerald', name: 'Emerald', preview: 'from-emerald-300 via-emerald-500 to-teal-800', pip: 'text-emerald-50', note: 'verdant arcane' },
+  { id: 'sapphire', name: 'Sapphire', preview: 'from-sky-300 via-blue-500 to-blue-900', pip: 'text-sky-50', note: 'deep ocean blue' },
+  { id: 'amethyst', name: 'Amethyst', preview: 'from-fuchsia-300 via-purple-500 to-violet-900', pip: 'text-fuchsia-50', note: 'royal violet' },
+  { id: 'rosegold', name: 'Rosegold', preview: 'from-rose-200 via-rose-400 to-orange-500', pip: 'text-rose-50', note: 'soft metallic blush' },
+] as const;
+
 export function Settings() {
   const { 
     apiKeys, 
@@ -702,22 +715,42 @@ export function Settings() {
             </p>
             <div className="space-y-2">
               <label className="block text-xs font-bold text-zinc-500 uppercase">Dice Skin</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {['default', 'obsidian', 'ivory', 'celestial', 'bloodstone'].map(skin => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {DICE_SKIN_OPTIONS.map((skin) => (
                   <button
-                    key={skin}
-                    onClick={() => setDiceSkin(skin)}
+                    key={skin.id}
+                    onClick={() => setDiceSkin(skin.id)}
                     className={cn(
-                      "px-3 py-2 rounded-lg text-xs font-bold capitalize border transition-all",
-                      diceSkin === skin 
-                        ? "bg-amber-500/10 border-amber-500 text-amber-500" 
-                        : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:bg-zinc-700"
+                      "rounded-xl border p-3 text-left transition-all",
+                      diceSkin === skin.id
+                        ? "bg-amber-500/10 border-amber-500 text-amber-500 shadow-[0_0_18px_rgba(245,158,11,0.12)]"
+                        : "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700"
                     )}
                   >
-                    {skin}
+                    <div className="flex items-center gap-3">
+                      <div className="relative shrink-0">
+                        <div className={cn("h-12 w-12 rounded-2xl border border-white/15 bg-gradient-to-br shadow-lg", skin.preview)} />
+                        <div className={cn("absolute inset-0 flex items-center justify-center text-xl font-black drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]", skin.pip)}>
+                          20
+                        </div>
+                        {skin.id === 'celestial' && (
+                          <>
+                            <span className="absolute -right-0.5 top-1 h-1.5 w-1.5 rounded-full bg-indigo-100 shadow-[0_0_8px_rgba(224,231,255,0.85)]" />
+                            <span className="absolute left-1 top-0.5 h-1 w-1 rounded-full bg-white/90 shadow-[0_0_8px_rgba(255,255,255,0.85)]" />
+                          </>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold">{skin.name}</div>
+                        <div className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{skin.note}</div>
+                      </div>
+                    </div>
                   </button>
                 ))}
               </div>
+              <p className="text-[10px] text-zinc-500">
+                The 3D roller uses color-driven themes right now. Celestial and Bloodstone also get animated tray effects for extra flair.
+              </p>
             </div>
 
             <div className="space-y-3 border-t border-zinc-800 pt-6">
@@ -731,7 +764,7 @@ export function Settings() {
               <input
                 type="range"
                 min="5"
-                max="16"
+                max="24"
                 step="1"
                 value={dice3DScale}
                 onChange={(e) => setDice3DScale(parseInt(e.target.value, 10))}
