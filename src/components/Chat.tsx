@@ -12,6 +12,19 @@ import { NPCTracker } from './NPCTracker';
 import { HUD } from './HUD';
 import { Dice3D } from './Dice3D';
 
+const CHAT_DICE_SKINS: Array<{ id: string; name: string }> = [
+  { id: 'classic', name: 'Classic' },
+  { id: 'default', name: 'Sunforged' },
+  { id: 'obsidian', name: 'Obsidian' },
+  { id: 'ivory', name: 'Ivory' },
+  { id: 'celestial', name: 'Starfield' },
+  { id: 'bloodstone', name: 'Bloodstone' },
+  { id: 'emerald', name: 'Emerald' },
+  { id: 'sapphire', name: 'Sapphire' },
+  { id: 'amethyst', name: 'Amethyst' },
+  { id: 'rosegold', name: 'Rosegold' },
+];
+
 export function Chat() {
   const { 
     messages, 
@@ -71,7 +84,9 @@ export function Chat() {
     connectedPlayers,
     joinCode,
     setCurrentRoleplayId,
-    setActiveSheetId
+    setActiveSheetId,
+    diceSkin,
+    setDiceSkin
   } = useStore();
 
   const activeRoleplay = [...userRoleplays, ...joinedRoleplays].find(rp => rp.id === currentLiveRoleplayId);
@@ -1317,6 +1332,30 @@ export function Chat() {
                 <RotateCcw className="w-3.5 h-3.5" />
                 Regenerate
               </button>
+              <div className={cn(
+                "flex items-center gap-2 rounded-lg border px-3 py-2 shadow-sm",
+                (theme === 'parchment' || theme === 'sepia')
+                  ? "bg-orange-100 border-orange-300 text-orange-900"
+                  : "bg-zinc-800 border-zinc-700 text-zinc-200"
+              )}>
+                <Dices className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Dice</span>
+                <select
+                  value={diceSkin}
+                  onChange={(e) => setDiceSkin(e.target.value)}
+                  className={cn(
+                    "bg-transparent text-xs font-bold focus:outline-none",
+                    (theme === 'parchment' || theme === 'sepia') ? "text-orange-900" : "text-zinc-100"
+                  )}
+                  title="Choose your dice theme"
+                >
+                  {CHAT_DICE_SKINS.map((skin) => (
+                    <option key={skin.id} value={skin.id} className="bg-zinc-900 text-zinc-100">
+                      {skin.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           )}
           {showDiceRoller && (

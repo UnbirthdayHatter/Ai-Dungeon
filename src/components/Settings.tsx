@@ -55,7 +55,7 @@ const DICE_SKIN_OPTIONS = [
   { id: 'default', name: 'Sunforged', preview: 'from-amber-400 via-orange-500 to-amber-700', pip: 'text-amber-50', note: 'etched solar texture' },
   { id: 'obsidian', name: 'Obsidian', preview: 'from-zinc-500 via-zinc-800 to-black', pip: 'text-zinc-100', note: 'fractured dark stone' },
   { id: 'ivory', name: 'Ivory', preview: 'from-stone-50 via-stone-200 to-stone-400', pip: 'text-zinc-900', note: 'engraved parchment grain' },
-  { id: 'celestial', name: 'Celestial', preview: 'from-indigo-300 via-indigo-500 to-violet-700', pip: 'text-indigo-50', note: 'starfield texture' },
+  { id: 'celestial', name: 'Starfield', preview: 'from-indigo-300 via-indigo-500 to-violet-700', pip: 'text-indigo-50', note: 'animated space texture' },
   { id: 'bloodstone', name: 'Bloodstone', preview: 'from-rose-400 via-red-600 to-red-950', pip: 'text-rose-50', note: 'veined ember stone' },
   { id: 'emerald', name: 'Emerald', preview: 'from-emerald-300 via-emerald-500 to-teal-800', pip: 'text-emerald-50', note: 'cut gemstone facets' },
   { id: 'sapphire', name: 'Sapphire', preview: 'from-sky-300 via-blue-500 to-blue-900', pip: 'text-sky-50', note: 'cut gemstone facets' },

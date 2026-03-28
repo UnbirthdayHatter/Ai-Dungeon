@@ -519,9 +519,9 @@ export const useStore = create<any>()((set, get) => ({
   ttsVolume: 1,
   selectedVoice: 'alloy',
   ttsProvider: 'gemini',
-  diceSkin: 'classic',
-  dice3DScale: 12,
-  dice3DAutoCloseMs: 2600,
+  diceSkin: readStorageValue('diceSkin', 'classic'),
+  dice3DScale: parseInt(readStorageValue('dice3DScale', '12'), 10) || 12,
+  dice3DAutoCloseMs: parseInt(readStorageValue('dice3DAutoCloseMs', '2600'), 10) || 2600,
   isCopilotMode: false,
   isOocMode: false,
   sessionId: null,
@@ -857,9 +857,20 @@ export const useStore = create<any>()((set, get) => ({
   setTtsVolume: (volume: number) => set({ ttsVolume: volume }),
   setSelectedVoice: (voice: string) => set({ selectedVoice: voice }),
   setTtsProvider: (provider: 'gemini' | 'openai' | 'kokoro') => set({ ttsProvider: provider }),
-  setDiceSkin: (skin: string) => set({ diceSkin: skin }),
-  setDice3DScale: (scale: number) => set({ dice3DScale: Math.min(24, Math.max(5, scale)) }),
-  setDice3DAutoCloseMs: (duration: number) => set({ dice3DAutoCloseMs: Math.min(6000, Math.max(1200, duration)) }),
+  setDiceSkin: (skin: string) => {
+    writeStorageValue('diceSkin', skin);
+    set({ diceSkin: skin });
+  },
+  setDice3DScale: (scale: number) => {
+    const clamped = Math.min(24, Math.max(5, scale));
+    writeStorageValue('dice3DScale', String(clamped));
+    set({ dice3DScale: clamped });
+  },
+  setDice3DAutoCloseMs: (duration: number) => {
+    const clamped = Math.min(6000, Math.max(1200, duration));
+    writeStorageValue('dice3DAutoCloseMs', String(clamped));
+    set({ dice3DAutoCloseMs: clamped });
+  },
   setIsCopilotMode: (enabled: boolean) => set({ isCopilotMode: enabled }),
   setAiRulesPreset: (preset: AiRulesPreset) => {
     writeStorageValue('aiRulesPreset', preset);
