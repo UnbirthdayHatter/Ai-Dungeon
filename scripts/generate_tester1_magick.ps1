@@ -89,15 +89,16 @@ magick $base `
 
 magick $seams `
   -morphology EdgeOut Diamond `
-  -blur 0x0.4 `
-  -evaluate Multiply 0.45 `
+  -threshold 54% `
+  -blur 0x0.2 `
+  -evaluate Multiply 0.28 `
   $cracks
 
 magick $cracks `
-  -blur 0x2.2 `
-  -threshold 58% `
+  -blur 0x1.1 `
+  -threshold 72% `
   -morphology Dilate Diamond `
-  -blur 0x1.4 `
+  -blur 0x0.6 `
   $crackHotspots
 
 magick -size ${size}x${size} plasma:fractal `
@@ -129,49 +130,49 @@ magick $defaultDark `
 magick $defaultLight `
   -colorspace gray `
   -threshold 70% `
-  -blur 0x2.8 `
+  -blur 0x2.1 `
   -fill '#ffcc73' -colorize 100 `
-  -modulate 100,210,100 `
+  -modulate 100,190,100 `
   $numberGlowLight
 
 magick $defaultDark `
   -colorspace gray `
   -threshold 66% `
-  -blur 0x3.1 `
+  -blur 0x2.3 `
   -fill '#ffb45c' -colorize 100 `
-  -modulate 100,214,100 `
+  -modulate 100,194,100 `
   $numberGlowDark
 
 & magick $base `
   '(' $stoneNoise '-alpha' 'off' ')' '-compose' 'Overlay' '-composite' `
   '(' $shading '-alpha' 'off' ')' '-compose' 'SoftLight' '-composite' `
   '(' $seams '-fill' '#060202' '-colorize' '100' ')' '-compose' 'Multiply' '-composite' `
-  '(' $cracks '-fill' '#ff6408' '-colorize' '100' ')' '-compose' 'Screen' '-composite' `
-  '(' $cracks '-fill' '#ffbe52' '-colorize' '100' -blur '0x0.8' -evaluate 'Multiply' '0.78' ')' '-compose' 'Screen' '-composite' `
-  '(' $crackHotspots '-fill' '#ffe296' '-colorize' '100' -blur '0x2.4' ')' '-compose' 'Screen' '-composite' `
-  '(' $embers '-alpha' 'off' -evaluate 'Multiply' '0.48' ')' '-compose' 'Screen' '-composite' `
-  '(' -size ${size}x${size} radial-gradient:'#8b2f08-#110604' ')' '-compose' 'SoftLight' '-composite' `
-  '-fill' '#160805' '-colorize' '54' `
-  '-brightness-contrast' '-34x52' `
-  '-sigmoidal-contrast' '10x42%' `
+  '(' $cracks '-fill' '#d84d08' '-colorize' '100' -evaluate 'Multiply' '0.62' ')' '-compose' 'Screen' '-composite' `
+  '(' $cracks '-fill' '#ffb347' '-colorize' '100' -blur '0x0.35' -evaluate 'Multiply' '0.34' ')' '-compose' 'Screen' '-composite' `
+  '(' $crackHotspots '-fill' '#ffd887' '-colorize' '100' -blur '0x1.1' -evaluate 'Multiply' '0.28' ')' '-compose' 'Screen' '-composite' `
+  '(' $embers '-alpha' 'off' -evaluate 'Multiply' '0.16' ')' '-compose' 'Screen' '-composite' `
+  '(' -size ${size}x${size} radial-gradient:'#4a1807-#0b0403' ')' '-compose' 'SoftLight' '-composite' `
+  '-fill' '#090403' '-colorize' '74' `
+  '-brightness-contrast' '-48x40' `
+  '-sigmoidal-contrast' '11x44%' `
   '-sharpen' '0x1.6' `
   '-type' 'TrueColor' `
   $preparedLight
 
 & magick $preparedLight `
-  '-fill' '#120604' '-colorize' '24' `
-  '-modulate' '42,112,100' `
-  '-brightness-contrast' '-22x32' `
+  '-fill' '#070303' '-colorize' '32' `
+  '-modulate' '34,106,100' `
+  '-brightness-contrast' '-30x28' `
   '-type' 'TrueColor' `
   $preparedDark
 
 & magick $preparedLight `
   '(' $numberGlowLight '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
   '(' $numberCoreLight '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
-  '(' $defaultLight '-alpha' 'off' '-evaluate' 'Multiply' '0.1' ')' '-compose' 'Screen' '-composite' `
-  '-brightness-contrast' '-42x46' `
-  '-modulate' '38,132,100' `
-  '-sigmoidal-contrast' '8x40%' `
+  '(' $defaultLight '-alpha' 'off' '-evaluate' 'Multiply' '0.06' ')' '-compose' 'Screen' '-composite' `
+  '-brightness-contrast' '-50x34' `
+  '-modulate' '28,118,100' `
+  '-sigmoidal-contrast' '9x42%' `
   '-sharpen' '0x1.45' `
   '-type' 'TrueColor' `
   $lightOut
@@ -179,35 +180,35 @@ magick $defaultDark `
 & magick $preparedDark `
   '(' $numberGlowDark '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
   '(' $numberCoreDark '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
-  '(' $defaultDark '-alpha' 'off' '-evaluate' 'Multiply' '0.12' ')' '-compose' 'Screen' '-composite' `
-  '-brightness-contrast' '-40x42' `
-  '-modulate' '32,136,100' `
-  '-sigmoidal-contrast' '8x38%' `
+  '(' $defaultDark '-alpha' 'off' '-evaluate' 'Multiply' '0.08' ')' '-compose' 'Screen' '-composite' `
+  '-brightness-contrast' '-48x32' `
+  '-modulate' '24,122,100' `
+  '-sigmoidal-contrast' '9x40%' `
   '-sharpen' '0x1.45' `
   '-type' 'TrueColor' `
   $darkOut
 
 & magick -size ${size}x${size} xc:black `
-  '(' $cracks '-fill' '#ff5a00' '-colorize' '100' ')' '-compose' 'Screen' '-composite' `
-  '(' $cracks '-fill' '#ffd16f' '-colorize' '100' -blur '0x1.1' -evaluate 'Multiply' '0.72' ')' '-compose' 'Screen' '-composite' `
-  '(' $crackHotspots '-fill' '#fff0b6' '-colorize' '100' -blur '0x1.8' ')' '-compose' 'Screen' '-composite' `
+  '(' $cracks '-fill' '#ff5a00' '-colorize' '100' -evaluate 'Multiply' '0.58' ')' '-compose' 'Screen' '-composite' `
+  '(' $cracks '-fill' '#ffd16f' '-colorize' '100' -blur '0x0.6' -evaluate 'Multiply' '0.22' ')' '-compose' 'Screen' '-composite' `
+  '(' $crackHotspots '-fill' '#fff0b6' '-colorize' '100' -blur '0x0.9' -evaluate 'Multiply' '0.2' ')' '-compose' 'Screen' '-composite' `
   '(' $numberGlowLight '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
   '(' $numberCoreLight '-alpha' 'off' -evaluate 'Multiply' '1.85' ')' '-compose' 'Screen' '-composite' `
-  '(' $embers '-alpha' 'off' -evaluate 'Multiply' '0.42' ')' '-compose' 'Screen' '-composite' `
-  '-modulate' '100,176,100' `
-  '-brightness-contrast' '18x46' `
+  '(' $embers '-alpha' 'off' -evaluate 'Multiply' '0.12' ')' '-compose' 'Screen' '-composite' `
+  '-modulate' '100,162,100' `
+  '-brightness-contrast' '8x30' `
   '-type' 'TrueColor' `
   $emissiveLight
 
 & magick -size ${size}x${size} xc:black `
-  '(' $cracks '-fill' '#ff5a00' '-colorize' '100' ')' '-compose' 'Screen' '-composite' `
-  '(' $cracks '-fill' '#ffd16f' '-colorize' '100' -blur '0x1.3' -evaluate 'Multiply' '0.72' ')' '-compose' 'Screen' '-composite' `
-  '(' $crackHotspots '-fill' '#fff0b6' '-colorize' '100' -blur '0x2.1' ')' '-compose' 'Screen' '-composite' `
+  '(' $cracks '-fill' '#ff5a00' '-colorize' '100' -evaluate 'Multiply' '0.6' ')' '-compose' 'Screen' '-composite' `
+  '(' $cracks '-fill' '#ffd16f' '-colorize' '100' -blur '0x0.7' -evaluate 'Multiply' '0.24' ')' '-compose' 'Screen' '-composite' `
+  '(' $crackHotspots '-fill' '#fff0b6' '-colorize' '100' -blur '0x1.0' -evaluate 'Multiply' '0.22' ')' '-compose' 'Screen' '-composite' `
   '(' $numberGlowDark '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
   '(' $numberCoreDark '-alpha' 'off' -evaluate 'Multiply' '1.95' ')' '-compose' 'Screen' '-composite' `
-  '(' $embers '-alpha' 'off' -evaluate 'Multiply' '0.46' ')' '-compose' 'Screen' '-composite' `
-  '-modulate' '100,182,100' `
-  '-brightness-contrast' '20x50' `
+  '(' $embers '-alpha' 'off' -evaluate 'Multiply' '0.13' ')' '-compose' 'Screen' '-composite' `
+  '-modulate' '100,166,100' `
+  '-brightness-contrast' '10x34' `
   '-type' 'TrueColor' `
   $emissiveDark
 
