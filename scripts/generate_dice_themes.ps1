@@ -73,15 +73,15 @@ function Apply-ToneOverlay($graphics, [string]$pattern, [bool]$isLight, [int]$wi
       $shade.Dispose()
     }
     'voidfire' {
-      $shade = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 112 } else { 84 }), 14, 6, 28))
+      $shade = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 148 } else { 116 }), 10, 4, 30))
       $graphics.FillRectangle($shade, $rect)
       $shade.Dispose()
 
       $glowBrush = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
         ([System.Drawing.Point]::new(0, 0)),
         ([System.Drawing.Point]::new($width, $height)),
-        ([System.Drawing.Color]::FromArgb($(if ($isLight) { 42 } else { 28 }), 168, 85, 247)),
-        ([System.Drawing.Color]::FromArgb(0, 30, 10, 46))
+        ([System.Drawing.Color]::FromArgb($(if ($isLight) { 74 } else { 48 }), 168, 85, 247)),
+        ([System.Drawing.Color]::FromArgb(0, 24, 8, 42))
       )
       $graphics.FillRectangle($glowBrush, $rect)
       $glowBrush.Dispose()
@@ -215,7 +215,7 @@ function Draw-Pattern($graphics, [string]$pattern, $random, [bool]$isLight, [int
       Draw-NoiseDots $graphics 260 3 210 255 45 90 $random $width $height
     }
     'voidfire' {
-      for ($i = 0; $i -lt 22; $i++) {
+      for ($i = 0; $i -lt 26; $i++) {
         $gray = if ($isLight) { $random.Next(195, 255) } else { $random.Next(220, 255) }
         $pen = New-PatternPen $gray ($random.Next(70, 150)) (($random.NextDouble() * 4.2) + 1.8)
         $points = New-Object 'System.Drawing.Point[]' 6
@@ -225,15 +225,23 @@ function Draw-Pattern($graphics, [string]$pattern, $random, [bool]$isLight, [int
         $graphics.DrawCurve($pen, $points, 0.55)
         $pen.Dispose()
       }
-      for ($i = 0; $i -lt 160; $i++) {
+      for ($i = 0; $i -lt 220; $i++) {
         $size = $random.Next(4, 12)
         $x = $random.Next(0, $width)
         $y = $random.Next(0, $height)
-        $flareBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($random.Next(18, 54), 192, 132, 252))
+        $flareBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($random.Next(24, 72), 192, 132, 252))
         $graphics.FillEllipse($flareBrush, $x, $y, $size, $size)
         $flareBrush.Dispose()
       }
-      Draw-NoiseDots $graphics 320 4 210 255 34 84 $random $width $height
+      for ($i = 0; $i -lt 90; $i++) {
+        $size = $random.Next(5, 18)
+        $x = $random.Next(0, $width)
+        $y = $random.Next(0, $height)
+        $purpleWash = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($random.Next(10, 34), 124, 58, 237))
+        $graphics.FillEllipse($purpleWash, $x, $y, $size, $size)
+        $purpleWash.Dispose()
+      }
+      Draw-NoiseDots $graphics 360 4 225 255 42 96 $random $width $height
     }
     'toxic' {
       for ($i = 0; $i -lt 24; $i++) {

@@ -25,7 +25,7 @@ const DICE_SKINS: Record<string, { theme: string; themeColor: string; accent: st
   amethyst: { theme: 'amethyst', themeColor: '#9333ea', accent: '#e9d5ff', glow: 'rgba(147,51,234,0.35)' },
   rosegold: { theme: 'rosegold', themeColor: '#fb7185', accent: '#fecdd3', glow: 'rgba(251,113,133,0.35)' },
   aurora: { theme: 'aurora', themeColor: '#34d399', accent: '#a7f3d0', glow: 'rgba(52,211,153,0.35)' },
-  voidfire: { theme: 'voidfire', themeColor: '#f97316', accent: '#fdba74', glow: 'rgba(249,115,22,0.45)' },
+  voidfire: { theme: 'voidfire', themeColor: '#a855f7', accent: '#e9d5ff', glow: 'rgba(168,85,247,0.45)' },
   toxic: { theme: 'toxic', themeColor: '#84cc16', accent: '#d9f99d', glow: 'rgba(132,204,22,0.45)' },
   glitchpop: { theme: 'glitchpop', themeColor: '#ec4899', accent: '#f9a8d4', glow: 'rgba(236,72,153,0.45)' },
   wacky: { theme: 'wacky', themeColor: '#22d3ee', accent: '#fef08a', glow: 'rgba(34,211,238,0.45)' },
