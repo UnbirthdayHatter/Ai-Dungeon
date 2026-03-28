@@ -30,6 +30,75 @@ const DICE_SKINS: Record<string, { theme: string; themeColor: string; accent: st
   glitchpop: { theme: 'glitchpop', themeColor: '#ec4899', accent: '#f9a8d4', glow: 'rgba(236,72,153,0.45)' },
 };
 
+function getDiceCanvasMotion(diceSkin: string, glow: string) {
+  switch (diceSkin) {
+    case 'celestial':
+      return {
+        style: {
+          filter: 'brightness(1.08) saturate(1.22) drop-shadow(0 0 12px rgba(125,211,252,0.16))',
+        },
+        animate: {
+          filter: [
+            'brightness(0.98) saturate(1.08) drop-shadow(0 0 10px rgba(125,211,252,0.10))',
+            'brightness(1.16) saturate(1.34) drop-shadow(0 0 18px rgba(165,180,252,0.24))',
+            'brightness(1.04) saturate(1.18) drop-shadow(0 0 12px rgba(125,211,252,0.14))',
+          ],
+          scale: [1, 1.01, 1],
+        },
+        transition: { duration: 3.2, repeat: Infinity, ease: 'easeInOut' as const },
+      };
+    case 'toxic':
+      return {
+        style: {
+          filter: 'brightness(1.02) saturate(1.2) drop-shadow(0 0 14px rgba(132,204,22,0.18))',
+        },
+        animate: {
+          filter: [
+            'brightness(0.96) saturate(1.08) hue-rotate(-4deg) drop-shadow(0 0 10px rgba(132,204,22,0.10))',
+            'brightness(1.14) saturate(1.38) hue-rotate(6deg) drop-shadow(0 0 20px rgba(163,230,53,0.22))',
+            'brightness(1.02) saturate(1.2) hue-rotate(0deg) drop-shadow(0 0 14px rgba(132,204,22,0.16))',
+          ],
+          scale: [1, 1.008, 1],
+        },
+        transition: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' as const },
+      };
+    case 'voidfire':
+      return {
+        style: {
+          filter: 'brightness(1.05) saturate(1.2) drop-shadow(0 0 14px rgba(249,115,22,0.2))',
+        },
+        animate: {
+          filter: [
+            'brightness(0.98) saturate(1.08) drop-shadow(0 0 10px rgba(249,115,22,0.1))',
+            'brightness(1.18) saturate(1.34) drop-shadow(0 0 22px rgba(249,115,22,0.24))',
+            'brightness(1.04) saturate(1.18) drop-shadow(0 0 12px rgba(217,70,239,0.16))',
+          ],
+        },
+        transition: { duration: 2.6, repeat: Infinity, ease: 'easeInOut' as const },
+      };
+    case 'glitchpop':
+      return {
+        style: {
+          filter: 'brightness(1.04) saturate(1.28) drop-shadow(0 0 12px rgba(236,72,153,0.18))',
+        },
+        animate: {
+          filter: [
+            'brightness(1.02) saturate(1.2) hue-rotate(-8deg) drop-shadow(0 0 8px rgba(34,211,238,0.12))',
+            'brightness(1.14) saturate(1.42) hue-rotate(10deg) drop-shadow(0 0 18px rgba(236,72,153,0.2))',
+            'brightness(1.06) saturate(1.24) hue-rotate(0deg) drop-shadow(0 0 10px rgba(250,204,21,0.14))',
+          ],
+        },
+        transition: { duration: 1.8, repeat: Infinity, ease: 'easeInOut' as const },
+      };
+    default:
+      return {
+        style: {
+          filter: `drop-shadow(0 0 10px ${glow})`,
+        },
+      };
+  }
+}
+
 function ToxicRipple({
   left,
   top,
@@ -148,6 +217,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
     return total ?? effectiveResults.reduce((sum, value) => sum + value, 0);
   }, [effectiveResults, highlight, total]);
   const finalTotal = total ?? effectiveResults.reduce((sum, value) => sum + value, 0);
+  const diceCanvasMotion = useMemo(() => getDiceCanvasMotion(diceSkin, skin.glow), [diceSkin, skin.glow]);
 
   useEffect(() => {
     let cancelled = false;
@@ -253,9 +323,9 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
           className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-white/10 bg-zinc-950/80 shadow-[0_0_60px_rgba(0,0,0,0.45)]"
           style={{ boxShadow: `0 0 50px ${skin.glow}` }}
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_45%)]" />
+          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_45%)]" />
           {diceSkin === 'celestial' && (
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_24%,rgba(56,189,248,0.15),transparent_22%),radial-gradient(circle_at_72%_18%,rgba(129,140,248,0.18),transparent_24%),radial-gradient(circle_at_50%_82%,rgba(168,85,247,0.18),transparent_28%),linear-gradient(180deg,rgba(9,11,28,0.16),rgba(4,8,22,0.44)_56%,rgba(2,6,23,0.68))]" />
               {Array.from({ length: 4 }).map((_, index) => (
                 <motion.div
@@ -274,15 +344,19 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
                   transition={{ duration: 8 + index * 1.2, repeat: Infinity, ease: 'easeInOut', delay: index * 0.35 }}
                 />
               ))}
-              {Array.from({ length: 56 }).map((_, index) => (
+            </div>
+          )}
+          {diceSkin === 'celestial' && (
+            <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
+              {Array.from({ length: 72 }).map((_, index) => (
                 <motion.div
                   key={`sparkle-${index}`}
                   className="absolute rounded-full bg-indigo-100/95"
                   style={{
                     left: `${4 + ((index * 17) % 92)}%`,
                     top: `${6 + ((index * 19) % 80)}%`,
-                    width: `${index % 9 === 0 ? 10 : index % 5 === 0 ? 7 : index % 3 === 0 ? 4 : 2}px`,
-                    height: `${index % 9 === 0 ? 10 : index % 5 === 0 ? 7 : index % 3 === 0 ? 4 : 2}px`,
+                    width: `${index % 11 === 0 ? 12 : index % 7 === 0 ? 8 : index % 4 === 0 ? 5 : 2}px`,
+                    height: `${index % 11 === 0 ? 12 : index % 7 === 0 ? 8 : index % 4 === 0 ? 5 : 2}px`,
                     boxShadow: index % 9 === 0
                       ? '0 0 22px rgba(103,232,249,0.9), 0 0 34px rgba(165,180,252,0.42)'
                       : index % 4 === 0
@@ -290,13 +364,13 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
                         : '0 0 10px rgba(165,180,252,0.48)',
                   }}
                   animate={{
-                    opacity: [0.08, index % 9 === 0 ? 1 : index % 4 === 0 ? 0.9 : 0.62, 0.14],
-                    scale: [0.68, index % 9 === 0 ? 2.1 : index % 4 === 0 ? 1.7 : 1.24, 0.84],
+                    opacity: [0.04, index % 11 === 0 ? 1 : index % 4 === 0 ? 0.92 : 0.58, 0.08],
+                    scale: [0.58, index % 11 === 0 ? 2.3 : index % 4 === 0 ? 1.75 : 1.18, 0.7],
                   }}
-                  transition={{ duration: 1.1 + (index % 5) * 0.42, repeat: Infinity, delay: index * 0.04 }}
+                  transition={{ duration: 0.9 + (index % 6) * 0.34, repeat: Infinity, delay: index * 0.03 }}
                 />
               ))}
-              {Array.from({ length: 12 }).map((_, index) => (
+              {Array.from({ length: 18 }).map((_, index) => (
                 <motion.div
                   key={`star-halo-${index}`}
                   className="absolute rounded-full blur-xl"
@@ -313,7 +387,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
                   transition={{ duration: 2.2 + (index % 4) * 0.35, repeat: Infinity, delay: index * 0.16 }}
                 />
               ))}
-              {Array.from({ length: 8 }).map((_, index) => (
+              {Array.from({ length: 14 }).map((_, index) => (
                 <motion.div
                   key={`star-streak-${index}`}
                   className="absolute h-[2px] rounded-full"
@@ -329,6 +403,23 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
                   transition={{ duration: 2.8 + (index % 3) * 0.4, repeat: Infinity, delay: index * 0.4 }}
                 />
               ))}
+              {Array.from({ length: 10 }).map((_, index) => (
+                <motion.div
+                  key={`star-cross-${index}`}
+                  className="absolute"
+                  style={{
+                    left: `${8 + ((index * 15) % 84)}%`,
+                    top: `${10 + ((index * 21) % 72)}%`,
+                    width: `${14 + (index % 3) * 5}px`,
+                    height: `${14 + (index % 3) * 5}px`,
+                  }}
+                  animate={{ opacity: [0.02, 0.8, 0.04], scale: [0.8, 1.3, 0.86], rotate: [0, 45, 90] }}
+                  transition={{ duration: 1.4 + (index % 3) * 0.28, repeat: Infinity, delay: index * 0.18 }}
+                >
+                  <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-cyan-100/80 to-transparent shadow-[0_0_12px_rgba(103,232,249,0.55)]" />
+                  <div className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-gradient-to-r from-transparent via-indigo-100/80 to-transparent shadow-[0_0_12px_rgba(165,180,252,0.5)]" />
+                </motion.div>
+              ))}
               <svg className="absolute inset-0 h-full w-full opacity-45" viewBox="0 0 100 100" preserveAspectRatio="none">
                 <g stroke="rgba(165,180,252,0.22)" strokeWidth="0.22" fill="none">
                   <path d="M18 28 L27 22 L39 30 L48 26" />
@@ -339,7 +430,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
             </div>
           )}
           {diceSkin === 'bloodstone' && (
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
               {Array.from({ length: 12 }).map((_, index) => (
                 <motion.div
                   key={`ember-${index}`}
@@ -355,7 +446,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
             </div>
           )}
           {diceSkin === 'aurora' && (
-            <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-90">
+            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-90">
               {Array.from({ length: 5 }).map((_, index) => (
                 <motion.div
                   key={`aurora-${index}`}
@@ -373,7 +464,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
             </div>
           )}
           {diceSkin === 'voidfire' && (
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
               {Array.from({ length: 14 }).map((_, index) => (
                 <motion.div
                   key={`voidfire-${index}`}
@@ -392,7 +483,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
             </div>
           )}
           {diceSkin === 'toxic' && (
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(163,230,53,0.22),transparent_38%),radial-gradient(circle_at_20%_0%,rgba(74,222,128,0.16),transparent_24%),linear-gradient(180deg,rgba(9,20,6,0.18),rgba(10,28,8,0.44)_58%,rgba(16,56,10,0.62))]" />
               <ToxicRipple left="12%" top="18%" width={240} delay={0} duration={2.6} rotate={-6} />
               <ToxicRipple left="58%" top="14%" width={300} delay={0.45} duration={3} rotate={4} />
@@ -419,6 +510,10 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
                   transition={{ duration: 3.4 + (index % 3) * 0.35, repeat: Infinity, ease: 'easeInOut', delay: index * 0.2 }}
                 />
               ))}
+            </div>
+          )}
+          {diceSkin === 'toxic' && (
+            <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
               {Array.from({ length: 12 }).map((_, index) => (
                 <motion.div
                   key={`toxic-${index}`}
@@ -480,7 +575,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
             </div>
           )}
           {diceSkin === 'glitchpop' && (
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
               {Array.from({ length: 18 }).map((_, index) => (
                 <motion.div
                   key={`glitch-${index}`}
@@ -505,7 +600,13 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
             <span>Dice Tray</span>
             <span>{notation}</span>
           </div>
-          <div id={containerIdRef.current} className="h-full w-full" />
+          <motion.div
+            id={containerIdRef.current}
+            className="relative z-20 h-full w-full"
+            style={diceCanvasMotion.style}
+            animate={diceCanvasMotion.animate}
+            transition={diceCanvasMotion.transition}
+          />
 
           {phase === 'initializing' && (
             <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-zinc-300">
