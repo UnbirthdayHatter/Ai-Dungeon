@@ -51,13 +51,38 @@ function createFaceAtlas(scene: Scene) {
     const fw = cellWidth - inset * 2;
     const fh = cellHeight - inset * 2;
     const faceNumber = (face + 1).toString();
+    const tri = [
+      { x: fx + fw * 0.12, y: fy + fh * 0.14 },
+      { x: fx + fw * 0.88, y: fy + fh * 0.18 },
+      { x: fx + fw * 0.22, y: fy + fh * 0.86 },
+    ];
+    const centroid = {
+      x: (tri[0].x + tri[1].x + tri[2].x) / 3,
+      y: (tri[0].y + tri[1].y + tri[2].y) / 3,
+    };
+
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(x, y, cellWidth, cellHeight);
 
     const rock = ctx.createLinearGradient(fx, fy, fx + fw, fy + fh);
     rock.addColorStop(0, '#090706');
     rock.addColorStop(0.45, '#1a0d08');
     rock.addColorStop(1, '#050404');
+    ctx.beginPath();
+    ctx.moveTo(tri[0].x, tri[0].y);
+    ctx.lineTo(tri[1].x, tri[1].y);
+    ctx.lineTo(tri[2].x, tri[2].y);
+    ctx.closePath();
     ctx.fillStyle = rock;
-    ctx.fillRect(fx, fy, fw, fh);
+    ctx.fill();
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(tri[0].x, tri[0].y);
+    ctx.lineTo(tri[1].x, tri[1].y);
+    ctx.lineTo(tri[2].x, tri[2].y);
+    ctx.closePath();
+    ctx.clip();
 
     for (let i = 0; i < 28; i += 1) {
       const px = fx + ((i * 97 + face * 29) % Math.floor(fw));
@@ -99,12 +124,23 @@ function createFaceAtlas(scene: Scene) {
 
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = `bold ${Math.floor(cellWidth * 0.34)}px Georgia, serif`;
+    ctx.font = `bold ${Math.floor(cellWidth * 0.26)}px Georgia, serif`;
     ctx.shadowBlur = 26;
     ctx.shadowColor = 'rgba(255, 164, 48, 0.95)';
     ctx.fillStyle = '#fff0c7';
-    ctx.fillText(faceNumber, x + cellWidth / 2, y + cellHeight / 2);
+    ctx.fillText(faceNumber, centroid.x, centroid.y);
     ctx.shadowBlur = 0;
+
+    ctx.restore();
+
+    ctx.strokeStyle = 'rgba(255, 208, 128, 0.14)';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(tri[0].x, tri[0].y);
+    ctx.lineTo(tri[1].x, tri[1].y);
+    ctx.lineTo(tri[2].x, tri[2].y);
+    ctx.closePath();
+    ctx.stroke();
   }
 
   texture.update(false);
