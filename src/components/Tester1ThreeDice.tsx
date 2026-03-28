@@ -86,9 +86,9 @@ void main() {
   float ember = smoothstep(0.94, 0.985, fbm(uv * 5.5 + 20.0));
   float pulse = 0.88 + sin(uTime * 1.8 + uSeed * 5.0) * 0.06 + sin(uTime * 3.7 + uSeed * 9.0) * 0.03;
 
-  vec3 rock = vec3(0.035, 0.02, 0.018);
-  rock += fbm(uv * 1.6) * 0.05;
-  rock += max(dot(normalize(vNormalW), normalize(vec3(0.4, 1.0, 0.6))), 0.0) * 0.045;
+  vec3 rock = vec3(0.018, 0.01, 0.009);
+  rock += fbm(uv * 1.6) * 0.028;
+  rock += max(dot(normalize(vNormalW), normalize(vec3(0.4, 1.0, 0.6))), 0.0) * 0.03;
 
   vec3 crackColor = vec3(1.0, 0.38, 0.06) * cracks * 0.34;
   vec3 hotspotColor = vec3(1.55, 0.92, 0.34) * hotspots * 0.28;
@@ -96,8 +96,8 @@ void main() {
 
   vec4 numberSample = texture2D(uNumberMap, vUv);
   float numberMask = numberSample.a;
-  vec3 numberCore = vec3(2.8, 2.45, 1.9) * smoothstep(0.72, 1.0, numberMask);
-  vec3 numberGlow = vec3(1.85, 0.78, 0.18) * smoothstep(0.04, 0.96, numberMask) * 0.92;
+  vec3 numberCore = vec3(1.95, 1.72, 1.34) * smoothstep(0.78, 1.0, numberMask);
+  vec3 numberGlow = vec3(1.15, 0.48, 0.1) * smoothstep(0.12, 0.96, numberMask) * 0.52;
 
   vec3 color = rock + crackColor + hotspotColor + emberColor;
   color += (numberGlow + numberCore) * pulse;
@@ -203,7 +203,7 @@ export function Tester1ThreeDice({
     let resizeObserver: ResizeObserver | null = null;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x070404);
+    scene.background = null;
 
     const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
     camera.position.set(0, 12.6, 6.6);
@@ -214,7 +214,7 @@ export function Tester1ThreeDice({
     renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
     renderer.shadowMap.enabled = true;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.24;
+    renderer.toneMappingExposure = 1.14;
     mountRef.current.innerHTML = '';
     mountRef.current.appendChild(renderer.domElement);
 
@@ -240,27 +240,6 @@ export function Tester1ThreeDice({
     const rimLight = new THREE.PointLight(0xff6a1f, 7.4, 20, 2);
     rimLight.position.set(-2.4, 3.8, 1.8);
     scene.add(rimLight);
-
-    const tray = new THREE.Mesh(
-      new THREE.CylinderGeometry(7.8, 8.8, 0.8, 48),
-      new THREE.MeshStandardMaterial({
-        color: 0x100706,
-        emissive: 0x1b0b08,
-        roughness: 0.92,
-        metalness: 0.05,
-      }),
-    );
-    tray.position.y = -0.55;
-    tray.receiveShadow = true;
-    scene.add(tray);
-
-    const trayGlow = new THREE.Mesh(
-      new THREE.TorusGeometry(8.2, 0.08, 20, 88),
-      new THREE.MeshBasicMaterial({ color: 0xff7a2a, transparent: true, opacity: 0.58 }),
-    );
-    trayGlow.rotation.x = Math.PI / 2;
-    trayGlow.position.y = -0.18;
-    scene.add(trayGlow);
 
     const world = new CANNON.World({
       gravity: new CANNON.Vec3(0, -24, 0),
@@ -402,7 +381,6 @@ export function Tester1ThreeDice({
         }
       });
 
-      trayGlow.material.opacity = 0.44 + Math.sin(elapsed * 1.8) * 0.08;
       rimLight.intensity = 6.3 + Math.sin(elapsed * 2.1) * 0.7;
 
       composer.render();
