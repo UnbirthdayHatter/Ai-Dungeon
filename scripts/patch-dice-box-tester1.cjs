@@ -42,6 +42,38 @@ const animatedHelper = `  registerAnimatedEmissive(e, t, i) {
   }
 `;
 
+const tester1VisualHelper = `function ha(f, e) {
+  var t, i, r;
+  if (!f.mesh || f.config.theme !== "tester1" || !f.mesh.material || f.mesh.metadata && f.mesh.metadata.tester1VisualAttached)
+    return;
+  const s = f.mesh, n = s.material, a = s.clone(\`\${s.name || "tester1"}_visual\`);
+  if (!a)
+    return;
+  const o = new g(\`tester1_visual_material_\${f.id}\`, e);
+  o.diffuseColor = new he(0.08, 0.045, 0.03), o.specularColor = new he(0.22, 0.12, 0.05), o.specularPower = 96, o.roughness = 0.2, o.bumpTexture = (t = n.bumpTexture) != null ? t : null, o.specularTexture = (i = n.specularTexture) != null ? i : null, o.emissiveTexture = (r = n.emissiveTexture) != null ? r : null, o.emissiveColor = new he(1.05, 0.52, 0.12), o.useEmissiveAsIllumination = !0, o.alpha = 1, a.material = o, a.parent = s, a.position.set(0, 0, 0), a.rotation.set(0, 0, 0), a.rotationQuaternion = new Ie(0, 0, 0, 1), a.scaling = new M(1.028, 1.028, 1.028), a.isPickable = !1, a.receiveShadows = !1, a.alwaysSelectAsActiveMesh = !0, a.metadata = {
+    ...(a.metadata || {}),
+    tester1VisualShell: !0
+  }, s.metadata = {
+    ...(s.metadata || {}),
+    tester1VisualAttached: !0
+  };
+  let l = 0;
+  const d = e.onBeforeRenderObservable.add(() => {
+    if (a.isDisposed() || o.isDisposed()) {
+      e.onBeforeRenderObservable.remove(d);
+      return;
+    }
+    const h = Math.min(e.getEngine().getDeltaTime() * 1e-3, 0.05);
+    l += h;
+    const c = 0.82 + Math.sin(l * 1.74) * 0.08 + Math.sin(l * 3.41 + 0.8) * 0.04, p = 0.96 + Math.sin(l * 1.13 + 1.7) * 0.03, E = Math.sin(l * 0.92 + 0.4) * 0.012;
+    o.emissiveTexture && (o.emissiveTexture.level = 1.24 + c * 0.34), o.emissiveColor = new he(1.05 * (1 + E), 0.5 * p, 0.11), a.scaling.set(1.028 + E, 1.028 + E, 1.028 + E), a.rotation.y = Math.sin(l * 0.8) * 0.03, a.rotation.x = Math.sin(l * 1.1 + 0.6) * 0.018;
+  });
+  a.onDisposeObservable.add(() => {
+    e.onBeforeRenderObservable.remove(d);
+  });
+}
+`;
+
 function warn(message) {
   console.warn(`[patch-dice-box-tester1] ${message}`);
 }
@@ -105,6 +137,28 @@ function main() {
   }
   if (!source.includes('this.registerAnimatedEmissive(t, [r, n], i);')) {
     warn('Did not patch loadColorMaterial; Tester1 emissive animation may be unavailable');
+  }
+
+  if (!source.includes('function ha(f, e) {') && source.includes('Z = new WeakMap()')) {
+    source = source.replace('Z = new WeakMap()', `${tester1VisualHelper}Z = new WeakMap()`);
+    patched = true;
+  } else if (!source.includes('function ha(f, e) {')) {
+    warn('Tester1 visual helper anchor not found; skipping visual shell injection');
+  }
+
+  source = source.replace(
+    /(\}, i = new Oe\(t, C\(this, K\)\);)/,
+    (match) => {
+      if (match.includes('e.theme === "tester1" && ha(i, C(this, K));')) {
+        return match;
+      }
+      patched = true;
+      return `${match}\n  e.theme === "tester1" && ha(i, C(this, K));`;
+    },
+  );
+
+  if (!source.includes('e.theme === "tester1" && ha(i, C(this, K));')) {
+    warn('Did not patch Tester1 visual shell attach call; custom visual overlay may be unavailable');
   }
 
   fs.writeFileSync(targetPath, source, 'utf8');
