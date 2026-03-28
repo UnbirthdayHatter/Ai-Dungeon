@@ -284,7 +284,7 @@ function LinearTrailField({
   );
 }
 
-function FlameTrailField({
+function ArcaneTrailField({
   prefix,
   count,
   getStyle,
@@ -307,22 +307,10 @@ function FlameTrailField({
           animate={getAnimate(index)}
           transition={getTransition(index)}
         >
-          <div className="absolute left-[-120%] top-[40%] h-[18%] w-[150%] rounded-full bg-[linear-gradient(90deg,rgba(168,85,247,0),rgba(168,85,247,0.2),rgba(216,180,254,0.5),rgba(255,255,255,0.08))] blur-md" />
-          <div
-            className="absolute right-[8%] top-[4%] h-[92%] w-[54%] blur-[0.6px]"
-            style={{
-              clipPath: 'polygon(52% 0%, 76% 16%, 88% 34%, 82% 52%, 100% 68%, 78% 86%, 62% 100%, 38% 92%, 22% 76%, 10% 56%, 0% 36%, 18% 16%)',
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.0), rgba(216,180,254,0.68), rgba(168,85,247,0.94), rgba(88,28,135,0.92))',
-            }}
-          />
-          <div
-            className="absolute right-[18%] top-[14%] h-[64%] w-[34%] blur-[0.4px]"
-            style={{
-              clipPath: 'polygon(50% 0%, 76% 20%, 82% 40%, 70% 60%, 88% 76%, 64% 100%, 36% 84%, 18% 60%, 14% 34%)',
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.0), rgba(244,114,182,0.38), rgba(217,70,239,0.82), rgba(126,34,206,0.92))',
-            }}
-          />
-          <div className="absolute right-[22%] top-[30%] h-[18%] w-[18%] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.78),rgba(216,180,254,0.34),rgba(216,180,254,0))] blur-[1px]" />
+          <div className="absolute left-[-105%] top-[42%] h-[14%] w-[145%] rounded-full bg-[linear-gradient(90deg,rgba(168,85,247,0),rgba(168,85,247,0.12),rgba(196,181,253,0.46),rgba(255,255,255,0.06))] blur-md" />
+          <div className="absolute right-[12%] top-[8%] h-[28%] w-[28%] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.76),rgba(216,180,254,0.48),rgba(168,85,247,0.08),rgba(168,85,247,0))] blur-[0.8px]" />
+          <div className="absolute right-[34%] top-[28%] h-[18%] w-[18%] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.58),rgba(129,140,248,0.34),rgba(129,140,248,0))] blur-[0.6px]" />
+          <div className="absolute right-[10%] top-[18%] h-[64%] w-[40%] rounded-[999px] border border-violet-200/35 opacity-70 blur-[0.3px]" />
         </motion.div>
       ))}
     </>
@@ -365,8 +353,8 @@ function VoidfireEffects() {
         />
       </div>
       <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
-        <FlameTrailField
-          prefix="voidfire-flame"
+        <ArcaneTrailField
+          prefix="voidfire-arcane"
           count={12}
           getStyle={(index) => ({
             left: `${36 + ((index * 5) % 24)}%`,
@@ -422,6 +410,32 @@ function VoidfireEffects() {
           })}
           getAnimate={() => ({ y: [0, -22, -6], opacity: [0.08, 0.64, 0.12], scale: [0.7, 1.24, 0.84] })}
           getTransition={(index) => ({ duration: 1.8 + (index % 3) * 0.2, repeat: Infinity, delay: index * 0.12 })}
+        />
+        <GlowBlobField
+          prefix="voidfire-bubble"
+          count={14}
+          className="absolute rounded-full blur-[0.4px]"
+          getStyle={(index) => ({
+            left: `${34 + ((index * 7) % 30)}%`,
+            top: `${28 + ((index * 9) % 28)}%`,
+            width: `${8 + (index % 4) * 6}px`,
+            height: `${8 + (index % 4) * 6}px`,
+            background: index % 3 === 0
+              ? 'radial-gradient(circle, rgba(255,255,255,0.75), rgba(216,180,254,0.42), rgba(168,85,247,0.08), rgba(168,85,247,0))'
+              : index % 3 === 1
+                ? 'radial-gradient(circle, rgba(224,231,255,0.72), rgba(129,140,248,0.38), rgba(129,140,248,0.08), rgba(129,140,248,0))'
+                : 'radial-gradient(circle, rgba(250,245,255,0.7), rgba(217,70,239,0.38), rgba(217,70,239,0.08), rgba(217,70,239,0))',
+            boxShadow: index % 2 === 0
+              ? '0 0 14px rgba(216,180,254,0.22)'
+              : '0 0 14px rgba(129,140,248,0.18)',
+          })}
+          getAnimate={(index) => ({
+            x: [0, 20 + (index % 5) * 6, 10 + (index % 4) * 4],
+            y: [0, -18 - (index % 3) * 8, -8],
+            opacity: [0, 0.86, 0],
+            scale: [0.72, 1.18, 0.88],
+          })}
+          getTransition={(index) => ({ duration: 1.2 + (index % 4) * 0.12, repeat: Infinity, delay: index * 0.07, ease: 'easeOut' })}
         />
         <GlowBlobField
           prefix="voidfire-smoke"
