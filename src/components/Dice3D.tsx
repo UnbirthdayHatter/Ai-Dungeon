@@ -78,6 +78,22 @@ function getDiceCanvasMotion(diceSkin: string, glow: string) {
         },
         transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' as const },
       };
+    case 'aurora':
+      return {
+        style: {
+          filter: 'brightness(1.08) saturate(1.28) contrast(1.08) drop-shadow(0 0 14px rgba(52,211,153,0.18))',
+        },
+        animate: {
+          filter: [
+            'brightness(1.02) saturate(1.14) contrast(1.04) hue-rotate(-18deg) drop-shadow(0 0 10px rgba(45,212,191,0.14))',
+            'brightness(1.16) saturate(1.4) contrast(1.12) hue-rotate(12deg) drop-shadow(0 0 18px rgba(96,165,250,0.18))',
+            'brightness(1.1) saturate(1.32) contrast(1.1) hue-rotate(36deg) drop-shadow(0 0 18px rgba(167,139,250,0.18))',
+            'brightness(1.04) saturate(1.18) contrast(1.06) hue-rotate(0deg) drop-shadow(0 0 12px rgba(52,211,153,0.16))',
+          ],
+          scale: [1, 1.01, 1],
+        },
+        transition: { duration: 4.8, repeat: Infinity, ease: 'easeInOut' as const },
+      };
     case 'voidfire':
       return {
         style: {
@@ -773,18 +789,63 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
           )}
           {diceSkin === 'aurora' && (
             <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-90">
-              {Array.from({ length: 5 }).map((_, index) => (
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_110%,rgba(16,185,129,0.12),transparent_34%),radial-gradient(circle_at_18%_18%,rgba(45,212,191,0.14),transparent_22%),radial-gradient(circle_at_78%_16%,rgba(99,102,241,0.12),transparent_22%),linear-gradient(180deg,rgba(3,12,20,0.18),rgba(6,18,28,0.54)_54%,rgba(4,10,18,0.88))]" />
+              {Array.from({ length: 7 }).map((_, index) => (
                 <motion.div
-                  key={`aurora-${index}`}
-                  className="absolute left-[-10%] h-40 w-[60%] rounded-full blur-3xl"
+                  key={`aurora-curtain-${index}`}
+                  className="absolute top-[-8%] w-[28%] rounded-[50%] blur-2xl"
                   style={{
-                    top: `${8 + index * 14}%`,
-                    background: index % 2 === 0
-                      ? 'linear-gradient(90deg, rgba(34,197,94,0.04), rgba(45,212,191,0.28), rgba(99,102,241,0.18), transparent)'
-                      : 'linear-gradient(90deg, rgba(59,130,246,0.02), rgba(168,85,247,0.24), rgba(45,212,191,0.18), transparent)',
+                    left: `${-8 + index * 14}%`,
+                    height: `${88 + (index % 3) * 8}%`,
+                    background: index % 3 === 0
+                      ? 'linear-gradient(180deg, rgba(45,212,191,0.0), rgba(45,212,191,0.26), rgba(16,185,129,0.18), rgba(45,212,191,0.0))'
+                      : index % 3 === 1
+                        ? 'linear-gradient(180deg, rgba(96,165,250,0.0), rgba(96,165,250,0.22), rgba(45,212,191,0.18), rgba(96,165,250,0.0))'
+                        : 'linear-gradient(180deg, rgba(167,139,250,0.0), rgba(167,139,250,0.22), rgba(45,212,191,0.16), rgba(167,139,250,0.0))',
+                    clipPath: 'polygon(12% 0%, 82% 0%, 100% 20%, 86% 42%, 100% 66%, 80% 100%, 18% 100%, 0% 68%, 16% 38%, 0% 14%)',
                   }}
-                  animate={{ x: ['-5%', '18%', '-2%'], opacity: [0.35, 0.65, 0.4], rotate: [-4, 3, -2] }}
-                  transition={{ duration: 7 + index, repeat: Infinity, ease: 'easeInOut', delay: index * 0.4 }}
+                  animate={{
+                    x: ['-2%', '6%', '-3%'],
+                    y: [0, 8, -4, 0],
+                    opacity: [0.22, 0.5, 0.28],
+                    rotate: [-6, 4, -3],
+                    scaleY: [0.94, 1.06, 0.98],
+                  }}
+                  transition={{ duration: 8 + index * 0.5, repeat: Infinity, ease: 'easeInOut', delay: index * 0.45 }}
+                />
+              ))}
+              {Array.from({ length: 6 }).map((_, index) => (
+                <motion.div
+                  key={`aurora-band-${index}`}
+                  className="absolute left-[-10%] h-28 w-[70%] rounded-full blur-3xl"
+                  style={{
+                    top: `${12 + index * 11}%`,
+                    background: index % 2 === 0
+                      ? 'linear-gradient(90deg, rgba(16,185,129,0.0), rgba(45,212,191,0.22), rgba(96,165,250,0.18), rgba(167,139,250,0.08), rgba(0,0,0,0))'
+                      : 'linear-gradient(90deg, rgba(99,102,241,0.0), rgba(167,139,250,0.18), rgba(45,212,191,0.2), rgba(16,185,129,0.08), rgba(0,0,0,0))',
+                  }}
+                  animate={{ x: ['-8%', '20%', '-2%'], opacity: [0.16, 0.34, 0.18], rotate: [-4, 3, -1] }}
+                  transition={{ duration: 9 + index * 0.6, repeat: Infinity, ease: 'easeInOut', delay: index * 0.35 }}
+                />
+              ))}
+              {Array.from({ length: 18 }).map((_, index) => (
+                <motion.div
+                  key={`aurora-star-${index}`}
+                  className="absolute rounded-full"
+                  style={{
+                    left: `${6 + ((index * 11) % 88)}%`,
+                    top: `${8 + ((index * 13) % 42)}%`,
+                    width: `${index % 4 === 0 ? 4 : 2}px`,
+                    height: `${index % 4 === 0 ? 4 : 2}px`,
+                    background: index % 3 === 0 ? 'rgba(255,255,255,0.82)' : index % 3 === 1 ? 'rgba(191,219,254,0.76)' : 'rgba(167,243,208,0.76)',
+                    boxShadow: index % 3 === 0
+                      ? '0 0 12px rgba(255,255,255,0.24)'
+                      : index % 3 === 1
+                        ? '0 0 12px rgba(96,165,250,0.2)'
+                        : '0 0 12px rgba(45,212,191,0.2)',
+                  }}
+                  animate={{ opacity: [0.12, 0.74, 0.16], scale: [0.8, 1.3, 0.9] }}
+                  transition={{ duration: 1.8 + (index % 4) * 0.25, repeat: Infinity, delay: index * 0.08 }}
                 />
               ))}
             </div>
