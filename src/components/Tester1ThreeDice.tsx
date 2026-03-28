@@ -90,18 +90,18 @@ void main() {
   rock += fbm(uv * 1.6) * 0.05;
   rock += max(dot(normalize(vNormalW), normalize(vec3(0.4, 1.0, 0.6))), 0.0) * 0.045;
 
-  vec3 crackColor = vec3(1.0, 0.38, 0.06) * cracks * 0.42;
-  vec3 hotspotColor = vec3(1.55, 0.92, 0.34) * hotspots * 0.32;
+  vec3 crackColor = vec3(1.0, 0.38, 0.06) * cracks * 0.34;
+  vec3 hotspotColor = vec3(1.55, 0.92, 0.34) * hotspots * 0.28;
   vec3 emberColor = vec3(1.0, 0.55, 0.1) * ember * 0.04;
 
   vec4 numberSample = texture2D(uNumberMap, vUv);
   float numberMask = numberSample.a;
-  vec3 numberCore = vec3(2.25, 2.0, 1.5) * smoothstep(0.62, 1.0, numberMask);
-  vec3 numberGlow = vec3(1.45, 0.62, 0.14) * smoothstep(0.08, 0.95, numberMask) * 0.7;
+  vec3 numberCore = vec3(2.8, 2.45, 1.9) * smoothstep(0.72, 1.0, numberMask);
+  vec3 numberGlow = vec3(1.85, 0.78, 0.18) * smoothstep(0.04, 0.96, numberMask) * 0.92;
 
   vec3 color = rock + crackColor + hotspotColor + emberColor;
   color += (numberGlow + numberCore) * pulse;
-  color += (crackColor + hotspotColor) * pulse * 0.38;
+  color += (crackColor + hotspotColor) * pulse * 0.28;
 
   gl_FragColor = vec4(color, 1.0);
 }
@@ -119,14 +119,19 @@ function createNumberTexture(value: number) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = 'bold 240px Georgia';
-  ctx.lineWidth = 14;
-  ctx.strokeStyle = 'rgba(255, 155, 42, 0.95)';
-  ctx.shadowBlur = 40;
-  ctx.shadowColor = 'rgba(255, 118, 20, 0.95)';
+  ctx.font = 'bold 280px Georgia';
+  ctx.lineWidth = 22;
+  ctx.strokeStyle = 'rgba(255, 120, 24, 1)';
+  ctx.shadowBlur = 34;
+  ctx.shadowColor = 'rgba(255, 92, 12, 0.92)';
   ctx.strokeText(String(value), canvas.width / 2, canvas.height / 2);
-  ctx.shadowBlur = 80;
-  ctx.shadowColor = 'rgba(255, 210, 120, 0.85)';
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = 'rgba(255, 214, 144, 0.88)';
+  ctx.shadowBlur = 96;
+  ctx.shadowColor = 'rgba(255, 214, 136, 0.95)';
+  ctx.strokeText(String(value), canvas.width / 2, canvas.height / 2);
+  ctx.shadowBlur = 132;
+  ctx.shadowColor = 'rgba(255, 235, 180, 0.98)';
   ctx.fillStyle = 'rgba(255, 250, 230, 1)';
   ctx.fillText(String(value), canvas.width / 2, canvas.height / 2);
 
@@ -198,18 +203,18 @@ export function Tester1ThreeDice({
     let resizeObserver: ResizeObserver | null = null;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x090605);
+    scene.background = new THREE.Color(0x070404);
 
-    const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
-    camera.position.set(0, 8.8, 11.5);
-    camera.lookAt(0, 0.8, 0);
+    const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+    camera.position.set(0, 12.6, 6.6);
+    camera.lookAt(0, 0.45, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
     renderer.shadowMap.enabled = true;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+    renderer.toneMappingExposure = 1.24;
     mountRef.current.innerHTML = '';
     mountRef.current.appendChild(renderer.domElement);
 
@@ -217,30 +222,30 @@ export function Tester1ThreeDice({
     composer.addPass(new RenderPass(scene, camera));
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(mountRef.current.clientWidth, mountRef.current.clientHeight),
-      0.9,
-      0.45,
-      0.72,
+      1.18,
+      0.52,
+      0.66,
     );
     composer.addPass(bloomPass);
 
-    const ambient = new THREE.AmbientLight(0xffd7a8, 0.5);
+    const ambient = new THREE.AmbientLight(0xffd7a8, 0.62);
     scene.add(ambient);
 
-    const keyLight = new THREE.DirectionalLight(0xffc27a, 1.45);
-    keyLight.position.set(5, 9, 6);
+    const keyLight = new THREE.DirectionalLight(0xffc27a, 1.7);
+    keyLight.position.set(3.2, 11.5, 3.8);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.set(1024, 1024);
     scene.add(keyLight);
 
-    const rimLight = new THREE.PointLight(0xff6a1f, 6, 20, 2);
-    rimLight.position.set(-3, 2.5, 2);
+    const rimLight = new THREE.PointLight(0xff6a1f, 7.4, 20, 2);
+    rimLight.position.set(-2.4, 3.8, 1.8);
     scene.add(rimLight);
 
     const tray = new THREE.Mesh(
-      new THREE.CylinderGeometry(7.8, 8.6, 0.7, 40),
+      new THREE.CylinderGeometry(7.8, 8.8, 0.8, 48),
       new THREE.MeshStandardMaterial({
-        color: 0x140908,
-        emissive: 0x24100c,
+        color: 0x100706,
+        emissive: 0x1b0b08,
         roughness: 0.92,
         metalness: 0.05,
       }),
@@ -250,8 +255,8 @@ export function Tester1ThreeDice({
     scene.add(tray);
 
     const trayGlow = new THREE.Mesh(
-      new THREE.TorusGeometry(8.15, 0.08, 20, 80),
-      new THREE.MeshBasicMaterial({ color: 0xff6b1f, transparent: true, opacity: 0.45 }),
+      new THREE.TorusGeometry(8.2, 0.08, 20, 88),
+      new THREE.MeshBasicMaterial({ color: 0xff7a2a, transparent: true, opacity: 0.58 }),
     );
     trayGlow.rotation.x = Math.PI / 2;
     trayGlow.position.y = -0.18;
@@ -397,8 +402,8 @@ export function Tester1ThreeDice({
         }
       });
 
-      trayGlow.material.opacity = 0.34 + Math.sin(elapsed * 1.8) * 0.08;
-      rimLight.intensity = 5.5 + Math.sin(elapsed * 2.1) * 0.7;
+      trayGlow.material.opacity = 0.44 + Math.sin(elapsed * 1.8) * 0.08;
+      rimLight.intensity = 6.3 + Math.sin(elapsed * 2.1) * 0.7;
 
       composer.render();
 
@@ -445,8 +450,9 @@ export function Tester1ThreeDice({
           </div>
         </div>
 
-        <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-orange-500/20 bg-zinc-950/90 shadow-[0_0_60px_rgba(0,0,0,0.45)]">
-          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top,rgba(255,140,60,0.12),transparent_40%),linear-gradient(180deg,rgba(18,8,6,0.22),rgba(8,4,4,0.74))]" />
+        <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-orange-400/20 bg-zinc-950/95 shadow-[0_0_80px_rgba(0,0,0,0.55)]">
+          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,153,76,0.16),transparent_34%),radial-gradient(circle_at_50%_100%,rgba(249,115,22,0.14),transparent_28%),linear-gradient(180deg,rgba(24,10,7,0.32),rgba(8,4,4,0.82))]" />
+          <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-[radial-gradient(circle_at_50%_35%,rgba(255,175,95,0.06),transparent_26%),linear-gradient(180deg,rgba(20,9,7,0.18),rgba(6,3,3,0.45))] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
           <div className="absolute inset-x-6 top-5 z-10 flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-zinc-500">
             <span>Tester1 Tray</span>
             <span>{notation}</span>
@@ -508,4 +514,3 @@ export function Tester1ThreeDice({
     </div>
   );
 }
-
