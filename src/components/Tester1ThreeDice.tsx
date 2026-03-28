@@ -217,9 +217,9 @@ export function Tester1ThreeDice({
     composer.addPass(new RenderPass(scene, camera));
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(mountRef.current.clientWidth, mountRef.current.clientHeight),
-      0.48,
-      0.28,
-      0.9,
+      0.62,
+      0.34,
+      0.86,
     );
     composer.addPass(bloomPass);
 
@@ -426,6 +426,52 @@ export function Tester1ThreeDice({
         <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-orange-400/20 bg-zinc-950/95 shadow-[0_0_80px_rgba(0,0,0,0.55)]">
           <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,153,76,0.16),transparent_34%),radial-gradient(circle_at_50%_100%,rgba(249,115,22,0.14),transparent_28%),linear-gradient(180deg,rgba(24,10,7,0.32),rgba(8,4,4,0.82))]" />
           <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-[radial-gradient(circle_at_50%_35%,rgba(255,175,95,0.06),transparent_26%),linear-gradient(180deg,rgba(20,9,7,0.18),rgba(6,3,3,0.45))] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
+          <div className="pointer-events-none absolute inset-[10px] z-[1] overflow-hidden rounded-[1.6rem]">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,118,24,0.12),transparent_32%),linear-gradient(180deg,rgba(18,7,5,0.12),rgba(8,3,2,0.42))]" />
+            {Array.from({ length: 4 }).map((_, index) => (
+              <motion.div
+                key={`tester1-lava-flow-${index}`}
+                className="absolute rounded-full blur-2xl"
+                style={{
+                  left: `${-8 + index * 24}%`,
+                  bottom: `${8 + (index % 2) * 10}%`,
+                  width: `${360 + index * 70}px`,
+                  height: `${74 + (index % 3) * 16}px`,
+                  background: index % 2 === 0
+                    ? 'linear-gradient(90deg, rgba(255,140,52,0), rgba(255,140,52,0.14), rgba(255,214,133,0.18), rgba(255,140,52,0.1), rgba(255,140,52,0))'
+                    : 'linear-gradient(90deg, rgba(249,115,22,0), rgba(249,115,22,0.1), rgba(255,176,82,0.14), rgba(249,115,22,0.08), rgba(249,115,22,0))',
+                  rotate: `${-4 + index * 3}deg`,
+                }}
+                animate={{
+                  x: [0, 46, -18, 0],
+                  y: [0, -8, 4, 0],
+                  opacity: [0.32, 0.56, 0.38],
+                  scaleX: [0.92, 1.08, 0.98],
+                }}
+                transition={{ duration: 5.4 + index * 0.55, repeat: Infinity, ease: 'easeInOut', delay: index * 0.3 }}
+              />
+            ))}
+            {Array.from({ length: 16 }).map((_, index) => (
+              <motion.div
+                key={`tester1-lava-speck-${index}`}
+                className="absolute rounded-full"
+                style={{
+                  left: `${6 + ((index * 11) % 86)}%`,
+                  bottom: `${10 + ((index * 7) % 24)}%`,
+                  width: `${index % 4 === 0 ? 5 : 3}px`,
+                  height: `${index % 4 === 0 ? 5 : 3}px`,
+                  background: index % 3 === 0 ? 'rgba(255,214,133,0.9)' : index % 3 === 1 ? 'rgba(255,153,76,0.74)' : 'rgba(249,115,22,0.66)',
+                  boxShadow: index % 3 === 0
+                    ? '0 0 12px rgba(255,214,133,0.28)'
+                    : index % 3 === 1
+                      ? '0 0 10px rgba(255,153,76,0.24)'
+                      : '0 0 8px rgba(249,115,22,0.2)',
+                }}
+                animate={{ y: [0, -18, -4], opacity: [0.06, 0.42, 0.08], scale: [0.7, 1.16, 0.84] }}
+                transition={{ duration: 1.9 + (index % 4) * 0.2, repeat: Infinity, delay: index * 0.11 }}
+              />
+            ))}
+          </div>
           <div className="absolute inset-x-6 top-5 z-10 flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-zinc-500">
             <span>Tester1 Tray</span>
             <span>{notation}</span>
