@@ -17,6 +17,13 @@ function replaceOnce(source, search, replacement, label) {
   return source.replace(search, replacement);
 }
 
+function replaceRegexOnce(source, pattern, replacement, label) {
+  if (!pattern.test(source)) {
+    throw new Error(`Unable to find expected ${label} patch target in ${targetPath}`);
+  }
+  return source.replace(pattern, replacement);
+}
+
 function main() {
   if (!fs.existsSync(targetPath)) {
     console.warn(`[patch-dice-box-tester1] Skipping: ${targetPath} not found`);
@@ -30,14 +37,9 @@ function main() {
     return;
   }
 
-  source = replaceOnce(
+  source = replaceRegexOnce(
     source,
-    `  constructor(e) {
-    xe(this, "loadedThemes", {});
-    xe(this, "themeData", {});
-    this.scene = e.scene;
-  }
-  async loadStandardMaterial(e) {`,
+    /  constructor\(e\) \{\s+xe\(this, "loadedThemes", \{\}\);\s+xe\(this, "themeData", \{\}\);\s+this\.scene = e\.scene;\s+  \}\s+  async loadStandardMaterial\(e\) \{/m,
     `  constructor(e) {
     xe(this, "loadedThemes", {});
     xe(this, "themeData", {});
@@ -80,22 +82,18 @@ function main() {
     'constructor/registerAnimatedEmissive block',
   );
 
-  source = replaceOnce(
+  source = replaceRegexOnce(
     source,
-    `    const { theme: t, material: i } = e, r = new g(t, this.scene);
-    i.diffuseTexture && (r.diffuseTexture = await this.getTexture("diffuse", e)), i.bumpTexture && (r.bumpTexture = await this.getTexture("bump", e)), i.specularTexture && (r.specularTexture = await this.getTexture("specular", e)), i.emissiveTexture && (r.emissiveTexture = await this.getTexture("emissive", e), r.emissiveColor = new he(1, 0.72, 0.35), r.useEmissiveAsIllumination = !0), r.allowShaderHotSwapping = !1;
-  }`,
+    /    const \{ theme: t, material: i \} = e, r = new g\(t, this\.scene\);\s+    i\.diffuseTexture && \(r\.diffuseTexture = await this\.getTexture\("diffuse", e\)\), i\.bumpTexture && \(r\.bumpTexture = await this\.getTexture\("bump", e\)\), i\.specularTexture && \(r\.specularTexture = await this\.getTexture\("specular", e\)\), i\.emissiveTexture && \(r\.emissiveTexture = await this\.getTexture\("emissive", e\), r\.emissiveColor = new he\(1, 0\.72, 0\.35\), r\.useEmissiveAsIllumination = !0\), r\.allowShaderHotSwapping = !1;\s+  \}/m,
     `    const { theme: t, material: i } = e, r = new g(t, this.scene);
     i.diffuseTexture && (r.diffuseTexture = await this.getTexture("diffuse", e)), i.bumpTexture && (r.bumpTexture = await this.getTexture("bump", e)), i.specularTexture && (r.specularTexture = await this.getTexture("specular", e)), i.emissiveTexture && (r.emissiveTexture = await this.getTexture("emissive", e), r.emissiveColor = new he(1, 0.72, 0.35), r.useEmissiveAsIllumination = !0), r.allowShaderHotSwapping = !1, this.registerAnimatedEmissive(t, [r], i);
   }`,
     'loadStandardMaterial',
   );
 
-  source = replaceOnce(
+  source = replaceRegexOnce(
     source,
-    `    const n = r.clone(t + "_dark");
-    i.diffuseTexture && i.diffuseTexture.dark && (s.material.diffuseTexture = e.material.diffuseTexture.dark, n.diffuseTexture = await this.getTexture("diffuse", s)), i.emissiveTexture && i.emissiveTexture.dark && (s.material.emissiveTexture = e.material.emissiveTexture.dark, n.emissiveTexture = await this.getTexture("emissive", s), n.emissiveColor = new he(1, 0.72, 0.35), n.useEmissiveAsIllumination = !0), n.AddAttribute("customColor");
-  }`,
+    /    const n = r\.clone\(t \+ "_dark"\);\s+    i\.diffuseTexture && i\.diffuseTexture\.dark && \(s\.material\.diffuseTexture = e\.material\.diffuseTexture\.dark, n\.diffuseTexture = await this\.getTexture\("diffuse", s\)\), i\.emissiveTexture && i\.emissiveTexture\.dark && \(s\.material\.emissiveTexture = e\.material\.emissiveTexture\.dark, n\.emissiveTexture = await this\.getTexture\("emissive", s\), n\.emissiveColor = new he\(1, 0\.72, 0\.35\), n\.useEmissiveAsIllumination = !0\), n\.AddAttribute\("customColor"\);\s+  \}/m,
     `    const n = r.clone(t + "_dark");
     i.diffuseTexture && i.diffuseTexture.dark && (s.material.diffuseTexture = e.material.diffuseTexture.dark, n.diffuseTexture = await this.getTexture("diffuse", s)), i.emissiveTexture && i.emissiveTexture.dark && (s.material.emissiveTexture = e.material.emissiveTexture.dark, n.emissiveTexture = await this.getTexture("emissive", s), n.emissiveColor = new he(1, 0.72, 0.35), n.useEmissiveAsIllumination = !0), n.AddAttribute("customColor"), this.registerAnimatedEmissive(t, [r, n], i);
   }`,
