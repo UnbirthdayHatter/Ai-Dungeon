@@ -234,25 +234,47 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
           {diceSkin === 'toxic' && (
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(163,230,53,0.22),transparent_38%),radial-gradient(circle_at_20%_0%,rgba(74,222,128,0.16),transparent_24%),linear-gradient(180deg,rgba(9,20,6,0.18),rgba(10,28,8,0.44)_58%,rgba(16,56,10,0.62))]" />
-              {Array.from({ length: 8 }).map((_, index) => (
+              {Array.from({ length: 9 }).map((_, index) => (
                 <motion.div
-                  key={`toxic-drip-${index}`}
-                  className="absolute top-0 rounded-b-[999px] blur-[1px]"
+                  key={`toxic-ripple-${index}`}
+                  className="absolute rounded-full border"
                   style={{
-                    left: `${6 + index * 11}%`,
-                    width: `${18 + (index % 3) * 10}px`,
-                    height: `${140 + (index % 4) * 55}px`,
-                    background: index % 2 === 0
-                      ? 'linear-gradient(180deg, rgba(190,242,100,0.9), rgba(132,204,22,0.35), rgba(132,204,22,0))'
-                      : 'linear-gradient(180deg, rgba(74,222,128,0.82), rgba(34,197,94,0.3), rgba(34,197,94,0))',
-                    boxShadow: '0 0 18px rgba(163,230,53,0.24)',
+                    left: `${8 + ((index * 9) % 78)}%`,
+                    top: `${20 + ((index * 7) % 48)}%`,
+                    width: `${80 + (index % 3) * 50}px`,
+                    height: `${28 + (index % 4) * 16}px`,
+                    borderColor: index % 2 === 0 ? 'rgba(190,242,100,0.28)' : 'rgba(74,222,128,0.24)',
+                    boxShadow: index % 2 === 0
+                      ? '0 0 18px rgba(163,230,53,0.12)'
+                      : '0 0 16px rgba(74,222,128,0.1)',
                   }}
                   animate={{
-                    scaleY: [0.72, 1.08, 0.84],
-                    opacity: [0.42, 0.9, 0.5],
-                    y: [0, 8, 0],
+                    scaleX: [0.82, 1.18, 0.92],
+                    scaleY: [0.84, 1.14, 0.9],
+                    opacity: [0.1, 0.4, 0.12],
                   }}
-                  transition={{ duration: 2.1 + (index % 4) * 0.28, repeat: Infinity, ease: 'easeInOut', delay: index * 0.09 }}
+                  transition={{ duration: 2 + (index % 4) * 0.25, repeat: Infinity, ease: 'easeInOut', delay: index * 0.15 }}
+                />
+              ))}
+              {Array.from({ length: 6 }).map((_, index) => (
+                <motion.div
+                  key={`toxic-wave-${index}`}
+                  className="absolute rounded-full blur-md"
+                  style={{
+                    left: `${6 + index * 14}%`,
+                    bottom: `${10 + ((index * 6) % 18)}%`,
+                    width: `${180 + (index % 3) * 60}px`,
+                    height: `${36 + (index % 2) * 10}px`,
+                    background: index % 2 === 0
+                      ? 'radial-gradient(circle, rgba(163,230,53,0.2), rgba(132,204,22,0.06), transparent 72%)'
+                      : 'radial-gradient(circle, rgba(74,222,128,0.18), rgba(22,163,74,0.06), transparent 72%)',
+                  }}
+                  animate={{
+                    scaleX: [0.86, 1.08, 0.94],
+                    opacity: [0.08, 0.24, 0.1],
+                    x: [0, 12, -8, 0],
+                  }}
+                  transition={{ duration: 3.4 + (index % 3) * 0.35, repeat: Infinity, ease: 'easeInOut', delay: index * 0.2 }}
                 />
               ))}
               {Array.from({ length: 12 }).map((_, index) => (
