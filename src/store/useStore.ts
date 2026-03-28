@@ -1023,6 +1023,15 @@ export const useStore = create<any>()((set, get) => ({
           updatedAt: Date.now(),
         });
       }
+    } else if (state.isLive && state.currentLiveRoleplayId) {
+      const nextMessage = nextMessages.find((message: Message) => message.id === id);
+      if (nextMessage) {
+        setDoc(
+          doc(db, 'roleplays', state.currentLiveRoleplayId, 'messages', id),
+          { isCollapsed: nextMessage.isCollapsed, updatedAt: Date.now() },
+          { merge: true } as any
+        ).catch(console.error);
+      }
     }
   },
   clearMessages: () => {
@@ -1041,6 +1050,12 @@ export const useStore = create<any>()((set, get) => ({
           updatedAt: Date.now(),
         });
       }
+    } else if (state.isLive && state.currentLiveRoleplayId) {
+      const messagesToDelete = state.messages.filter((message: Message) => message.id !== 'welcome');
+      messagesToDelete.forEach((message: Message) => {
+        deleteDoc(doc(db, 'roleplays', state.currentLiveRoleplayId!, 'messages', message.id)).catch(console.error);
+      });
+      updateDoc(doc(db, 'roleplays', state.currentLiveRoleplayId), { updatedAt: Date.now() }).catch(console.error);
     }
   },
   rewindToMessage: (id: string) => {
@@ -1062,6 +1077,12 @@ export const useStore = create<any>()((set, get) => ({
           updatedAt: Date.now(),
         });
       }
+    } else if (state.isLive && state.currentLiveRoleplayId) {
+      const removedMessages = state.messages.slice(index + 1);
+      removedMessages.forEach((message: Message) => {
+        deleteDoc(doc(db, 'roleplays', state.currentLiveRoleplayId!, 'messages', message.id)).catch(console.error);
+      });
+      updateDoc(doc(db, 'roleplays', state.currentLiveRoleplayId), { updatedAt: Date.now() }).catch(console.error);
     }
   },
   branchFromMessage: (_id: string, branchName: string) => set({ currentRoleplayName: branchName }),
