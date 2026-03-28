@@ -108,7 +108,14 @@ export function Chat() {
   const [showDiceRoller, setShowDiceRoller] = useState(false);
   const [diceInput, setDiceInput] = useState('1d20');
   const [suggestedLore, setSuggestedLore] = useState<any[]>([]);
-  const [activeRoll, setActiveRoll] = useState<{ result: number; type: number } | null>(null);
+  const [activeRoll, setActiveRoll] = useState<{
+    results: number[];
+    total: number;
+    type: number;
+    label?: string;
+    modifier?: number;
+    highlight?: 'highest' | 'lowest' | 'sum';
+  } | null>(null);
   const [ttsLoadingId, setTtsLoadingId] = useState<string | null>(null);
   const [ttsPlayingId, setTtsPlayingId] = useState<string | null>(null);
   const [showResumeDropdown, setShowResumeDropdown] = useState(false);
@@ -218,6 +225,15 @@ export function Chat() {
     const total = subtotal + modifier;
     const modifierLabel = modifier ? ` ${modifier > 0 ? '+' : '-'} ${Math.abs(modifier)}` : '';
     return `**${activeSheet?.name || 'Player'}** rolled **${diceCount}d${diceSides}${modifier ? (modifier > 0 ? `+${modifier}` : modifier) : ''}**\n\nRolls: [${rolls.join(', ')}]\nSubtotal: **${subtotal}**${modifierLabel}\nTotal: **${total}**`;
+  };
+
+  const rollStandardDice = (diceCount: number, diceSides: number, modifier: number) => {
+    const rolls = Array.from({ length: diceCount }, () => Math.floor(Math.random() * diceSides) + 1);
+    const subtotal = rolls.reduce((sum, roll) => sum + roll, 0);
+    const total = subtotal + modifier;
+    const modifierLabel = modifier ? ` ${modifier > 0 ? '+' : '-'} ${Math.abs(modifier)}` : '';
+    const message = `**${activeSheet?.name || 'Player'}** rolled **${diceCount}d${diceSides}${modifier ? (modifier > 0 ? `+${modifier}` : modifier) : ''}**\n\nRolls: [${rolls.join(', ')}]\nSubtotal: **${subtotal}**${modifierLabel}\nTotal: **${total}**`;
+    return { rolls, total, message };
   };
 
   const activeSheet =
@@ -349,9 +365,20 @@ export function Chat() {
     const diceCommand = parseDiceCommand(messageContent);
     if (!content) setInput('');
     if (diceCommand) {
+      const standardRoll = rollStandardDice(diceCommand.diceCount, diceCommand.diceSides, diceCommand.modifier);
+      if (showDiceFX) {
+        setActiveRoll({
+          results: standardRoll.rolls,
+          total: standardRoll.total,
+          type: diceCommand.diceSides,
+          label: `${diceCommand.diceCount}d${diceCommand.diceSides}${diceCommand.modifier ? (diceCommand.modifier > 0 ? `+${diceCommand.modifier}` : diceCommand.modifier) : ''}`,
+          modifier: diceCommand.modifier,
+          highlight: 'sum',
+        });
+      }
       await addMessage({
         role: 'dice',
-        content: buildDiceCommandMessage(diceCommand.diceCount, diceCommand.diceSides, diceCommand.modifier),
+        content: standardRoll.message,
       });
     } else {
       await addMessage({ 
@@ -541,7 +568,13 @@ export function Chat() {
     
     const message = `**${activeSheet?.name || 'Player'}** ${rollName} with **${poolText}**\n\nResult: ${rollDetails} ➔ **${result}**\n${outcome}`;
     
-    setActiveRoll({ result, type: 6 });
+    setActiveRoll({
+      results: rolls,
+      total: result,
+      type: 6,
+      label: label || 'Action Roll',
+      highlight: isZeroDice ? 'lowest' : 'highest',
+    });
 
     addMessage({
       role: 'dice',
@@ -960,8 +993,12 @@ export function Chat() {
 
       {activeRoll && (
         <Dice3D 
-          result={activeRoll.result} 
+          results={activeRoll.results}
+          total={activeRoll.total}
           diceType={activeRoll.type} 
+          label={activeRoll.label}
+          modifier={activeRoll.modifier}
+          highlight={activeRoll.highlight}
           onComplete={() => setActiveRoll(null)} 
         />
       )}

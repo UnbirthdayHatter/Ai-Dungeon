@@ -7,7 +7,7 @@ import { Dice3D } from './Dice3D';
 export function DiceRoller() {
   const [isOpen, setIsOpen] = useState(false);
   const [diceCount, setDiceCount] = useState(1);
-  const [activeRoll, setActiveRoll] = useState<{ result: number, diceType: number, message: string } | null>(null);
+  const [activeRoll, setActiveRoll] = useState<{ results: number[]; total: number; diceType: number; message: string; label?: string; highlight?: 'highest' | 'lowest' | 'sum' } | null>(null);
   const { addMessage, sheets, activeSheetId, generateAIResponse, isLive, isHost, aiAutoRespond } = useStore();
 
   const activeSheet = sheets.find(s => s.id === activeSheetId) || sheets[0];
@@ -66,15 +66,25 @@ export function DiceRoller() {
     
     const message = `**${activeSheet?.name || 'Player'}** ${rollName} with **${poolText}**\n\nResult: ${rollDetails} ➔ **${result}**\n${outcome}`;
     
-    setActiveRoll({ result, diceType: 6, message });
+    setActiveRoll({
+      results: rolls,
+      total: result,
+      diceType: 6,
+      message,
+      label: label || 'Action Roll',
+      highlight: isZeroDice ? 'lowest' : 'highest',
+    });
   };
 
   return (
     <>
       {activeRoll && (
         <Dice3D 
-          result={activeRoll.result} 
+          results={activeRoll.results}
+          total={activeRoll.total}
           diceType={activeRoll.diceType} 
+          label={activeRoll.label}
+          highlight={activeRoll.highlight}
           onComplete={completeRoll} 
         />
       )}
