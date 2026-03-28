@@ -437,7 +437,9 @@ export function CharacterSheet() {
               {savedCharacters
                 .filter(s => showArchived || !s.archived)
                 .map(char => {
-                  const isInAdventure = sessionSheets.some(s => s.id === char.id);
+                  const isInAdventure = isAdventureScoped
+                    ? sessionSheets.some(s => s.id === char.id)
+                    : scopedSheets.some(s => s.id === char.id);
                   const isActive = activeSheetId === char.id;
                   return (
                     <div key={char.id} className={cn(

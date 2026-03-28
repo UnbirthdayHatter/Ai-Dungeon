@@ -167,7 +167,7 @@ export function Sidebar({ activeTab }: SidebarProps) {
                   <div className={cn("ml-9 space-y-0.5 border-l pl-2 max-h-[400px] overflow-y-auto custom-scrollbar", themeClasses.border)}>
                     {subItems.map((item) => {
                       const isMultiplayerTab = tab.id === 'multiplayer';
-                      const isOwned = userRoleplays.some(r => r.id === item.id);
+                      const isOwned = !isMultiplayerTab || userRoleplays.some(r => r.id === item.id);
                       const isCurrent = currentRoleplayId === item.id;
                       
                       return (

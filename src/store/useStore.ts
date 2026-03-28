@@ -1277,13 +1277,23 @@ export const useStore = create<any>()((set, get) => ({
     if (!source) return;
     const attached = { ...source, ownerId: user?.uid || source.ownerId, lastSeen: Date.now() };
     set((current: any) => {
-      const sessionSheets = [
-        ...current.sessionSheets.filter((sheet: Sheet) => sheet.ownerId !== attached.ownerId && sheet.id !== attached.id),
-        attached,
-      ];
+      const sessionSheets = current.isLive
+        ? [
+            ...current.sessionSheets.filter((sheet: Sheet) => sheet.ownerId !== attached.ownerId && sheet.id !== attached.id),
+            attached,
+          ]
+        : current.sessionSheets;
+      const nextSoloSheets = current.isLive
+        ? current.sheets
+        : current.sheets.some((sheet: Sheet) => sheet.id === attached.id)
+          ? current.sheets.map((sheet: Sheet) => sheet.id === attached.id ? attached : sheet)
+          : [...current.sheets, attached];
       return {
         sessionSheets,
-        sheets: current.isLive ? sessionSheets : current.sheets.some((sheet: Sheet) => sheet.id === attached.id) ? current.sheets : [...current.sheets, attached],
+        sheets: current.isLive ? sessionSheets : nextSoloSheets,
+        savedRoleplays: current.isLive
+          ? current.savedRoleplays
+          : syncSavedRoleplaySheets(current.savedRoleplays, current.currentSaveRoleplayId, nextSoloSheets),
         activeSheetId: attached.id,
       };
     });
@@ -1297,6 +1307,30 @@ export const useStore = create<any>()((set, get) => ({
       }
       await setDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'sheets', attached.id), cleanObject(attached), { merge: true } as any).catch(console.error);
       await updateDoc(doc(db, 'roleplays', state.currentLiveRoleplayId), { updatedAt: Date.now() }).catch(console.error);
+    } else if (user && state.currentSaveRoleplayId) {
+      const nextSoloSheets = state.sheets.some((sheet: Sheet) => sheet.id === attached.id)
+        ? state.sheets.map((sheet: Sheet) => sheet.id === attached.id ? attached : sheet)
+        : [...state.sheets, attached];
+      getSavedRoleplayWriter(state.currentSaveRoleplayId)(user.uid, {
+        ...(state.savedRoleplays.find((roleplay: SavedRoleplay) => roleplay.id === state.currentSaveRoleplayId) || {
+          id: state.currentSaveRoleplayId,
+          name: state.currentRoleplayName || 'New Adventure',
+          messages: state.messages,
+          systemRules: state.systemRules,
+          mood: state.mood,
+          visualStyle: state.visualStyle,
+          lorebook: state.lorebook,
+          currentNPCs: state.currentNPCs,
+          updatedAt: Date.now(),
+          quests: state.quests,
+          timeline: state.timeline,
+          combat: state.combat,
+          clocks: state.clocks,
+          notes: state.notes,
+        }),
+        sheets: nextSoloSheets,
+        updatedAt: Date.now(),
+      } as SavedRoleplay);
     }
   },
   removeCharacterFromAdventure: (sheetId: string) => get().removeSheetFromRoleplay(get().currentLiveRoleplayId || '', sheetId),
@@ -1718,7 +1752,7 @@ export const useStore = create<any>()((set, get) => ({
     }
   },
 
-  generateAIResponse: async () => {
+  generateAIResponse: async (promptOverride?: string) => {
     const state = get();
 
     if (state.currentLiveRoleplayId) {
@@ -1918,10 +1952,12 @@ Do not take over the narrative; instead, support and enhance the player's vision
         return acc;
       }, [] as { role: 'user' | 'assistant' | 'system'; content: string }[]);
 
-      const apiMessages = [
-        { role: 'system', content: systemPrompt },
-        ...combinedMessages
-      ];
+      const requestMessages = promptOverride
+        ? [
+            ...combinedMessages,
+            { role: 'user' as const, content: promptOverride },
+          ]
+        : combinedMessages;
 
       const apiKey = state.apiKeys[state.provider] || (state.provider === 'gemini' ? state.apiKeys.gemini || state.apiKey || '' : state.apiKey || '');
       if (state.provider === 'custom' && !state.customEndpointUrl) {
@@ -1938,7 +1974,7 @@ Do not take over the narrative; instead, support and enhance the player's vision
           apiKey: apiKey || undefined,
           customEndpointUrl: state.customEndpointUrl || undefined,
           systemPrompt,
-          messages: combinedMessages,
+          messages: requestMessages,
         })
       });
 

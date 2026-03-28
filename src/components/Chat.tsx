@@ -76,7 +76,7 @@ export function Chat() {
   const isAdmin = Boolean(isHost || activeRoleplay?.admins?.includes(auth.currentUser?.uid || ''));
   const isEditor = Boolean(activeRoleplay?.editors?.includes(auth.currentUser?.uid || ''));
   const canEditAIResponses = !isLive || Boolean(aiEditEnabled && (isAdmin || isEditor));
-  const canUseOoc = isAdmin;
+  const canUseOoc = !isLive || isAdmin;
   const isAdventureScoped = Boolean(isLive && currentLiveRoleplayId);
   const characterLookupSheets = isAdventureScoped ? sessionSheets : sheets;
   const canGenerateAiNow = !isLive || (isHost && aiAutoRespond);
@@ -1019,7 +1019,7 @@ export function Chat() {
                   {msg.role === 'assistant' && !isAIGenerating && isLastAssistantTurn(msg.id) && (
                     <div className="mt-4 flex flex-wrap gap-2">
                       <button
-                        onClick={() => generateAIResponse()}
+                        onClick={() => generateAIResponse('Continue the scene naturally from the current moment without repeating prior narration.')}
                         className={cn(
                           "px-3 py-1.5 rounded-lg border text-xs font-bold transition-all flex items-center gap-2 shadow-sm",
                           (theme === 'parchment' || theme === 'sepia')
