@@ -34,13 +34,14 @@ export const LoreLinker: React.FC<LoreLinkerProps> = ({ text, onLinkClick }) => 
         const entry = sortedLore.find(l => l.name.toLowerCase() === part.toLowerCase());
         if (entry) {
           return (
-            <span
+            <button
               key={i}
-              className="text-amber-600 dark:text-amber-400 font-medium cursor-pointer hover:underline decoration-amber-500/50 underline-offset-2"
+              type="button"
+              className="inline rounded-sm text-amber-600 dark:text-amber-400 font-medium underline decoration-amber-500/60 underline-offset-2 transition-colors hover:text-amber-500 dark:hover:text-amber-300"
               onClick={() => onLinkClick?.(entry.id)}
             >
               {part}
-            </span>
+            </button>
           );
         }
         return part;
