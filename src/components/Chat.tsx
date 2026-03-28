@@ -960,8 +960,8 @@ export function Chat() {
                   <textarea
                     value={editContent}
                     onChange={(e) => setEditContent(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-zinc-100 text-sm focus:outline-none focus:border-amber-500 min-h-[100px] h-auto"
-                    rows={Math.max(3, editContent.split('\n').length)}
+                    className="w-full bg-zinc-950/90 border border-zinc-700 rounded-xl px-4 py-3 text-zinc-100 text-sm leading-relaxed focus:outline-none focus:border-amber-500 min-h-[220px] resize-y"
+                    rows={Math.max(8, editContent.split('\n').length + 1)}
                   />
                   <div className="flex justify-end gap-2">
                     <button

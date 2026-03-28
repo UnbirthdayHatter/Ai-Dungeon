@@ -694,6 +694,7 @@ export const useStore = create<any>()((set, get) => ({
       joinCode: joinedRoleplay.joinCode,
       isLive: true,
       isHost: data.ownerId === user.uid,
+      aiEditEnabled: Boolean((data as any).aiEditEnabled),
       aiAutoRespond: true,
     }));
   },
@@ -728,6 +729,7 @@ export const useStore = create<any>()((set, get) => ({
           combat: data.combat || state.combat,
           notes: data.notes || '',
           currentNPCs: data.currentNPCs || [],
+          aiEditEnabled: Boolean((data as any).aiEditEnabled),
           isLive: true,
           isHost: data.ownerId === currentUserId,
           admins: Array.from(new Set([...(data.admins || []), data.ownerId].filter(Boolean) as string[])),
@@ -1220,7 +1222,16 @@ export const useStore = create<any>()((set, get) => ({
     }));
   },
   setAiAutoRespond: (autoRespond: boolean) => set({ aiAutoRespond: autoRespond }),
-  setAiEditEnabled: (enabled: boolean) => set({ aiEditEnabled: enabled }),
+  setAiEditEnabled: (enabled: boolean) => {
+    const state = get();
+    set({ aiEditEnabled: enabled });
+    if (state.currentLiveRoleplayId && state.isHost) {
+      updateDoc(doc(db, 'roleplays', state.currentLiveRoleplayId), {
+        aiEditEnabled: enabled,
+        updatedAt: Date.now(),
+      }).catch(console.error);
+    }
+  },
   setRequireRolls: (requireRolls: boolean) => set({ requireRolls }),
   setActiveSheet: (id: string | null) => set({ activeSheetId: id }),
   addLootToInventory: (loot: any) => set((state: any) => {
@@ -1352,6 +1363,7 @@ export const useStore = create<any>()((set, get) => ({
         ownerName: user.displayName || 'User',
         admins: [user.uid],
         editors: [],
+        aiEditEnabled: roleplay.aiEditEnabled || false,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         joinCode: hostedJoinCode,
@@ -1592,6 +1604,7 @@ export const useStore = create<any>()((set, get) => ({
           ownerName: user.displayName || 'User',
           admins: [user.uid],
           editors: [],
+          aiEditEnabled: false,
           joinCode: liveJoinCode,
           updatedAt: Date.now(),
           createdAt: Date.now(),
@@ -1693,6 +1706,7 @@ export const useStore = create<any>()((set, get) => ({
         ownerName: user.displayName || 'User',
         admins: [user.uid],
         editors: [],
+        aiEditEnabled: state.aiEditEnabled || false,
         joinCode: promotedJoinCode,
         updatedAt: Date.now(),
         createdAt: Date.now(),
