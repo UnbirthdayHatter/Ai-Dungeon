@@ -233,6 +233,28 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
           )}
           {diceSkin === 'toxic' && (
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(163,230,53,0.22),transparent_38%),radial-gradient(circle_at_20%_0%,rgba(74,222,128,0.16),transparent_24%),linear-gradient(180deg,rgba(9,20,6,0.18),rgba(10,28,8,0.44)_58%,rgba(16,56,10,0.62))]" />
+              {Array.from({ length: 8 }).map((_, index) => (
+                <motion.div
+                  key={`toxic-drip-${index}`}
+                  className="absolute top-0 rounded-b-[999px] blur-[1px]"
+                  style={{
+                    left: `${6 + index * 11}%`,
+                    width: `${18 + (index % 3) * 10}px`,
+                    height: `${140 + (index % 4) * 55}px`,
+                    background: index % 2 === 0
+                      ? 'linear-gradient(180deg, rgba(190,242,100,0.9), rgba(132,204,22,0.35), rgba(132,204,22,0))'
+                      : 'linear-gradient(180deg, rgba(74,222,128,0.82), rgba(34,197,94,0.3), rgba(34,197,94,0))',
+                    boxShadow: '0 0 18px rgba(163,230,53,0.24)',
+                  }}
+                  animate={{
+                    scaleY: [0.72, 1.08, 0.84],
+                    opacity: [0.42, 0.9, 0.5],
+                    y: [0, 8, 0],
+                  }}
+                  transition={{ duration: 2.1 + (index % 4) * 0.28, repeat: Infinity, ease: 'easeInOut', delay: index * 0.09 }}
+                />
+              ))}
               {Array.from({ length: 12 }).map((_, index) => (
                 <motion.div
                   key={`toxic-${index}`}
@@ -246,6 +268,49 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
                   }}
                   animate={{ scale: [0.9, 1.2, 0.95], opacity: [0.18, 0.46, 0.2] }}
                   transition={{ duration: 1.9 + (index % 3) * 0.2, repeat: Infinity, delay: index * 0.14 }}
+                />
+              ))}
+              {Array.from({ length: 16 }).map((_, index) => (
+                <motion.div
+                  key={`toxic-splatter-${index}`}
+                  className="absolute rounded-full"
+                  style={{
+                    left: `${4 + ((index * 7) % 90)}%`,
+                    bottom: `${6 + ((index * 9) % 26)}%`,
+                    width: `${10 + (index % 4) * 8}px`,
+                    height: `${10 + (index % 5) * 7}px`,
+                    background: index % 3 === 0
+                      ? 'radial-gradient(circle, rgba(190,242,100,0.78), rgba(132,204,22,0.42), rgba(132,204,22,0) 74%)'
+                      : 'radial-gradient(circle, rgba(74,222,128,0.68), rgba(22,163,74,0.36), rgba(22,163,74,0) 72%)',
+                    boxShadow: '0 0 14px rgba(163,230,53,0.18)',
+                  }}
+                  animate={{
+                    scale: [0.72, 1.22, 0.86],
+                    opacity: [0.12, 0.68, 0.16],
+                    y: [0, -12, -4],
+                  }}
+                  transition={{ duration: 1.6 + (index % 4) * 0.16, repeat: Infinity, delay: index * 0.08 }}
+                />
+              ))}
+              {Array.from({ length: 10 }).map((_, index) => (
+                <motion.div
+                  key={`toxic-vapor-${index}`}
+                  className="absolute rounded-full blur-2xl"
+                  style={{
+                    left: `${10 + ((index * 11) % 76)}%`,
+                    bottom: `${14 + ((index * 6) % 22)}%`,
+                    width: `${80 + (index % 3) * 28}px`,
+                    height: `${38 + (index % 4) * 12}px`,
+                    background: index % 2 === 0
+                      ? 'radial-gradient(circle, rgba(163,230,53,0.2), rgba(101,163,13,0.08), transparent 72%)'
+                      : 'radial-gradient(circle, rgba(74,222,128,0.18), rgba(22,163,74,0.06), transparent 74%)',
+                  }}
+                  animate={{
+                    x: [0, 18, -10, 0],
+                    y: [0, -20, -8, 0],
+                    opacity: [0.08, 0.28, 0.1],
+                  }}
+                  transition={{ duration: 3.2 + (index % 3) * 0.3, repeat: Infinity, ease: 'easeInOut', delay: index * 0.17 }}
                 />
               ))}
             </div>
