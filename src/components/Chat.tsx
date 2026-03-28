@@ -923,7 +923,8 @@ export function Chat() {
             </div>
             
             <div className={cn(
-              'px-6 py-4 rounded-2xl max-w-[80%] group relative shadow-md transition-all duration-300',
+              'px-6 py-4 rounded-2xl group relative shadow-md transition-all duration-300',
+              editingMessageId === msg.id ? 'w-full max-w-3xl' : 'max-w-[80%]',
               msg.role === 'user' ? (() => {
                 const playerColor = getPlayerColor(msg.sheetId);
                 return (theme === 'parchment' || theme === 'sepia') 
@@ -955,11 +956,11 @@ export function Chat() {
                 </div>
               )}
               {editingMessageId === msg.id ? (
-                <div className="space-y-3">
+                <div className="space-y-3 w-full">
                   <textarea
                     value={editContent}
                     onChange={(e) => setEditContent(e.target.value)}
-                    className="w-full bg-zinc-950/90 border border-zinc-700 rounded-xl px-4 py-3 text-zinc-100 text-sm leading-relaxed focus:outline-none focus:border-amber-500 min-h-[220px] resize-y"
+                    className="block w-full bg-zinc-950/90 border border-zinc-700 rounded-xl px-4 py-3 text-zinc-100 text-sm leading-relaxed focus:outline-none focus:border-amber-500 min-h-[260px] resize-y"
                     rows={Math.max(8, editContent.split('\n').length + 1)}
                   />
                   <div className="flex justify-end gap-2">
