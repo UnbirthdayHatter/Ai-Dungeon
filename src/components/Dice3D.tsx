@@ -317,6 +317,92 @@ function ArcaneTrailField({
   );
 }
 
+function MagicTrailEmitter({
+  prefix,
+  count,
+  emitterStyle,
+  emitterAnimate,
+  emitterTransition,
+}: {
+  prefix: string;
+  count: number;
+  emitterStyle: React.CSSProperties;
+  emitterAnimate: any;
+  emitterTransition: any;
+}) {
+  return (
+    <motion.div
+      className="absolute"
+      style={emitterStyle}
+      animate={emitterAnimate}
+      transition={emitterTransition}
+    >
+      {Array.from({ length: count }).map((_, index) => (
+        <motion.div
+          key={`${prefix}-spark-${index}`}
+          className="absolute left-0 top-0"
+          style={{
+            width: `${8 + (index % 3) * 4}px`,
+            height: `${8 + (index % 3) * 4}px`,
+            marginLeft: `${-4 - (index % 4) * 3}px`,
+            marginTop: `${-4 - (index % 5) * 2}px`,
+          }}
+          animate={{
+            x: [0, -18 - (index % 5) * 12, -44 - (index % 4) * 14],
+            y: [0, 10 + (index % 4) * 6, 22 + (index % 5) * 10],
+            opacity: [0, 0.92, 0],
+            scale: [0.7, 1.16, 0.82],
+          }}
+          transition={{
+            duration: 0.9 + (index % 4) * 0.12,
+            repeat: Infinity,
+            delay: index * 0.045,
+            ease: 'easeOut',
+          }}
+        >
+          <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.82),rgba(216,180,254,0.48),rgba(168,85,247,0.1),rgba(168,85,247,0))] blur-[0.6px]" />
+          <div
+            className="absolute left-1/2 top-1/2 h-[3px] w-[24px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[0.4px]"
+            style={{
+              background: index % 2 === 0
+                ? 'linear-gradient(90deg, rgba(255,255,255,0), rgba(216,180,254,0.86), rgba(168,85,247,0))'
+                : 'linear-gradient(90deg, rgba(255,255,255,0), rgba(129,140,248,0.82), rgba(91,33,182,0))',
+              rotate: `${(index * 31) % 360}deg`,
+            }}
+          />
+        </motion.div>
+      ))}
+      {Array.from({ length: 6 }).map((_, index) => (
+        <motion.div
+          key={`${prefix}-smoke-${index}`}
+          className="absolute left-0 top-0 rounded-full blur-2xl"
+          style={{
+            width: `${54 + (index % 3) * 18}px`,
+            height: `${28 + (index % 3) * 10}px`,
+            marginLeft: `${-20 - index * 10}px`,
+            marginTop: `${-8 + (index % 3) * 4}px`,
+            background: index % 2 === 0
+              ? 'radial-gradient(circle, rgba(76,29,149,0.22), rgba(30,27,75,0.08), transparent 74%)'
+              : 'radial-gradient(circle, rgba(88,28,135,0.2), rgba(24,24,27,0.06), transparent 76%)',
+          }}
+          animate={{
+            x: [0, -18 - index * 8, -34 - index * 12],
+            y: [0, -8 - (index % 2) * 8, -14],
+            opacity: [0, 0.26, 0],
+            scale: [0.86, 1.12, 0.92],
+          }}
+          transition={{
+            duration: 1.4 + index * 0.1,
+            repeat: Infinity,
+            delay: index * 0.08,
+            ease: 'easeOut',
+          }}
+        />
+      ))}
+    </motion.div>
+  );
+}
+
 function VoidfireEffects() {
   return (
     <>
@@ -355,7 +441,7 @@ function VoidfireEffects() {
       <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
         <ArcaneTrailField
           prefix="voidfire-arcane"
-          count={12}
+          count={8}
           getStyle={(index) => ({
             left: `${36 + ((index * 5) % 24)}%`,
             top: `${30 + ((index * 7) % 24)}%`,
@@ -375,91 +461,25 @@ function VoidfireEffects() {
           })}
           getTransition={(index) => ({ duration: 1.15 + (index % 4) * 0.14, repeat: Infinity, delay: index * 0.09, ease: 'easeOut' })}
         />
-        <LinearTrailField
-          prefix="voidfire-spellstreak"
-          count={10}
-          className="absolute rounded-full blur-md"
-          getStyle={(index) => ({
-            left: `${34 + ((index * 6) % 28)}%`,
-            top: `${34 + ((index * 6) % 22)}%`,
-            width: `${120 + (index % 4) * 34}px`,
-            height: '18px',
-            background: index % 2 === 0
-              ? 'linear-gradient(90deg, rgba(147,51,234,0), rgba(168,85,247,0.3), rgba(196,181,253,0.16), rgba(0,0,0,0))'
-              : 'linear-gradient(90deg, rgba(217,70,239,0), rgba(217,70,239,0.28), rgba(129,140,248,0.14), rgba(0,0,0,0))',
-            rotate: `${-14 + (index % 5) * 6}deg`,
-          })}
-          getAnimate={() => ({ x: [0, 74, 20], opacity: [0, 0.3, 0], scaleX: [0.84, 1.18, 0.92] })}
-          getTransition={(index) => ({ duration: 1.3 + (index % 4) * 0.16, repeat: Infinity, delay: index * 0.11 })}
-        />
-        <GlowBlobField
-          prefix="voidfire-ember"
-          count={10}
-          className="absolute rounded-full blur-md"
-          getStyle={(index) => ({
-            left: `${10 + ((index * 11) % 78)}%`,
-            bottom: `${10 + ((index * 7) % 22)}%`,
-            width: `${12 + (index % 3) * 8}px`,
-            height: `${12 + (index % 4) * 7}px`,
-            background: index % 2 === 0
-              ? 'radial-gradient(circle, rgba(216,180,254,0.82), rgba(147,51,234,0.34), rgba(147,51,234,0) 74%)'
-              : 'radial-gradient(circle, rgba(129,140,248,0.58), rgba(91,33,182,0.26), rgba(91,33,182,0) 74%)',
-            boxShadow: index % 2 === 0
-              ? '0 0 14px rgba(216,180,254,0.24)'
-              : '0 0 14px rgba(168,85,247,0.22)',
-          })}
-          getAnimate={() => ({ y: [0, -22, -6], opacity: [0.08, 0.64, 0.12], scale: [0.7, 1.24, 0.84] })}
-          getTransition={(index) => ({ duration: 1.8 + (index % 3) * 0.2, repeat: Infinity, delay: index * 0.12 })}
-        />
-        <GlowBlobField
-          prefix="voidfire-burst-core"
-          count={10}
-          className="absolute rounded-full blur-[0.6px]"
-          getStyle={(index) => ({
-            left: `${36 + ((index * 7) % 28)}%`,
-            top: `${28 + ((index * 9) % 28)}%`,
-            width: `${10 + (index % 3) * 7}px`,
-            height: `${10 + (index % 3) * 7}px`,
-            background: index % 2 === 0
-              ? 'radial-gradient(circle, rgba(255,255,255,0.82), rgba(216,180,254,0.46), rgba(168,85,247,0.1), rgba(168,85,247,0))'
-              : 'radial-gradient(circle, rgba(224,231,255,0.8), rgba(129,140,248,0.42), rgba(129,140,248,0.1), rgba(129,140,248,0))',
-            boxShadow: index % 2 === 0
-              ? '0 0 16px rgba(216,180,254,0.26)'
-              : '0 0 16px rgba(129,140,248,0.22)',
-          })}
-          getAnimate={(index) => ({
-            x: [0, 22 + (index % 4) * 8, 12 + (index % 3) * 5],
-            y: [0, -20 - (index % 3) * 10, -10],
-            opacity: [0, 0.92, 0],
-            scale: [0.68, 1.24, 0.84],
-          })}
-          getTransition={(index) => ({ duration: 1.2 + (index % 4) * 0.12, repeat: Infinity, delay: index * 0.07, ease: 'easeOut' })}
-        />
-        <LinearTrailField
-          prefix="voidfire-burst-rays"
-          count={16}
-          className="absolute rounded-full blur-[0.4px]"
-          getStyle={(index) => ({
-            left: `${36 + ((index * 5) % 28)}%`,
-            top: `${28 + ((index * 7) % 28)}%`,
-            width: `${26 + (index % 4) * 12}px`,
-            height: '4px',
-            background: index % 2 === 0
-              ? 'linear-gradient(90deg, rgba(255,255,255,0), rgba(216,180,254,0.82), rgba(168,85,247,0))'
-              : 'linear-gradient(90deg, rgba(255,255,255,0), rgba(129,140,248,0.78), rgba(91,33,182,0))',
-            rotate: `${(index * 22) % 360}deg`,
-            transformOrigin: 'left center',
-            boxShadow: index % 2 === 0
-              ? '0 0 10px rgba(216,180,254,0.16)'
-              : '0 0 10px rgba(129,140,248,0.14)',
-          })}
-          getAnimate={(index) => ({
-            x: [0, 18 + (index % 3) * 6, 10],
-            y: [0, -14 - (index % 3) * 6, -6],
-            opacity: [0, 0.76, 0],
-            scaleX: [0.6, 1.18, 0.82],
-          })}
-          getTransition={(index) => ({ duration: 1.05 + (index % 5) * 0.1, repeat: Infinity, delay: index * 0.045, ease: 'easeOut' })}
+        <MagicTrailEmitter
+          prefix="voidfire-emitter"
+          count={18}
+          emitterStyle={{
+            left: '44%',
+            top: '42%',
+            width: '14px',
+            height: '14px',
+          }}
+          emitterAnimate={{
+            x: [0, 120, 36],
+            y: [0, -26, -8],
+            opacity: [0.2, 0.94, 0.2],
+          }}
+          emitterTransition={{
+            duration: 1.35,
+            repeat: Infinity,
+            ease: 'easeOut',
+          }}
         />
         <GlowBlobField
           prefix="voidfire-smoke"
