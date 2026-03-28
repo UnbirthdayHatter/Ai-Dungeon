@@ -412,30 +412,54 @@ function VoidfireEffects() {
           getTransition={(index) => ({ duration: 1.8 + (index % 3) * 0.2, repeat: Infinity, delay: index * 0.12 })}
         />
         <GlowBlobField
-          prefix="voidfire-bubble"
-          count={14}
-          className="absolute rounded-full blur-[0.4px]"
+          prefix="voidfire-burst-core"
+          count={10}
+          className="absolute rounded-full blur-[0.6px]"
           getStyle={(index) => ({
-            left: `${34 + ((index * 7) % 30)}%`,
+            left: `${36 + ((index * 7) % 28)}%`,
             top: `${28 + ((index * 9) % 28)}%`,
-            width: `${8 + (index % 4) * 6}px`,
-            height: `${8 + (index % 4) * 6}px`,
-            background: index % 3 === 0
-              ? 'radial-gradient(circle, rgba(255,255,255,0.75), rgba(216,180,254,0.42), rgba(168,85,247,0.08), rgba(168,85,247,0))'
-              : index % 3 === 1
-                ? 'radial-gradient(circle, rgba(224,231,255,0.72), rgba(129,140,248,0.38), rgba(129,140,248,0.08), rgba(129,140,248,0))'
-                : 'radial-gradient(circle, rgba(250,245,255,0.7), rgba(217,70,239,0.38), rgba(217,70,239,0.08), rgba(217,70,239,0))',
+            width: `${10 + (index % 3) * 7}px`,
+            height: `${10 + (index % 3) * 7}px`,
+            background: index % 2 === 0
+              ? 'radial-gradient(circle, rgba(255,255,255,0.82), rgba(216,180,254,0.46), rgba(168,85,247,0.1), rgba(168,85,247,0))'
+              : 'radial-gradient(circle, rgba(224,231,255,0.8), rgba(129,140,248,0.42), rgba(129,140,248,0.1), rgba(129,140,248,0))',
             boxShadow: index % 2 === 0
-              ? '0 0 14px rgba(216,180,254,0.22)'
-              : '0 0 14px rgba(129,140,248,0.18)',
+              ? '0 0 16px rgba(216,180,254,0.26)'
+              : '0 0 16px rgba(129,140,248,0.22)',
           })}
           getAnimate={(index) => ({
-            x: [0, 20 + (index % 5) * 6, 10 + (index % 4) * 4],
-            y: [0, -18 - (index % 3) * 8, -8],
-            opacity: [0, 0.86, 0],
-            scale: [0.72, 1.18, 0.88],
+            x: [0, 22 + (index % 4) * 8, 12 + (index % 3) * 5],
+            y: [0, -20 - (index % 3) * 10, -10],
+            opacity: [0, 0.92, 0],
+            scale: [0.68, 1.24, 0.84],
           })}
           getTransition={(index) => ({ duration: 1.2 + (index % 4) * 0.12, repeat: Infinity, delay: index * 0.07, ease: 'easeOut' })}
+        />
+        <LinearTrailField
+          prefix="voidfire-burst-rays"
+          count={16}
+          className="absolute rounded-full blur-[0.4px]"
+          getStyle={(index) => ({
+            left: `${36 + ((index * 5) % 28)}%`,
+            top: `${28 + ((index * 7) % 28)}%`,
+            width: `${26 + (index % 4) * 12}px`,
+            height: '4px',
+            background: index % 2 === 0
+              ? 'linear-gradient(90deg, rgba(255,255,255,0), rgba(216,180,254,0.82), rgba(168,85,247,0))'
+              : 'linear-gradient(90deg, rgba(255,255,255,0), rgba(129,140,248,0.78), rgba(91,33,182,0))',
+            rotate: `${(index * 22) % 360}deg`,
+            transformOrigin: 'left center',
+            boxShadow: index % 2 === 0
+              ? '0 0 10px rgba(216,180,254,0.16)'
+              : '0 0 10px rgba(129,140,248,0.14)',
+          })}
+          getAnimate={(index) => ({
+            x: [0, 18 + (index % 3) * 6, 10],
+            y: [0, -14 - (index % 3) * 6, -6],
+            opacity: [0, 0.76, 0],
+            scaleX: [0.6, 1.18, 0.82],
+          })}
+          getTransition={(index) => ({ duration: 1.05 + (index % 5) * 0.1, repeat: Infinity, delay: index * 0.045, ease: 'easeOut' })}
         />
         <GlowBlobField
           prefix="voidfire-smoke"
