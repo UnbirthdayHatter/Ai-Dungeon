@@ -98,11 +98,11 @@ void main() {
   rock += fbm(uv * 1.6) * 0.012;
   rock += max(dot(normalize(vNormalW), normalize(vec3(0.32, 1.0, 0.58))), 0.0) * 0.018;
 
-  vec3 voidCore = vec3(0.002, 0.003, 0.01) * innerCracks;
-  vec3 galaxyTint = vec3(0.03, 0.02, 0.09) * innerCracks * (0.56 + 0.44 * fbm(uv * 4.9 + 25.0));
-  vec3 nebula = vec3(0.16, 0.08, 0.3) * innerCracks * smoothstep(0.42, 0.84, fbm(uv * 3.8 + vec2(t * 0.05, -t * 0.03) + 81.0)) * 0.32;
-  vec3 starColor = vec3(0.92, 0.95, 1.08) * starField * starTwinkle * innerCracks * 1.45;
-  starColor += vec3(0.74, 0.82, 1.0) * starFieldSmall * (0.62 + 0.38 * starTwinkle) * innerCracks * 0.95;
+  vec3 voidCore = vec3(0.0, 0.001, 0.006) * innerCracks;
+  vec3 galaxyTint = vec3(0.01, 0.015, 0.05) * innerCracks * (0.46 + 0.54 * fbm(uv * 4.9 + 25.0));
+  vec3 nebula = vec3(0.04, 0.08, 0.18) * innerCracks * smoothstep(0.46, 0.84, fbm(uv * 3.8 + vec2(t * 0.05, -t * 0.03) + 81.0)) * 0.22;
+  vec3 starColor = vec3(1.0, 1.0, 1.08) * starField * starTwinkle * innerCracks * 1.62;
+  starColor += vec3(0.62, 0.8, 1.0) * starFieldSmall * (0.62 + 0.38 * starTwinkle) * innerCracks * 1.18;
   vec3 crackEdgeColor = vec3(0.74, 0.28, 1.0) * crackEdge * 0.22;
   vec3 hotspotColor = vec3(0.92, 0.42, 1.08) * hotspots * 0.065;
   vec3 emberColor = vec3(0.5, 0.24, 0.88) * ember * 0.01;
