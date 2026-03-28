@@ -94,8 +94,6 @@ export function Settings() {
     setMood,
     visualStyle,
     setVisualStyle,
-    aiEditEnabled,
-    setAiEditEnabled,
     isHost,
     kokoroUrl,
     setKokoroUrl,
@@ -695,18 +693,8 @@ export function Settings() {
             Customization
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-6">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-bold text-zinc-300">Allow AI Edit</label>
-              <button
-                onClick={() => setAiEditEnabled(!aiEditEnabled)}
-                disabled={!isHost}
-                className={cn("px-4 py-2 rounded-lg font-bold text-xs", aiEditEnabled ? "bg-amber-600 text-white" : "bg-zinc-800 text-zinc-400", !isHost && "opacity-50 cursor-not-allowed")}
-              >
-                {aiEditEnabled ? 'Enabled' : 'Disabled'}
-              </button>
-            </div>
             <p className="text-[10px] text-zinc-500">
-              When enabled, hosts, admins, and editors can edit AI responses. Admins can also use OOC mode and edit the lorebook.
+              Hosts, admins, and editors can edit AI responses in multiplayer. Admins can also use OOC mode and edit the lorebook.
             </p>
             <div className="space-y-2">
               <label className="block text-xs font-bold text-zinc-500 uppercase">Dice Skin</label>

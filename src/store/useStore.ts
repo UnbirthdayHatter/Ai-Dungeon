@@ -1585,8 +1585,9 @@ export const useStore = create<any>()((set, get) => ({
       activeRoleplaySyncCleanup = null;
     }
     
-    // Auto-save the current adventure before starting a new one
-    if (state.messages.length > 1) {
+    // Auto-save only solo adventures before starting a new one.
+    // Live multiplayer sessions are already persisted and should not be cloned into solo saves.
+    if (!state.isLive && state.messages.length > 1) {
       const date = new Date().toLocaleDateString();
       const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const logName = `Adventure Log - ${date} ${time}`;

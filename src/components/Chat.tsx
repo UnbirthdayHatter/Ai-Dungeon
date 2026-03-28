@@ -48,7 +48,6 @@ export function Chat() {
     provider,
     sessionSheets,
     isHost,
-    aiEditEnabled,
     aiAutoRespond,
     setAiAutoRespond,
     currentLiveRoleplayId,
@@ -75,7 +74,7 @@ export function Chat() {
   const currentUserId = auth.currentUser?.uid || '';
   const isAdmin = Boolean(isHost || activeRoleplay?.admins?.includes(auth.currentUser?.uid || ''));
   const isEditor = Boolean(activeRoleplay?.editors?.includes(auth.currentUser?.uid || ''));
-  const canEditAIResponses = !isLive || Boolean(aiEditEnabled && (isAdmin || isEditor));
+  const canEditAIResponses = !isLive || isAdmin || isEditor;
   const canUseOoc = !isLive || isAdmin;
   const isAdventureScoped = Boolean(isLive && currentLiveRoleplayId);
   const characterLookupSheets = isAdventureScoped ? sessionSheets : sheets;
