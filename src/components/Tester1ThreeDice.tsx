@@ -151,10 +151,21 @@ function buildFaceMaterials() {
   });
 }
 
-function makeTargetQuaternion(value: number) {
-  const from = FACE_NORMALS[value].clone().normalize();
-  const to = new THREE.Vector3(0, 1, 0);
-  return new THREE.Quaternion().setFromUnitVectors(from, to);
+function readTopFaceValue(quaternion: THREE.Quaternion) {
+  const up = new THREE.Vector3(0, 1, 0);
+  let bestValue = 1;
+  let bestDot = -Infinity;
+
+  Object.entries(FACE_NORMALS).forEach(([value, normal]) => {
+    const worldNormal = normal.clone().applyQuaternion(quaternion);
+    const dot = worldNormal.dot(up);
+    if (dot > bestDot) {
+      bestDot = dot;
+      bestValue = Number(value);
+    }
+  });
+
+  return bestValue;
 }
 
 export function Tester1ThreeDice({
@@ -171,6 +182,7 @@ export function Tester1ThreeDice({
   const completeTimeoutRef = useRef<number | null>(null);
   const onCompleteRef = useRef(onComplete);
   const [phase, setPhase] = useState<'initializing' | 'rolling' | 'settled' | 'failed'>('initializing');
+  const [resolvedResults, setResolvedResults] = useState<number[] | null>(null);
 
   useEffect(() => {
     onCompleteRef.current = onComplete;
@@ -182,17 +194,19 @@ export function Tester1ThreeDice({
     const modifierPart = modifier === 0 ? '' : modifier > 0 ? `+${modifier}` : `${modifier}`;
     return `${diceCount}d${diceType}${modifierPart}`;
   }, [diceType, effectiveResults.length, modifier]);
+  const displayValues = resolvedResults ?? effectiveResults;
   const displayHighlightedValue = highlight === 'lowest'
-    ? Math.min(...effectiveResults)
+    ? Math.min(...displayValues)
     : highlight === 'highest'
-      ? Math.max(...effectiveResults)
-      : effectiveResults.reduce((sum, value) => sum + value, 0) + modifier;
+      ? Math.max(...displayValues)
+      : displayValues.reduce((sum, value) => sum + value, 0) + modifier;
   const displayTotal = highlight === 'sum'
-    ? effectiveResults.reduce((sum, value) => sum + value, 0) + modifier
+    ? displayValues.reduce((sum, value) => sum + value, 0) + modifier
     : displayHighlightedValue;
 
   useEffect(() => {
     if (!mountRef.current) return;
+    setResolvedResults(null);
     let cancelled = false;
     let animationFrame = 0;
     let resizeObserver: ResizeObserver | null = null;
@@ -263,7 +277,7 @@ export function Tester1ThreeDice({
       world.addBody(wall);
     });
 
-    const dice = effectiveResults.map((value, index) => {
+    const dice = effectiveResults.map((_, index) => {
       const materials = buildFaceMaterials();
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), materials);
       mesh.castShadow = true;
@@ -289,14 +303,11 @@ export function Tester1ThreeDice({
       world.addBody(body);
 
       return {
-        value,
         mesh,
         body,
         materials,
-        snapping: false,
-        snapProgress: 0,
-        snapFrom: new THREE.Quaternion(),
-        snapTo: makeTargetQuaternion(value),
+        settled: false,
+        resolvedValue: null as number | null,
       };
     });
 
@@ -314,12 +325,12 @@ export function Tester1ThreeDice({
     resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(mountRef.current);
 
-    const finish = () => {
+    const finish = (finalResults: number[]) => {
       if (completeTimeoutRef.current) {
         window.clearTimeout(completeTimeoutRef.current);
       }
       completeTimeoutRef.current = window.setTimeout(() => {
-        onCompleteRef.current(effectiveResults);
+        onCompleteRef.current(finalResults);
       }, dice3DAutoCloseMs);
     };
 
@@ -351,27 +362,19 @@ export function Tester1ThreeDice({
         );
         const bodyPos = new THREE.Vector3(die.body.position.x, die.body.position.y, die.body.position.z);
 
-        if (!die.snapping) {
-          die.mesh.position.copy(bodyPos);
-          die.mesh.quaternion.copy(bodyQuat);
+        die.mesh.position.copy(bodyPos);
+        die.mesh.quaternion.copy(bodyQuat);
+
+        if (!die.settled) {
           const speed = die.body.velocity.length();
           const spin = die.body.angularVelocity.length();
           if (elapsed > minRollTime && (die.body.sleepState === CANNON.Body.SLEEPING || (speed < 0.18 && spin < 0.2) || elapsed > maxRollTime)) {
-            die.snapping = true;
             die.body.sleep();
             die.body.velocity.setZero();
             die.body.angularVelocity.setZero();
-            die.snapFrom.copy(die.mesh.quaternion);
+            die.settled = true;
+            die.resolvedValue = readTopFaceValue(die.mesh.quaternion);
           } else {
-            allSettled = false;
-          }
-        }
-
-        if (die.snapping) {
-          die.snapProgress = Math.min(1, die.snapProgress + delta * 2.6);
-          die.mesh.position.copy(bodyPos);
-          die.mesh.quaternion.slerpQuaternions(die.snapFrom, die.snapTo, die.snapProgress);
-          if (die.snapProgress < 1) {
             allSettled = false;
           }
         }
@@ -383,8 +386,10 @@ export function Tester1ThreeDice({
 
       if (!finished && allSettled) {
         finished = true;
+        const finalResults = dice.map((die) => die.resolvedValue ?? readTopFaceValue(die.mesh.quaternion));
+        setResolvedResults(finalResults);
         setPhase('settled');
-        finish();
+        finish(finalResults);
       }
     };
 
@@ -519,7 +524,7 @@ export function Tester1ThreeDice({
                 </div>
               )}
               <div className="mt-3 flex flex-wrap justify-center gap-2 text-sm text-zinc-300">
-                {effectiveResults.map((value, index) => (
+                {displayValues.map((value, index) => (
                   <span
                     key={`${value}-${index}`}
                     className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold"
