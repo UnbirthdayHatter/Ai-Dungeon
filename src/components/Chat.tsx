@@ -12,7 +12,7 @@ import { NPCTracker } from './NPCTracker';
 import { HUD } from './HUD';
 import { Dice3D } from './Dice3D';
 
-const CHAT_DICE_SKINS: Array<{ id: string; name: string }> = [
+const CHAT_DICE_SKINS: Array<{ id: string; name: string; private?: true }> = [
   { id: 'classic', name: 'Classic' },
   { id: 'default', name: 'Sunforged' },
   { id: 'obsidian', name: 'Obsidian' },
@@ -28,9 +28,16 @@ const CHAT_DICE_SKINS: Array<{ id: string; name: string }> = [
   { id: 'toxic', name: 'Toxic' },
   { id: 'glitchpop', name: 'Glitchpop' },
   { id: 'wacky', name: 'Wacky' },
+  { id: 'tester1', name: 'Tester1', private: true as const },
 ];
 
+function canAccessPrivateDiceSkins() {
+  const identity = `${auth.currentUser?.displayName || ''} ${auth.currentUser?.email || ''}`.toLowerCase();
+  return identity.includes('unbirthdayhatter');
+}
+
 export function Chat() {
+  const visibleChatDiceSkins = CHAT_DICE_SKINS.filter((skin) => !('private' in skin) || canAccessPrivateDiceSkins());
   const { 
     messages, 
     addMessage, 
@@ -1380,7 +1387,7 @@ export function Chat() {
                   )}
                   title="Choose your dice theme"
                 >
-                  {CHAT_DICE_SKINS.map((skin) => (
+                  {visibleChatDiceSkins.map((skin) => (
                     <option key={skin.id} value={skin.id} className="bg-zinc-900 text-zinc-100">
                       {skin.name}
                     </option>

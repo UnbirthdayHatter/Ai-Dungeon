@@ -1,6 +1,7 @@
 import { useStore, ProviderType, ThemeType, AiRulesPreset } from '@/store/useStore';
 import { THEME_CLASSES } from '@/constants';
 import { cn } from '@/lib/utils';
+import { auth } from '@/firebase';
 import { 
   Key, 
   Settings as SettingsIcon, 
@@ -66,9 +67,17 @@ const DICE_SKIN_OPTIONS = [
   { id: 'toxic', name: 'Toxic', preview: 'from-lime-300 via-green-500 to-zinc-900', pip: 'text-lime-50', note: 'radioactive sludge glow' },
   { id: 'glitchpop', name: 'Glitchpop', preview: 'from-cyan-300 via-fuchsia-500 to-yellow-400', pip: 'text-fuchsia-50', note: 'neon data corruption' },
   { id: 'wacky', name: 'Wacky', preview: 'from-cyan-300 via-fuchsia-500 to-lime-300', pip: 'text-white', note: 'chaotic rainbow test skin' },
+  { id: 'tester1', name: 'Tester1', preview: 'from-rose-500 via-fuchsia-500 to-amber-300', pip: 'text-white', note: 'private experimental skin', private: true },
 ] as const;
 
+function canAccessPrivateDiceSkins() {
+  const identity = `${auth.currentUser?.displayName || ''} ${auth.currentUser?.email || ''}`.toLowerCase();
+  return identity.includes('unbirthdayhatter');
+}
+
 export function Settings() {
+  const canSeePrivateDiceSkins = canAccessPrivateDiceSkins();
+  const visibleDiceSkinOptions = DICE_SKIN_OPTIONS.filter((skin) => !('private' in skin) || canSeePrivateDiceSkins);
   const { 
     apiKeys, 
     setApiKeys, 
@@ -721,7 +730,7 @@ export function Settings() {
             <div className="space-y-2">
               <label className="block text-xs font-bold text-zinc-500 uppercase">Dice Skin</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {DICE_SKIN_OPTIONS.map((skin) => (
+                    {visibleDiceSkinOptions.map((skin) => (
                   <button
                     key={skin.id}
                     onClick={() => setDiceSkin(skin.id)}

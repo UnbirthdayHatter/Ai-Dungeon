@@ -102,6 +102,7 @@ export function DiceRoller() {
     toxic: 'from-lime-500/20 to-green-500/10 border-lime-400/30 text-lime-200',
     glitchpop: 'from-fuchsia-500/20 to-cyan-500/10 border-pink-400/30 text-pink-200',
     wacky: 'from-cyan-500/20 via-fuchsia-500/10 to-lime-500/20 border-cyan-400/30 text-cyan-100',
+    tester1: 'from-rose-500/20 via-fuchsia-500/10 to-amber-300/20 border-rose-400/30 text-rose-100',
   }[diceSkin] || 'from-amber-500/20 to-orange-500/10 border-amber-500/20 text-amber-300';
 
   return (

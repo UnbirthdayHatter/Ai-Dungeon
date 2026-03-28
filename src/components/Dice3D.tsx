@@ -29,6 +29,7 @@ const DICE_SKINS: Record<string, { theme: string; themeColor: string; accent: st
   toxic: { theme: 'toxic', themeColor: '#84cc16', accent: '#d9f99d', glow: 'rgba(132,204,22,0.45)' },
   glitchpop: { theme: 'glitchpop', themeColor: '#ec4899', accent: '#f9a8d4', glow: 'rgba(236,72,153,0.45)' },
   wacky: { theme: 'wacky', themeColor: '#22d3ee', accent: '#fef08a', glow: 'rgba(34,211,238,0.45)' },
+  tester1: { theme: 'wacky', themeColor: '#f43f5e', accent: '#fef08a', glow: 'rgba(244,63,94,0.45)' },
 };
 
 function getDiceCanvasMotion(diceSkin: string, glow: string) {
@@ -125,6 +126,7 @@ function getDiceCanvasMotion(diceSkin: string, glow: string) {
         transition: { duration: 1.8, repeat: Infinity, ease: 'easeInOut' as const },
       };
     case 'wacky':
+    case 'tester1':
       return {
         style: {
           filter: 'brightness(1.1) saturate(1.52) contrast(1.12) drop-shadow(0 0 12px rgba(34,211,238,0.2))',
