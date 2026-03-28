@@ -647,6 +647,22 @@ export function Chat() {
     }
   };
 
+  const handleContinueScene = () => {
+    generateAIResponse('Continue the scene naturally from the current moment without repeating prior narration.');
+  };
+
+  const handleRegenerate = () => {
+    const latestAssistantMessage = [...messages].reverse().find((entry) => entry.role === 'assistant');
+    if (!latestAssistantMessage) return;
+    const previousPlayerMessage = [...messages]
+      .reverse()
+      .find((entry) => ['user', 'dice', 'ooc'].includes(entry.role) && entry.timestamp! < (latestAssistantMessage.timestamp || Number.MAX_SAFE_INTEGER));
+    if (previousPlayerMessage) {
+      rewindToMessage(previousPlayerMessage.id);
+      setTimeout(() => generateAIResponse(), 0);
+    }
+  };
+
   const handleCopyJoinCode = async () => {
     const code = joinCode || currentLiveRoleplayId;
     if (!code) return;
@@ -1180,38 +1196,6 @@ export function Chat() {
                   {/* Roll Prompts */}
                   {msg.role === 'assistant' && !isAIGenerating && isLastAssistantTurn(msg.id) && (
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <button
-                        onClick={() => generateAIResponse('Continue the scene naturally from the current moment without repeating prior narration.')}
-                        className={cn(
-                          "px-3 py-1.5 rounded-lg border text-xs font-bold transition-all flex items-center gap-2 shadow-sm",
-                          (theme === 'parchment' || theme === 'sepia')
-                            ? "bg-orange-100 border-orange-300 text-orange-900 hover:bg-orange-200"
-                            : "bg-zinc-800 border-zinc-700 text-zinc-200 hover:bg-zinc-700"
-                        )}
-                      >
-                        <Bot className="w-3 h-3" />
-                        Continue Scene
-                      </button>
-                      <button
-                        onClick={() => {
-                          const previousPlayerMessage = [...messages]
-                            .reverse()
-                            .find((entry) => ['user', 'dice', 'ooc'].includes(entry.role) && entry.timestamp! < (msg.timestamp || Number.MAX_SAFE_INTEGER));
-                          if (previousPlayerMessage) {
-                            rewindToMessage(previousPlayerMessage.id);
-                            setTimeout(() => generateAIResponse(), 0);
-                          }
-                        }}
-                        className={cn(
-                          "px-3 py-1.5 rounded-lg border text-xs font-bold transition-all flex items-center gap-2 shadow-sm",
-                          (theme === 'parchment' || theme === 'sepia')
-                            ? "bg-orange-100 border-orange-300 text-orange-900 hover:bg-orange-200"
-                            : "bg-zinc-800 border-zinc-700 text-zinc-200 hover:bg-zinc-700"
-                        )}
-                      >
-                        <RotateCcw className="w-3 h-3" />
-                        Regenerate
-                      </button>
                       {parseRollPrompts(msg.content).map((prompt, idx) => (
                         <button
                           key={`${prompt.label}-${idx}`}
@@ -1307,28 +1291,65 @@ export function Chat() {
 
       <div className="p-4 bg-zinc-900 border-t border-zinc-800">
         <div className="max-w-4xl mx-auto relative flex flex-col gap-2">
+          {!isAIGenerating && messages.some((message) => message.role === 'assistant') && (
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={handleContinueScene}
+                className={cn(
+                  "px-3 py-2 rounded-lg border text-xs font-bold transition-all flex items-center gap-2 shadow-sm",
+                  (theme === 'parchment' || theme === 'sepia')
+                    ? "bg-orange-100 border-orange-300 text-orange-900 hover:bg-orange-200"
+                    : "bg-zinc-800 border-zinc-700 text-zinc-200 hover:bg-zinc-700"
+                )}
+              >
+                <Bot className="w-3.5 h-3.5" />
+                Continue Scene
+              </button>
+              <button
+                onClick={handleRegenerate}
+                className={cn(
+                  "px-3 py-2 rounded-lg border text-xs font-bold transition-all flex items-center gap-2 shadow-sm",
+                  (theme === 'parchment' || theme === 'sepia')
+                    ? "bg-orange-100 border-orange-300 text-orange-900 hover:bg-orange-200"
+                    : "bg-zinc-800 border-zinc-700 text-zinc-200 hover:bg-zinc-700"
+                )}
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Regenerate
+              </button>
+            </div>
+          )}
           {showDiceRoller && (
-            <div className="absolute bottom-full mb-2 right-0 bg-zinc-800 border border-zinc-700 p-3 rounded-xl shadow-xl flex flex-col gap-3 z-10 min-w-[200px]">
+            <div className="absolute bottom-full mb-2 right-0 bg-zinc-900/95 border border-zinc-700 p-4 rounded-2xl shadow-2xl flex flex-col gap-4 z-10 min-w-[290px] backdrop-blur-md">
+              <div className="flex items-center justify-between gap-3 border-b border-zinc-800 pb-3">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.35em] text-zinc-500 font-black">Dice Console</div>
+                  <div className="text-sm font-bold text-zinc-100">Roll by formula or action</div>
+                </div>
+                <div className="px-2 py-1 rounded-full border border-indigo-500/20 bg-indigo-500/10 text-[10px] uppercase tracking-widest text-indigo-300 font-bold">
+                  Visual FX
+                </div>
+              </div>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={diceInput}
                   onChange={(e) => setDiceInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleManualRoll()}
-                  placeholder="1d6"
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-zinc-100 focus:outline-none focus:border-amber-500 text-sm"
+                  placeholder="1d6 or /roll 2d6+1"
+                  className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-zinc-100 focus:outline-none focus:border-amber-500 text-sm"
                 />
                 <button
                   onClick={handleManualRoll}
-                  className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-medium transition-colors"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold transition-colors"
                 >
                   Roll
                 </button>
               </div>
               
-              <div className="border-t border-zinc-700 pt-2">
-                <div className="text-xs text-zinc-400 mb-2 font-medium">Quick Rolls</div>
-                <div className="flex flex-wrap gap-2">
+              <div className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-3">
+                <div className="text-[10px] uppercase tracking-[0.3em] text-zinc-500 mb-3 font-black">Quick Rolls</div>
+                <div className="grid grid-cols-3 gap-2">
                   {['0d6', '1d6', '2d6', '3d6', '4d6'].map(dice => (
                     <button
                       key={dice}
@@ -1336,7 +1357,7 @@ export function Chat() {
                         const count = parseInt(dice.charAt(0));
                         handleBitDRoll(count, 'Quick Roll');
                       }}
-                      className="px-2 py-1 bg-zinc-700 hover:bg-zinc-600 text-zinc-200 rounded text-xs transition-colors"
+                      className="px-2 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl text-xs transition-colors font-bold"
                     >
                       {dice}
                     </button>
@@ -1345,22 +1366,21 @@ export function Chat() {
               </div>
               
               {activeSheet?.type === 'bitd' && activeSheet?.bitd && (
-                <>
-                  <div className="border-t border-zinc-700 pt-2">
-                    <div className="text-xs text-zinc-400 mb-2 font-medium">Action Ratings</div>
-                    <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1">
+                <div className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-3">
+                    <div className="text-[10px] uppercase tracking-[0.3em] text-zinc-500 mb-3 font-black">Action Ratings</div>
+                    <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
                       {(Object.entries(activeSheet.bitd.actions) as Array<[string, number]>).map(([action, rating]) => (
                         <button
                           key={action}
                           onClick={() => handleBitDRoll(rating, action.charAt(0).toUpperCase() + action.slice(1))}
-                          className="px-2 py-1 bg-indigo-900/30 hover:bg-indigo-800/50 text-indigo-300 border border-indigo-500/30 rounded text-xs transition-colors capitalize flex items-center gap-1"
+                          className="px-3 py-2 bg-indigo-900/30 hover:bg-indigo-800/50 text-indigo-300 border border-indigo-500/30 rounded-xl text-xs transition-colors capitalize flex items-center justify-between gap-2"
                         >
-                          {action} <span className="text-indigo-500 font-bold ml-1">{rating}d</span>
+                          <span>{action}</span>
+                          <span className="text-indigo-400 font-black">{rating}d</span>
                         </button>
                       ))}
                     </div>
-                  </div>
-                </>
+                </div>
               )}
             </div>
           )}
