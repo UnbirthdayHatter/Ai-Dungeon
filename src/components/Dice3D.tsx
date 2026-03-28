@@ -274,24 +274,43 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
                   transition={{ duration: 8 + index * 1.2, repeat: Infinity, ease: 'easeInOut', delay: index * 0.35 }}
                 />
               ))}
-              {Array.from({ length: 24 }).map((_, index) => (
+              {Array.from({ length: 56 }).map((_, index) => (
                 <motion.div
                   key={`sparkle-${index}`}
-                  className="absolute rounded-full bg-indigo-100/90"
+                  className="absolute rounded-full bg-indigo-100/95"
                   style={{
                     left: `${4 + ((index * 17) % 92)}%`,
                     top: `${6 + ((index * 19) % 80)}%`,
-                    width: `${index % 5 === 0 ? 8 : index % 3 === 0 ? 5 : 3}px`,
-                    height: `${index % 5 === 0 ? 8 : index % 3 === 0 ? 5 : 3}px`,
-                    boxShadow: index % 4 === 0
-                      ? '0 0 16px rgba(191,219,254,0.7)'
-                      : '0 0 10px rgba(165,180,252,0.45)',
+                    width: `${index % 9 === 0 ? 10 : index % 5 === 0 ? 7 : index % 3 === 0 ? 4 : 2}px`,
+                    height: `${index % 9 === 0 ? 10 : index % 5 === 0 ? 7 : index % 3 === 0 ? 4 : 2}px`,
+                    boxShadow: index % 9 === 0
+                      ? '0 0 22px rgba(103,232,249,0.9), 0 0 34px rgba(165,180,252,0.42)'
+                      : index % 4 === 0
+                        ? '0 0 16px rgba(191,219,254,0.74)'
+                        : '0 0 10px rgba(165,180,252,0.48)',
                   }}
                   animate={{
-                    opacity: [0.12, index % 4 === 0 ? 1 : 0.72, 0.16],
-                    scale: [0.72, index % 4 === 0 ? 1.7 : 1.3, 0.84],
+                    opacity: [0.08, index % 9 === 0 ? 1 : index % 4 === 0 ? 0.9 : 0.62, 0.14],
+                    scale: [0.68, index % 9 === 0 ? 2.1 : index % 4 === 0 ? 1.7 : 1.24, 0.84],
                   }}
-                  transition={{ duration: 1.6 + (index % 4) * 0.5, repeat: Infinity, delay: index * 0.07 }}
+                  transition={{ duration: 1.1 + (index % 5) * 0.42, repeat: Infinity, delay: index * 0.04 }}
+                />
+              ))}
+              {Array.from({ length: 12 }).map((_, index) => (
+                <motion.div
+                  key={`star-halo-${index}`}
+                  className="absolute rounded-full blur-xl"
+                  style={{
+                    left: `${8 + ((index * 13) % 84)}%`,
+                    top: `${10 + ((index * 23) % 72)}%`,
+                    width: `${22 + (index % 3) * 10}px`,
+                    height: `${22 + (index % 3) * 10}px`,
+                    background: index % 2 === 0
+                      ? 'radial-gradient(circle, rgba(103,232,249,0.22), rgba(129,140,248,0.08), transparent 70%)'
+                      : 'radial-gradient(circle, rgba(191,219,254,0.2), rgba(168,85,247,0.08), transparent 72%)',
+                  }}
+                  animate={{ opacity: [0.06, 0.24, 0.08], scale: [0.8, 1.18, 0.88] }}
+                  transition={{ duration: 2.2 + (index % 4) * 0.35, repeat: Infinity, delay: index * 0.16 }}
                 />
               ))}
               {Array.from({ length: 8 }).map((_, index) => (

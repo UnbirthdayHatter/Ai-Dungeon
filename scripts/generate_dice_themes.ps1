@@ -33,10 +33,19 @@ function Apply-ToneOverlay($graphics, [string]$pattern, [bool]$isLight, [int]$wi
   $rect = New-Object System.Drawing.Rectangle 0, 0, $width, $height
   switch ($pattern) {
     'celestial' {
-      $darken = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 125 } else { 90 }), 8, 8, 18))
-      $graphics.FillRectangle($darken, $rect)
-      $darken.Dispose()
-    }
+        $darken = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 168 } else { 120 }), 4, 6, 18))
+        $graphics.FillRectangle($darken, $rect)
+        $darken.Dispose()
+
+        $glowBrush = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
+          ([System.Drawing.Point]::new(0, 0)),
+          ([System.Drawing.Point]::new($width, $height)),
+          ([System.Drawing.Color]::FromArgb($(if ($isLight) { 32 } else { 20 }), 46, 196, 255)),
+          ([System.Drawing.Color]::FromArgb(0, 20, 40, 92))
+        )
+        $graphics.FillRectangle($glowBrush, $rect)
+        $glowBrush.Dispose()
+      }
     'bloodstone' {
       $darken = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 95 } else { 72 }), 14, 4, 4))
       $graphics.FillRectangle($darken, $rect)
@@ -119,15 +128,23 @@ function Draw-Pattern($graphics, [string]$pattern, $random, [bool]$isLight, [int
       Draw-NoiseDots $graphics 700 2 120 210 10 28 $random $width $height
     }
     'celestial' {
-      for ($i = 0; $i -lt 14; $i++) {
-        $gray = if ($isLight) { $random.Next(150, 225) } else { $random.Next(210, 255) }
-        $pen = New-PatternPen $gray ($random.Next(26, 72)) (($random.NextDouble() * 2.6) + 1.2)
-        $rect = New-Object System.Drawing.Rectangle($random.Next(-120, 280), $random.Next(-80, 240), $random.Next(180, 360), $random.Next(120, 320))
-        $graphics.DrawArc($pen, $rect, $random.Next(0, 360), $random.Next(70, 180))
-        $pen.Dispose()
+        for ($i = 0; $i -lt 20; $i++) {
+          $gray = if ($isLight) { $random.Next(170, 245) } else { $random.Next(225, 255) }
+          $pen = New-PatternPen $gray ($random.Next(44, 110)) (($random.NextDouble() * 3.1) + 1.4)
+          $rect = New-Object System.Drawing.Rectangle($random.Next(-120, 280), $random.Next(-80, 240), $random.Next(180, 360), $random.Next(120, 320))
+          $graphics.DrawArc($pen, $rect, $random.Next(0, 360), $random.Next(70, 180))
+          $pen.Dispose()
+        }
+        for ($i = 0; $i -lt 90; $i++) {
+          $size = $random.Next(3, 10)
+          $x = $random.Next(0, $width)
+          $y = $random.Next(0, $height)
+          $starBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($random.Next(26, 76), 108, 232, 255))
+          $graphics.FillEllipse($starBrush, $x, $y, $size, $size)
+          $starBrush.Dispose()
+        }
+        Draw-NoiseDots $graphics 900 4 220 255 120 220 $random $width $height
       }
-      Draw-NoiseDots $graphics 620 4 210 255 85 175 $random $width $height
-    }
     'bloodstone' {
       for ($i = 0; $i -lt 18; $i++) {
         $gray = if ($isLight) { $random.Next(190, 245) } else { $random.Next(215, 255) }
