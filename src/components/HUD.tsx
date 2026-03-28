@@ -71,7 +71,19 @@ export function HUD({ sheet, isCompact = false }: HUDProps) {
     )}>
       {/* Host Controls Overlay */}
       {isHost && !isMe && (
-        <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <div className="absolute -top-2 -right-2 flex flex-wrap justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 max-w-[220px]">
+          <button
+            onClick={() => togglePlayerPermission(currentLiveRoleplayId!, sheet.ownerId!, isAdmin ? 'viewer' : 'admin')}
+            className={cn(
+              "p-1.5 rounded-lg border shadow-lg transition-all",
+              isAdmin
+                ? "bg-red-500 border-red-400 text-white"
+                : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-zinc-200"
+            )}
+            title={isAdmin ? "Revoke Admin Permission" : "Grant Admin Permission"}
+          >
+            <ShieldAlert className="w-3.5 h-3.5" />
+          </button>
           <button
             onClick={() => togglePlayerPermission(currentLiveRoleplayId!, sheet.ownerId!, isEditor ? 'viewer' : 'editor')}
             className={cn(
@@ -83,6 +95,13 @@ export function HUD({ sheet, isCompact = false }: HUDProps) {
             title={isEditor ? "Revoke Edit Permission" : "Grant Edit Permission"}
           >
             <ShieldCheck className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => togglePlayerPermission(currentLiveRoleplayId!, sheet.ownerId!, 'viewer')}
+            className="p-1.5 rounded-lg border shadow-lg transition-all bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-zinc-200"
+            title="Set to Viewer"
+          >
+            <Radio className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => {
