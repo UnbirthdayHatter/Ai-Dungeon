@@ -427,7 +427,7 @@ export function Tester1ThreeDice({
         <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-orange-400/20 bg-zinc-950/95 shadow-[0_0_80px_rgba(0,0,0,0.55)]">
           <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,153,76,0.2),transparent_34%),radial-gradient(circle_at_50%_100%,rgba(249,115,22,0.18),transparent_28%),linear-gradient(180deg,rgba(24,10,7,0.32),rgba(8,4,4,0.82))]" />
           <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-[radial-gradient(circle_at_50%_35%,rgba(255,175,95,0.1),transparent_26%),linear-gradient(180deg,rgba(20,9,7,0.24),rgba(6,3,3,0.5))] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
-          <div className="pointer-events-none absolute inset-[10px] z-[1] overflow-hidden rounded-[1.6rem]">
+          <div className="pointer-events-none absolute inset-[10px] z-[24] overflow-hidden rounded-[1.6rem] mix-blend-screen opacity-80">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,118,24,0.24),transparent_34%),radial-gradient(circle_at_24%_82%,rgba(255,170,74,0.1),transparent_22%),radial-gradient(circle_at_78%_84%,rgba(249,115,22,0.12),transparent_22%),linear-gradient(180deg,rgba(24,8,5,0.12),rgba(8,3,2,0.42))]" />
             {Array.from({ length: 4 }).map((_, index) => (
               <motion.div
