@@ -78,8 +78,8 @@ void main() {
   float fieldA = fbm(uv + vec2(t * 0.34, -t * 0.18));
   float fieldB = fbm(uv * 1.8 - vec2(t * 0.16, -t * 0.28));
   float crackField = abs(fieldA - 0.5) + abs(fieldB - 0.53) * 0.74;
-  float cracks = 1.0 - smoothstep(0.046, 0.115, crackField);
-  float innerCracks = 1.0 - smoothstep(0.03, 0.082, crackField);
+  float cracks = 1.0 - smoothstep(0.09, 0.22, crackField);
+  float innerCracks = 1.0 - smoothstep(0.06, 0.16, crackField);
   float crackEdge = clamp(cracks - innerCracks, 0.0, 1.0);
   float hotspots = pow(crackEdge, 7.0) * (0.42 + 0.58 * fbm(uv * 3.8 + 12.0));
   float ember = smoothstep(0.962, 0.992, fbm(uv * 5.4 + 19.0));
