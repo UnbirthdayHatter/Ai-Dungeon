@@ -39,6 +39,8 @@ $cracks = Join-Path $tempPath 'cracks.png'
 $embers = Join-Path $tempPath 'embers.png'
 $numberGlowLight = Join-Path $tempPath 'number-glow-light.png'
 $numberGlowDark = Join-Path $tempPath 'number-glow-dark.png'
+$emissiveLight = Join-Path $themePath 'emissive-light.png'
+$emissiveDark = Join-Path $themePath 'emissive-dark.png'
 $preparedLight = Join-Path $tempPath 'prepared-light.png'
 $preparedDark = Join-Path $tempPath 'prepared-dark.png'
 $lightOut = Join-Path $themePath 'diffuse-light.png'
@@ -155,5 +157,25 @@ magick $defaultDark `
   '-sharpen' '0x1.3' `
   '-type' 'TrueColor' `
   $darkOut
+
+& magick -size ${size}x${size} xc:black `
+  '(' $cracks '-fill' '#ff5a00' '-colorize' '100' ')' '-compose' 'Screen' '-composite' `
+  '(' $cracks '-fill' '#ffd16f' '-colorize' '100' -blur '0x1.8' ')' '-compose' 'Screen' '-composite' `
+  '(' $numberGlowLight '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
+  '(' $embers '-alpha' 'off' -evaluate 'Multiply' '0.85' ')' '-compose' 'Screen' '-composite' `
+  '-modulate' '100,170,100' `
+  '-brightness-contrast' '6x30' `
+  '-type' 'TrueColor' `
+  $emissiveLight
+
+& magick -size ${size}x${size} xc:black `
+  '(' $cracks '-fill' '#ff5a00' '-colorize' '100' ')' '-compose' 'Screen' '-composite' `
+  '(' $cracks '-fill' '#ffd16f' '-colorize' '100' -blur '0x2.1' ')' '-compose' 'Screen' '-composite' `
+  '(' $numberGlowDark '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
+  '(' $embers '-alpha' 'off' -evaluate 'Multiply' '0.9' ')' '-compose' 'Screen' '-composite' `
+  '-modulate' '100,178,100' `
+  '-brightness-contrast' '10x34' `
+  '-type' 'TrueColor' `
+  $emissiveDark
 
 Write-Output "Generated Tester1 ImageMagick lava texture at $themePath"

@@ -10,6 +10,11 @@
       "light": "diffuse-light.png",
       "dark": "diffuse-dark.png"
     },
+    "emissiveTexture": {
+      "light": "emissive-light.png",
+      "dark": "emissive-dark.png"
+    },
+    "emissiveLevel": 1.7,
     "diffuseLevel": 1.1,
     "bumpTexture": "normal.png",
     "bumpLevel": 0.85,
