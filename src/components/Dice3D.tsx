@@ -30,6 +30,98 @@ const DICE_SKINS: Record<string, { theme: string; themeColor: string; accent: st
   glitchpop: { theme: 'glitchpop', themeColor: '#ec4899', accent: '#f9a8d4', glow: 'rgba(236,72,153,0.45)' },
 };
 
+function ToxicRipple({
+  left,
+  top,
+  width,
+  delay,
+  duration,
+  rotate = 0,
+}: {
+  left: string;
+  top: string;
+  width: number;
+  delay: number;
+  duration: number;
+  rotate?: number;
+}) {
+  const height = Math.round(width * 0.5);
+
+  return (
+    <motion.div
+      className="absolute"
+      style={{
+        left,
+        top,
+        width: `${width}px`,
+        height: `${height}px`,
+        rotate: `${rotate}deg`,
+        transformOrigin: 'center center',
+      }}
+      animate={{
+        scale: [0.76, 1.08, 1.16],
+        opacity: [0, 0.9, 0],
+      }}
+      transition={{ duration, delay, repeat: Infinity, ease: 'easeOut' }}
+    >
+      <svg viewBox="0 0 200 100" className="h-full w-full overflow-visible">
+        <defs>
+          <radialGradient id="toxic-ripple-core" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgba(190,242,100,0.85)" />
+            <stop offset="50%" stopColor="rgba(74,222,128,0.45)" />
+            <stop offset="100%" stopColor="rgba(74,222,128,0)" />
+          </radialGradient>
+          <filter id="toxic-ripple-glow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="1.8" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <ellipse
+          cx="100"
+          cy="50"
+          rx="16"
+          ry="8"
+          fill="url(#toxic-ripple-core)"
+          opacity="0.55"
+          filter="url(#toxic-ripple-glow)"
+        />
+
+        <path
+          d="M100 50m-18 0a18 9 0 1 0 36 0a18 9 0 1 0-36 0"
+          fill="none"
+          stroke="rgba(132,204,22,0.42)"
+          strokeWidth="2"
+          strokeDasharray="26 14 18 22"
+          strokeLinecap="round"
+          filter="url(#toxic-ripple-glow)"
+        />
+        <path
+          d="M100 50m-42 0c0-12 18-22 42-22s42 10 42 22-18 22-42 22-42-10-42-22z"
+          fill="none"
+          stroke="rgba(74,222,128,0.34)"
+          strokeWidth="2.5"
+          strokeDasharray="42 20 14 18 24 22"
+          strokeLinecap="round"
+          filter="url(#toxic-ripple-glow)"
+        />
+        <path
+          d="M100 50m-74 0c0-21 32-38 74-38s74 17 74 38-32 38-74 38-74-17-74-38z"
+          fill="none"
+          stroke="rgba(56,189,248,0.16)"
+          strokeWidth="2.5"
+          strokeDasharray="58 34 16 26 40 28"
+          strokeLinecap="round"
+          filter="url(#toxic-ripple-glow)"
+        />
+      </svg>
+    </motion.div>
+  );
+}
+
 export function Dice3D({ results, diceType, total, label, modifier = 0, highlight = 'sum', onComplete }: Dice3DProps) {
   const { diceSkin, dice3DScale, dice3DAutoCloseMs } = useStore();
   const containerIdRef = useRef(`dice-box-${Math.random().toString(36).slice(2, 10)}`);
@@ -234,28 +326,10 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
           {diceSkin === 'toxic' && (
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(163,230,53,0.22),transparent_38%),radial-gradient(circle_at_20%_0%,rgba(74,222,128,0.16),transparent_24%),linear-gradient(180deg,rgba(9,20,6,0.18),rgba(10,28,8,0.44)_58%,rgba(16,56,10,0.62))]" />
-              {Array.from({ length: 9 }).map((_, index) => (
-                <motion.div
-                  key={`toxic-ripple-${index}`}
-                  className="absolute rounded-full border"
-                  style={{
-                    left: `${8 + ((index * 9) % 78)}%`,
-                    top: `${20 + ((index * 7) % 48)}%`,
-                    width: `${80 + (index % 3) * 50}px`,
-                    height: `${28 + (index % 4) * 16}px`,
-                    borderColor: index % 2 === 0 ? 'rgba(190,242,100,0.28)' : 'rgba(74,222,128,0.24)',
-                    boxShadow: index % 2 === 0
-                      ? '0 0 18px rgba(163,230,53,0.12)'
-                      : '0 0 16px rgba(74,222,128,0.1)',
-                  }}
-                  animate={{
-                    scaleX: [0.82, 1.18, 0.92],
-                    scaleY: [0.84, 1.14, 0.9],
-                    opacity: [0.1, 0.4, 0.12],
-                  }}
-                  transition={{ duration: 2 + (index % 4) * 0.25, repeat: Infinity, ease: 'easeInOut', delay: index * 0.15 }}
-                />
-              ))}
+              <ToxicRipple left="12%" top="18%" width={240} delay={0} duration={2.6} rotate={-6} />
+              <ToxicRipple left="58%" top="14%" width={300} delay={0.45} duration={3} rotate={4} />
+              <ToxicRipple left="28%" top="48%" width={340} delay={0.95} duration={3.2} rotate={-3} />
+              <ToxicRipple left="68%" top="54%" width={220} delay={1.35} duration={2.4} rotate={7} />
               {Array.from({ length: 6 }).map((_, index) => (
                 <motion.div
                   key={`toxic-wave-${index}`}
