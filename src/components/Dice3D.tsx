@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import '@3d-dice/dice-box/dist/style.css';
 import { useStore } from '@/store/useStore';
+import { TesterDicePrototype } from './TesterDicePrototype';
 
 interface Dice3DProps {
   results: number[];
@@ -472,7 +473,7 @@ function VoidfireEffects() {
   );
 }
 
-export function Dice3D({ results, diceType, total, label, modifier = 0, highlight = 'sum', onComplete }: Dice3DProps) {
+function StandardDice3D({ results, diceType, total, label, modifier = 0, highlight = 'sum', onComplete }: Dice3DProps) {
   const { diceSkin, dice3DScale, dice3DAutoCloseMs } = useStore();
   const containerIdRef = useRef(`dice-box-${Math.random().toString(36).slice(2, 10)}`);
   const trayRef = useRef<HTMLDivElement | null>(null);
@@ -1294,4 +1295,14 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
       </div>
     </div>
   );
+}
+
+export function Dice3D(props: Dice3DProps) {
+  const { diceSkin } = useStore();
+
+  if (diceSkin === 'tester1') {
+    return <TesterDicePrototype {...props} />;
+  }
+
+  return <StandardDice3D {...props} />;
 }
