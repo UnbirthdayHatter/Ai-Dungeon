@@ -29,6 +29,7 @@ const DICE_SKINS: Record<string, { themeColor: string; accent: string; glow: str
 export function Dice3D({ results, diceType, total, label, modifier = 0, highlight = 'sum', onComplete }: Dice3DProps) {
   const { diceSkin, dice3DScale, dice3DAutoCloseMs } = useStore();
   const containerIdRef = useRef(`dice-box-${Math.random().toString(36).slice(2, 10)}`);
+  const trayRef = useRef<HTMLDivElement | null>(null);
   const completeTimeoutRef = useRef<number | null>(null);
   const onCompleteRef = useRef(onComplete);
   const settledRef = useRef(false);
@@ -55,6 +56,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
   useEffect(() => {
     let cancelled = false;
     let diceBox: { init: () => Promise<unknown>; roll: (notation: string) => Promise<unknown>; clear: () => void; onRollComplete?: () => void; updateConfig?: (config: Record<string, unknown>) => Promise<unknown> | unknown } | null = null;
+    let resizeObserver: ResizeObserver | null = null;
     settledRef.current = false;
 
     const finish = () => {
@@ -79,8 +81,8 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
           themeColor: skin.themeColor,
           scale: dice3DScale,
           gravity: 1.2,
-          offscreen: true,
-        });
+          offscreen: false,
+          });
         diceBox.onRollComplete = () => {
           if (cancelled) return;
           setPhase('settled');
@@ -92,13 +94,26 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
         if (diceBox.updateConfig) {
           await diceBox.updateConfig({ themeColor: skin.themeColor });
         }
-        const canvas = document.querySelector<HTMLCanvasElement>(`#${containerIdRef.current} canvas`);
-        if (canvas) {
+        const syncCanvasResolution = () => {
+          const canvas = document.querySelector<HTMLCanvasElement>(`#${containerIdRef.current} canvas`);
+          const tray = trayRef.current;
+          if (!canvas || !tray) return;
+          const ratio = Math.min(window.devicePixelRatio || 1, 2);
+          const width = Math.max(1, Math.floor(tray.clientWidth * ratio));
+          const height = Math.max(1, Math.floor(tray.clientHeight * ratio));
+          canvas.width = width;
+          canvas.height = height;
           canvas.style.width = '100%';
           canvas.style.height = '100%';
           canvas.style.display = 'block';
-        }
+          window.dispatchEvent(new Event('resize'));
+        };
+        syncCanvasResolution();
+        resizeObserver = new ResizeObserver(() => syncCanvasResolution());
         setPhase('rolling');
+        if (trayRef.current) {
+          resizeObserver.observe(trayRef.current);
+        }
         await diceBox.roll(notation);
       } catch (error) {
         console.error('3D dice failed to initialize', error);
@@ -115,6 +130,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
       if (completeTimeoutRef.current) {
         window.clearTimeout(completeTimeoutRef.current);
       }
+      resizeObserver?.disconnect();
       try {
         diceBox?.clear();
       } catch {
@@ -137,6 +153,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
         </div>
 
         <div
+          ref={trayRef}
           className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-white/10 bg-zinc-950/80 shadow-[0_0_60px_rgba(0,0,0,0.45)]"
           style={{ boxShadow: `0 0 50px ${skin.glow}` }}
         >
