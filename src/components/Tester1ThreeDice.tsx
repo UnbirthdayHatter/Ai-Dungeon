@@ -96,8 +96,8 @@ void main() {
 
   vec4 numberSample = texture2D(uNumberMap, vUv);
   float numberMask = numberSample.a;
-  vec3 numberCore = vec3(1.95, 1.72, 1.34) * smoothstep(0.78, 1.0, numberMask);
-  vec3 numberGlow = vec3(1.15, 0.48, 0.1) * smoothstep(0.12, 0.96, numberMask) * 0.52;
+  vec3 numberCore = vec3(1.7, 1.5, 1.18) * smoothstep(0.84, 1.0, numberMask);
+  vec3 numberGlow = vec3(0.64, 0.28, 0.06) * smoothstep(0.22, 0.96, numberMask) * 0.22;
 
   vec3 color = rock + crackColor + hotspotColor + emberColor;
   color += (numberGlow + numberCore) * pulse;
