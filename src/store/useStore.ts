@@ -157,6 +157,7 @@ export type LoreEntry = {
   category: string;
   name: string;
   description: string;
+  appearance?: string;
   avatarUrl?: string;
   imageUrl?: string;
   imageLocked?: boolean;
@@ -454,6 +455,26 @@ const syncSavedRoleplaySheets = (savedRoleplays: SavedRoleplay[], roleplayId: st
       )
     : savedRoleplays;
 
+const buildLorePortraitPrompt = (entry: Partial<LoreEntry>) => {
+  const category = (entry.category || '').toLowerCase();
+  const baseAppearance = (entry.appearance || '').trim();
+  const fallbackDescription = (entry.description || '').trim();
+
+  if (category === 'location' || category === 'place') {
+    return `${entry.name || 'Location'}: ${fallbackDescription || 'A scenic environmental illustration'} scenic, not focusing on people`;
+  }
+
+  const appearanceText = baseAppearance
+    || fallbackDescription
+    || 'A character portrait with clear appearance cues, age presentation, gender presentation if specified, clothing, features, and atmosphere';
+
+  const portraitFraming = category === 'npc'
+    ? 'a close up portrait with a blurry background'
+    : 'a focused character illustration with a clean background';
+
+  return `${entry.name || 'Character'}: ${appearanceText} ${portraitFraming}`;
+};
+
 let activeRoleplaySyncCleanup: (() => void) | null = null;
 
 const postPresenceUpdate = async (payload: { roleplayId: string; userId?: string; name?: string; isTyping?: boolean; isAIGenerating?: boolean }) => {
@@ -553,6 +574,7 @@ export const useStore = create<any>()((set, get) => ({
   generatePortrait: async (id: string, prompt: string) => {
     const state = get();
     const apiKey = state.apiKeys.gemini || state.apiKey || undefined;
+    const loreEntry = state.lorebook.find((entry: LoreEntry) => entry.id === id);
     const tonePromptParts = [
       state.mood ? `Adventure mood and tone: ${state.mood}.` : '',
       state.visualStyle ? `Preferred campaign visual style: ${state.visualStyle}.` : '',
@@ -560,7 +582,10 @@ export const useStore = create<any>()((set, get) => ({
       state.contextAndRules ? `Current adventure context: ${state.contextAndRules}.` : '',
     ].filter(Boolean);
     const themedPrompt = [
-      prompt,
+      loreEntry ? buildLorePortraitPrompt(loreEntry) : prompt,
+      loreEntry?.appearance
+        ? `Use this appearance as authoritative. Do not change the subject's apparent gender, presentation, body type, age cues, or major visible traits unless the appearance text says so.`
+        : 'If the description specifies gender, presentation, body type, age cues, ancestry, or distinctive features, preserve them exactly instead of defaulting to generic fantasy portrait assumptions.',
       tonePromptParts.length > 0
         ? `Match the visual tone, fashion, atmosphere, lighting, and genre cues of this adventure. ${tonePromptParts.join(' ')}`
         : 'Match the visual tone of the current adventure and keep the portrait consistent with its setting and atmosphere.',
@@ -1998,12 +2023,13 @@ ${(state.sessionSheets as Sheet[]).map((sheet) => `- ${sheet.name || 'Unknown Ch
       const stateUpdateContext = `\n\nSTATE UPDATES:
 If the player's HP changes, their inventory changes, or the NPCs in the current scene change, you MUST append a JSON block at the very end of your response.
 CRITICAL: Whenever a new character is introduced, or an unnamed character is given a name, or you mention a character that is NOT already in the LOREBOOK provided above, you MUST add them to the 'newLore' array with a description. This is mandatory for every single character introduction.
+For NPC entries, include an 'appearance' field whenever the scene establishes visible traits. Be explicit about presentation such as woman/man/nonbinary presentation when known, age cues, build, skin tone, hair, clothing, and notable facial features so portrait generation does not have to guess.
 Format it exactly like this:
 \`\`\`json
 {
   "hpDelta": -2,
   "inventoryChanges": ["+ Iron Sword", "- 10 gp"],
-  "newLore": [{"category": "NPC", "name": "Garrick", "description": "A burly blacksmith"}],
+  "newLore": [{"category": "NPC", "name": "Garrick", "description": "A burly blacksmith", "appearance": "A broad-shouldered middle-aged man with soot-dark skin, a heavy beard, thick arms, and a leather apron over rolled sleeves"}],
   "currentNPCs": [{"name": "Garrick", "relationship": "Friendly"}]
 }
 \`\`\`
@@ -2172,6 +2198,7 @@ Do not take over the narrative; instead, support and enhance the player's vision
                     category: l.category || 'NPC',
                     name: l.name || 'Unknown',
                     description: l.description || '',
+                    appearance: l.appearance || '',
                     parentId: null
                   };
                   
@@ -2180,7 +2207,7 @@ Do not take over the narrative; instead, support and enhance the player's vision
                   }
 
                   if ((entry.category || '').toLowerCase() === 'npc') {
-                    const portraitPrompt = `${entry.name}: ${entry.description || 'A character portrait'} a close up portrait with a blurry background`;
+                    const portraitPrompt = buildLorePortraitPrompt(entry);
                     get().generatePortrait(entry.id, portraitPrompt).catch((error: unknown) => {
                       console.error('Auto-generating NPC portrait failed:', error);
                     });

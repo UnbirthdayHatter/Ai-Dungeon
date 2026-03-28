@@ -135,14 +135,10 @@ export function Lorebook() {
     if (!selectedEntry) return;
     setIsGenerating(true);
     try {
-      let categoryInstructions = '';
-      if (selectedEntry.category === 'Location') {
-        categoryInstructions = ' scenic, not focusing on people';
-      } else if (selectedEntry.category === 'NPC') {
-        categoryInstructions = ' a close up portrait with a blurry background';
-      }
-      
-      const fullPrompt = `${selectedEntry.name}: ${selectedEntry.description}${categoryInstructions}`;
+      const appearancePrompt = (selectedEntry as any).appearance?.trim();
+      const descriptionPrompt = selectedEntry.description?.trim();
+      const promptSource = [appearancePrompt, descriptionPrompt].filter(Boolean).join('. ');
+      const fullPrompt = `${selectedEntry.name}: ${promptSource || 'A portrait that matches this lore entry'}`;
       await generatePortrait(selectedEntry.id, fullPrompt);
     } catch (error) {
       console.error(error);
@@ -434,6 +430,20 @@ export function Lorebook() {
                 </div>
 
                 <div className="space-y-4">
+                  {selectedEntry.category !== 'Folder' && (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-zinc-500 border-b border-zinc-800 pb-2">
+                        <User className="w-4 h-4" />
+                        <span className="text-xs font-medium uppercase tracking-wider">Looks & Portrait Guidance</span>
+                      </div>
+                      <textarea
+                        value={(selectedEntry as any).appearance || ''}
+                        onChange={(e) => updateLoreEntry(selectedEntry.id, { appearance: e.target.value })}
+                        className="w-full min-h-[140px] bg-zinc-900/40 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-300 leading-relaxed focus:outline-none focus:border-amber-500/40 resize-y placeholder:text-zinc-700"
+                        placeholder="Describe visible appearance clearly: gender presentation, age, build, skin tone, hair, clothing, notable facial features, scars, makeup, jewelry, posture, and anything the portrait generator must preserve."
+                      />
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 text-zinc-500 border-b border-zinc-800 pb-2">
                     <BookOpen className="w-4 h-4" />
                     <span className="text-xs font-medium uppercase tracking-wider">Description & Lore</span>
