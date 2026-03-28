@@ -96,8 +96,8 @@ void main() {
 
   vec4 numberSample = texture2D(uNumberMap, vUv);
   float numberMask = numberSample.a;
-  vec3 numberCore = vec3(1.7, 1.5, 1.18) * smoothstep(0.84, 1.0, numberMask);
-  vec3 numberGlow = vec3(0.64, 0.28, 0.06) * smoothstep(0.22, 0.96, numberMask) * 0.22;
+  vec3 numberCore = vec3(1.15, 1.02, 0.82) * smoothstep(0.9, 1.0, numberMask);
+  vec3 numberGlow = vec3(0.26, 0.12, 0.03) * smoothstep(0.42, 0.98, numberMask) * 0.08;
 
   vec3 color = rock + crackColor + hotspotColor + emberColor;
   color += (numberGlow + numberCore) * pulse;
@@ -120,19 +120,14 @@ function createNumberTexture(value: number) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.font = 'bold 280px Georgia';
-  ctx.lineWidth = 22;
-  ctx.strokeStyle = 'rgba(255, 120, 24, 1)';
-  ctx.shadowBlur = 34;
-  ctx.shadowColor = 'rgba(255, 92, 12, 0.92)';
-  ctx.strokeText(String(value), canvas.width / 2, canvas.height / 2);
   ctx.lineWidth = 10;
-  ctx.strokeStyle = 'rgba(255, 214, 144, 0.88)';
-  ctx.shadowBlur = 96;
-  ctx.shadowColor = 'rgba(255, 214, 136, 0.95)';
+  ctx.strokeStyle = 'rgba(255, 170, 84, 0.72)';
+  ctx.shadowBlur = 10;
+  ctx.shadowColor = 'rgba(255, 110, 24, 0.35)';
   ctx.strokeText(String(value), canvas.width / 2, canvas.height / 2);
-  ctx.shadowBlur = 132;
-  ctx.shadowColor = 'rgba(255, 235, 180, 0.98)';
-  ctx.fillStyle = 'rgba(255, 250, 230, 1)';
+  ctx.shadowBlur = 14;
+  ctx.shadowColor = 'rgba(255, 228, 168, 0.3)';
+  ctx.fillStyle = 'rgba(255, 247, 224, 0.96)';
   ctx.fillText(String(value), canvas.width / 2, canvas.height / 2);
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -214,7 +209,7 @@ export function Tester1ThreeDice({
     renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
     renderer.shadowMap.enabled = true;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.14;
+    renderer.toneMappingExposure = 0.94;
     mountRef.current.innerHTML = '';
     mountRef.current.appendChild(renderer.domElement);
 
@@ -222,9 +217,9 @@ export function Tester1ThreeDice({
     composer.addPass(new RenderPass(scene, camera));
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(mountRef.current.clientWidth, mountRef.current.clientHeight),
-      1.18,
-      0.52,
-      0.66,
+      0.48,
+      0.28,
+      0.9,
     );
     composer.addPass(bloomPass);
 
