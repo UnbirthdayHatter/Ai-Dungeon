@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Zap, Shield, Star, User, ShieldCheck, Trash2, ShieldAlert } from 'lucide-react';
+import { Heart, Zap, Shield, Star, User, ShieldCheck, Trash2, ShieldAlert, Radio } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore, Sheet } from '../store/useStore';
 import { auth } from '../firebase';
@@ -17,7 +17,10 @@ export function HUD({ sheet, isCompact = false }: HUDProps) {
     togglePlayerPermission,
     editors,
     admins,
-    removeSheetFromRoleplay
+    removeSheetFromRoleplay,
+    typingUsers,
+    activeSheetId,
+    isLive
   } = useStore();
   if (!sheet) return null;
 
@@ -33,6 +36,20 @@ export function HUD({ sheet, isCompact = false }: HUDProps) {
       : isEditor
         ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
         : 'bg-zinc-800 text-zinc-400 border-zinc-700';
+  const currentUserId = auth.currentUser?.uid || '';
+  const isTyping = Boolean(
+    sheet.ownerId
+      && sheet.ownerId !== currentUserId
+      && (typingUsers as Record<string, { isTyping?: boolean; timestamp?: number }>)[sheet.ownerId]?.isTyping
+  );
+  const isActiveCharacter = activeSheetId === sheet.id;
+  const seenRecently = Boolean(sheet.lastSeen && Date.now() - sheet.lastSeen < 120000);
+  const statusTone = isTyping
+    ? 'bg-blue-400'
+    : seenRecently || !isLive
+      ? 'bg-emerald-400'
+      : 'bg-zinc-600';
+  const statusLabel = isTyping ? 'Typing' : seenRecently || !isLive ? 'Ready' : 'Idle';
 
   // BitD Stats
   const stress = sheet.bitd?.stress || 0;
@@ -150,11 +167,25 @@ export function HUD({ sheet, isCompact = false }: HUDProps) {
             <span className={cn("px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest", roleBadgeClass)}>
               {roleLabel}
             </span>
+            {isActiveCharacter && (
+              <span className="px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest bg-indigo-500/10 text-indigo-300 border-indigo-500/30">
+                Current
+              </span>
+            )}
             {isMe && (
               <span className="text-[9px] uppercase tracking-widest text-zinc-500">
                 Reserved to this player
               </span>
             )}
+          </div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-zinc-500">
+              <span className={cn("w-2 h-2 rounded-full", statusTone)} />
+              <span>{statusLabel}</span>
+            </div>
+            <span className="text-[9px] uppercase tracking-widest text-zinc-600 truncate max-w-[120px]">
+              {sheet.charClass || sheet.bitd?.playbook || sheet.race || 'Adventurer'}
+            </span>
           </div>
           
           {/* Stress/HP Bar */}

@@ -67,7 +67,8 @@ export function Chat() {
     promoteToMultiplayer,
     isOocMode,
     setIsOocMode,
-    toggleMessageCollapse
+    toggleMessageCollapse,
+    connectedPlayers
   } = useStore();
 
   const activeRoleplay = [...userRoleplays, ...joinedRoleplays].find(rp => rp.id === currentLiveRoleplayId);
@@ -222,6 +223,7 @@ export function Chat() {
     || sheets.find(s => s.ownerId === auth.currentUser?.uid)
     || characterLookupSheets[0]
     || sheets[0];
+  const partyCount = sessionSheets.length > 0 ? sessionSheets.length : (activeSheet ? 1 : 0);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -643,7 +645,27 @@ export function Chat() {
         <div className="flex items-center gap-2 mb-2">
           <Shield className="w-4 h-4 text-zinc-500" />
           <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Party Panel</h3>
+          <span className="ml-auto text-[10px] uppercase tracking-widest text-zinc-600">
+            {partyCount} {partyCount === 1 ? 'member' : 'members'}
+          </span>
         </div>
+        {isLive && (
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-400 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-zinc-500 uppercase tracking-widest text-[10px] font-black">Session Presence</span>
+              <span className="text-zinc-500 text-[10px] uppercase tracking-widest">
+                {connectedPlayers.length} connected
+              </span>
+            </div>
+            {activeTypingUsers.length > 0 ? (
+              <p className="text-blue-300">
+                {activeTypingUsers.map((user) => user.name).join(', ')} {activeTypingUsers.length === 1 ? 'is' : 'are'} typing...
+              </p>
+            ) : (
+              <p className="text-zinc-500">No one is typing right now.</p>
+            )}
+          </div>
+        )}
         {sessionSheets.length > 0 ? (
           sessionSheets.map((sheet) => (
             <HUD key={sheet.id} sheet={sheet} isCompact={sessionSheets.length > 2} />
