@@ -24,6 +24,10 @@ const DICE_SKINS: Record<string, { theme: string; themeColor: string; accent: st
   sapphire: { theme: 'sapphire', themeColor: '#2563eb', accent: '#bfdbfe', glow: 'rgba(37,99,235,0.35)' },
   amethyst: { theme: 'amethyst', themeColor: '#9333ea', accent: '#e9d5ff', glow: 'rgba(147,51,234,0.35)' },
   rosegold: { theme: 'rosegold', themeColor: '#fb7185', accent: '#fecdd3', glow: 'rgba(251,113,133,0.35)' },
+  aurora: { theme: 'aurora', themeColor: '#34d399', accent: '#a7f3d0', glow: 'rgba(52,211,153,0.35)' },
+  voidfire: { theme: 'voidfire', themeColor: '#f97316', accent: '#fdba74', glow: 'rgba(249,115,22,0.45)' },
+  toxic: { theme: 'toxic', themeColor: '#84cc16', accent: '#d9f99d', glow: 'rgba(132,204,22,0.45)' },
+  glitchpop: { theme: 'glitchpop', themeColor: '#ec4899', accent: '#f9a8d4', glow: 'rgba(236,72,153,0.45)' },
 };
 
 export function Dice3D({ results, diceType, total, label, modifier = 0, highlight = 'sum', onComplete }: Dice3DProps) {
@@ -186,6 +190,84 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
                   }}
                   animate={{ opacity: [0.1, 0.55, 0.12], y: [0, -16, -6] }}
                   transition={{ duration: 2.2 + (index % 4) * 0.3, repeat: Infinity, delay: index * 0.1 }}
+                />
+              ))}
+            </div>
+          )}
+          {diceSkin === 'aurora' && (
+            <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-90">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <motion.div
+                  key={`aurora-${index}`}
+                  className="absolute left-[-10%] h-40 w-[60%] rounded-full blur-3xl"
+                  style={{
+                    top: `${8 + index * 14}%`,
+                    background: index % 2 === 0
+                      ? 'linear-gradient(90deg, rgba(34,197,94,0.04), rgba(45,212,191,0.28), rgba(99,102,241,0.18), transparent)'
+                      : 'linear-gradient(90deg, rgba(59,130,246,0.02), rgba(168,85,247,0.24), rgba(45,212,191,0.18), transparent)',
+                  }}
+                  animate={{ x: ['-5%', '18%', '-2%'], opacity: [0.35, 0.65, 0.4], rotate: [-4, 3, -2] }}
+                  transition={{ duration: 7 + index, repeat: Infinity, ease: 'easeInOut', delay: index * 0.4 }}
+                />
+              ))}
+            </div>
+          )}
+          {diceSkin === 'voidfire' && (
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              {Array.from({ length: 14 }).map((_, index) => (
+                <motion.div
+                  key={`voidfire-${index}`}
+                  className="absolute h-24 w-24 rounded-full blur-2xl"
+                  style={{
+                    left: `${6 + ((index * 7) % 84)}%`,
+                    bottom: `${-4 + ((index * 5) % 22)}%`,
+                    background: index % 2 === 0
+                      ? 'radial-gradient(circle, rgba(249,115,22,0.35), rgba(168,85,247,0.12), transparent 70%)'
+                      : 'radial-gradient(circle, rgba(217,70,239,0.3), rgba(249,115,22,0.08), transparent 72%)',
+                  }}
+                  animate={{ y: [0, -80, -20], opacity: [0.15, 0.6, 0.08], scale: [0.8, 1.4, 0.9] }}
+                  transition={{ duration: 2.8 + (index % 4) * 0.35, repeat: Infinity, delay: index * 0.12 }}
+                />
+              ))}
+            </div>
+          )}
+          {diceSkin === 'toxic' && (
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              {Array.from({ length: 12 }).map((_, index) => (
+                <motion.div
+                  key={`toxic-${index}`}
+                  className="absolute rounded-full blur-xl"
+                  style={{
+                    left: `${8 + ((index * 9) % 78)}%`,
+                    top: `${18 + ((index * 11) % 58)}%`,
+                    width: `${36 + (index % 3) * 18}px`,
+                    height: `${22 + (index % 4) * 14}px`,
+                    background: 'radial-gradient(circle, rgba(163,230,53,0.38), rgba(132,204,22,0.18), transparent 72%)',
+                  }}
+                  animate={{ scale: [0.9, 1.2, 0.95], opacity: [0.18, 0.46, 0.2] }}
+                  transition={{ duration: 1.9 + (index % 3) * 0.2, repeat: Infinity, delay: index * 0.14 }}
+                />
+              ))}
+            </div>
+          )}
+          {diceSkin === 'glitchpop' && (
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              {Array.from({ length: 18 }).map((_, index) => (
+                <motion.div
+                  key={`glitch-${index}`}
+                  className="absolute h-3 rounded-full blur-[1px]"
+                  style={{
+                    left: `${((index * 13) % 90)}%`,
+                    top: `${8 + ((index * 17) % 76)}%`,
+                    width: `${60 + (index % 4) * 36}px`,
+                    background: index % 3 === 0
+                      ? 'linear-gradient(90deg, rgba(236,72,153,0.0), rgba(236,72,153,0.85), transparent)'
+                      : index % 3 === 1
+                        ? 'linear-gradient(90deg, rgba(34,211,238,0.0), rgba(34,211,238,0.85), transparent)'
+                        : 'linear-gradient(90deg, rgba(250,204,21,0.0), rgba(250,204,21,0.8), transparent)',
+                  }}
+                  animate={{ x: [0, 18, -10, 0], opacity: [0.18, 0.75, 0.2], scaleX: [0.9, 1.12, 0.92] }}
+                  transition={{ duration: 0.95 + (index % 4) * 0.18, repeat: Infinity, delay: index * 0.05 }}
                 />
               ))}
             </div>

@@ -61,6 +61,10 @@ const DICE_SKIN_OPTIONS = [
   { id: 'sapphire', name: 'Sapphire', preview: 'from-sky-300 via-blue-500 to-blue-900', pip: 'text-sky-50', note: 'cut gemstone facets' },
   { id: 'amethyst', name: 'Amethyst', preview: 'from-fuchsia-300 via-purple-500 to-violet-900', pip: 'text-fuchsia-50', note: 'cut gemstone facets' },
   { id: 'rosegold', name: 'Rosegold', preview: 'from-rose-200 via-rose-400 to-orange-500', pip: 'text-rose-50', note: 'filigree metallic grain' },
+  { id: 'aurora', name: 'Aurora', preview: 'from-emerald-300 via-cyan-400 to-indigo-700', pip: 'text-cyan-50', note: 'sweeping arctic lights' },
+  { id: 'voidfire', name: 'Voidfire', preview: 'from-fuchsia-500 via-orange-500 to-zinc-950', pip: 'text-orange-50', note: 'cosmic embers and magma' },
+  { id: 'toxic', name: 'Toxic', preview: 'from-lime-300 via-green-500 to-zinc-900', pip: 'text-lime-50', note: 'radioactive sludge glow' },
+  { id: 'glitchpop', name: 'Glitchpop', preview: 'from-cyan-300 via-fuchsia-500 to-yellow-400', pip: 'text-fuchsia-50', note: 'neon data corruption' },
 ] as const;
 
 export function Settings() {

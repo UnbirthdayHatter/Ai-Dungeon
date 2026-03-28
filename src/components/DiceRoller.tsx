@@ -88,6 +88,10 @@ export function DiceRoller() {
     sapphire: 'from-blue-500/20 to-cyan-500/10 border-blue-400/30 text-blue-200',
     amethyst: 'from-purple-500/20 to-fuchsia-500/10 border-purple-400/30 text-purple-200',
     rosegold: 'from-rose-400/20 to-orange-400/10 border-rose-300/30 text-rose-200',
+    aurora: 'from-emerald-400/20 to-indigo-500/10 border-cyan-400/30 text-cyan-200',
+    voidfire: 'from-orange-500/20 to-fuchsia-500/10 border-orange-400/30 text-orange-200',
+    toxic: 'from-lime-500/20 to-green-500/10 border-lime-400/30 text-lime-200',
+    glitchpop: 'from-fuchsia-500/20 to-cyan-500/10 border-pink-400/30 text-pink-200',
   }[diceSkin] || 'from-amber-500/20 to-orange-500/10 border-amber-500/20 text-amber-300';
 
   return (

@@ -23,6 +23,10 @@ const CHAT_DICE_SKINS: Array<{ id: string; name: string }> = [
   { id: 'sapphire', name: 'Sapphire' },
   { id: 'amethyst', name: 'Amethyst' },
   { id: 'rosegold', name: 'Rosegold' },
+  { id: 'aurora', name: 'Aurora' },
+  { id: 'voidfire', name: 'Voidfire' },
+  { id: 'toxic', name: 'Toxic' },
+  { id: 'glitchpop', name: 'Glitchpop' },
 ];
 
 export function Chat() {
