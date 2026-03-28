@@ -51,16 +51,16 @@ const AI_RULESET_OPTIONS: Array<{ id: AiRulesPreset; name: string; description: 
 ];
 
 const DICE_SKIN_OPTIONS = [
-  { id: 'classic', name: 'Classic Amber', preview: 'from-amber-400 via-orange-500 to-amber-700', pip: 'text-amber-50', note: 'original warm glow' },
-  { id: 'default', name: 'Sunforged', preview: 'from-amber-400 via-orange-500 to-amber-700', pip: 'text-amber-50', note: 'warm amber glow' },
-  { id: 'obsidian', name: 'Obsidian', preview: 'from-zinc-500 via-zinc-800 to-black', pip: 'text-zinc-100', note: 'dark stone' },
-  { id: 'ivory', name: 'Ivory', preview: 'from-stone-50 via-stone-200 to-stone-400', pip: 'text-zinc-900', note: 'bone and parchment' },
-  { id: 'celestial', name: 'Celestial', preview: 'from-indigo-300 via-indigo-500 to-violet-700', pip: 'text-indigo-50', note: 'sparkling night sky' },
-  { id: 'bloodstone', name: 'Bloodstone', preview: 'from-rose-400 via-red-600 to-red-950', pip: 'text-rose-50', note: 'embers and crimson' },
-  { id: 'emerald', name: 'Emerald', preview: 'from-emerald-300 via-emerald-500 to-teal-800', pip: 'text-emerald-50', note: 'verdant arcane' },
-  { id: 'sapphire', name: 'Sapphire', preview: 'from-sky-300 via-blue-500 to-blue-900', pip: 'text-sky-50', note: 'deep ocean blue' },
-  { id: 'amethyst', name: 'Amethyst', preview: 'from-fuchsia-300 via-purple-500 to-violet-900', pip: 'text-fuchsia-50', note: 'royal violet' },
-  { id: 'rosegold', name: 'Rosegold', preview: 'from-rose-200 via-rose-400 to-orange-500', pip: 'text-rose-50', note: 'soft metallic blush' },
+  { id: 'classic', name: 'Classic Amber', preview: 'from-amber-400 via-orange-500 to-amber-700', pip: 'text-amber-50', note: 'original stock finish' },
+  { id: 'default', name: 'Sunforged', preview: 'from-amber-400 via-orange-500 to-amber-700', pip: 'text-amber-50', note: 'etched solar texture' },
+  { id: 'obsidian', name: 'Obsidian', preview: 'from-zinc-500 via-zinc-800 to-black', pip: 'text-zinc-100', note: 'fractured dark stone' },
+  { id: 'ivory', name: 'Ivory', preview: 'from-stone-50 via-stone-200 to-stone-400', pip: 'text-zinc-900', note: 'engraved parchment grain' },
+  { id: 'celestial', name: 'Celestial', preview: 'from-indigo-300 via-indigo-500 to-violet-700', pip: 'text-indigo-50', note: 'starfield texture' },
+  { id: 'bloodstone', name: 'Bloodstone', preview: 'from-rose-400 via-red-600 to-red-950', pip: 'text-rose-50', note: 'veined ember stone' },
+  { id: 'emerald', name: 'Emerald', preview: 'from-emerald-300 via-emerald-500 to-teal-800', pip: 'text-emerald-50', note: 'cut gemstone facets' },
+  { id: 'sapphire', name: 'Sapphire', preview: 'from-sky-300 via-blue-500 to-blue-900', pip: 'text-sky-50', note: 'cut gemstone facets' },
+  { id: 'amethyst', name: 'Amethyst', preview: 'from-fuchsia-300 via-purple-500 to-violet-900', pip: 'text-fuchsia-50', note: 'cut gemstone facets' },
+  { id: 'rosegold', name: 'Rosegold', preview: 'from-rose-200 via-rose-400 to-orange-500', pip: 'text-rose-50', note: 'filigree metallic grain' },
 ] as const;
 
 export function Settings() {
@@ -749,7 +749,7 @@ export function Settings() {
                 ))}
               </div>
               <p className="text-[10px] text-zinc-500">
-                The 3D roller uses color-driven themes right now. Celestial and Bloodstone also get animated tray effects for extra flair.
+                These skins now use dedicated texture themes in the 3D roller. Celestial and Bloodstone also get animated tray effects for extra flair.
               </p>
             </div>
 

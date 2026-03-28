@@ -13,17 +13,17 @@ interface Dice3DProps {
   onComplete: () => void;
 }
 
-const DICE_SKINS: Record<string, { themeColor: string; accent: string; glow: string }> = {
-  classic: { themeColor: '#f59e0b', accent: '#fde68a', glow: 'rgba(245,158,11,0.35)' },
-  default: { themeColor: '#f59e0b', accent: '#fde68a', glow: 'rgba(245,158,11,0.35)' },
-  obsidian: { themeColor: '#71717a', accent: '#d4d4d8', glow: 'rgba(39,39,42,0.5)' },
-  ivory: { themeColor: '#d6d3d1', accent: '#fafaf9', glow: 'rgba(214,211,209,0.35)' },
-  celestial: { themeColor: '#6366f1', accent: '#c7d2fe', glow: 'rgba(99,102,241,0.35)' },
-  bloodstone: { themeColor: '#b91c1c', accent: '#fecaca', glow: 'rgba(185,28,28,0.35)' },
-  emerald: { themeColor: '#10b981', accent: '#a7f3d0', glow: 'rgba(16,185,129,0.35)' },
-  sapphire: { themeColor: '#2563eb', accent: '#bfdbfe', glow: 'rgba(37,99,235,0.35)' },
-  amethyst: { themeColor: '#9333ea', accent: '#e9d5ff', glow: 'rgba(147,51,234,0.35)' },
-  rosegold: { themeColor: '#fb7185', accent: '#fecdd3', glow: 'rgba(251,113,133,0.35)' },
+const DICE_SKINS: Record<string, { theme: string; themeColor: string; accent: string; glow: string }> = {
+  classic: { theme: 'default', themeColor: '#f59e0b', accent: '#fde68a', glow: 'rgba(245,158,11,0.35)' },
+  default: { theme: 'sunforged', themeColor: '#f59e0b', accent: '#fde68a', glow: 'rgba(245,158,11,0.35)' },
+  obsidian: { theme: 'obsidian', themeColor: '#71717a', accent: '#d4d4d8', glow: 'rgba(39,39,42,0.5)' },
+  ivory: { theme: 'ivory', themeColor: '#d6d3d1', accent: '#fafaf9', glow: 'rgba(214,211,209,0.35)' },
+  celestial: { theme: 'celestial', themeColor: '#6366f1', accent: '#c7d2fe', glow: 'rgba(99,102,241,0.35)' },
+  bloodstone: { theme: 'bloodstone', themeColor: '#b91c1c', accent: '#fecaca', glow: 'rgba(185,28,28,0.35)' },
+  emerald: { theme: 'emerald', themeColor: '#10b981', accent: '#a7f3d0', glow: 'rgba(16,185,129,0.35)' },
+  sapphire: { theme: 'sapphire', themeColor: '#2563eb', accent: '#bfdbfe', glow: 'rgba(37,99,235,0.35)' },
+  amethyst: { theme: 'amethyst', themeColor: '#9333ea', accent: '#e9d5ff', glow: 'rgba(147,51,234,0.35)' },
+  rosegold: { theme: 'rosegold', themeColor: '#fb7185', accent: '#fecdd3', glow: 'rgba(251,113,133,0.35)' },
 };
 
 export function Dice3D({ results, diceType, total, label, modifier = 0, highlight = 'sum', onComplete }: Dice3DProps) {
@@ -77,7 +77,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
         const DiceBox = module.default;
         diceBox = new DiceBox(`#${containerIdRef.current}`, {
           assetPath: '/assets/',
-          theme: 'default',
+          theme: skin.theme,
           themeColor: skin.themeColor,
           scale: dice3DScale,
           gravity: 1.2,
@@ -92,7 +92,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
         await diceBox.init();
         if (cancelled) return;
         if (diceBox.updateConfig) {
-          await diceBox.updateConfig({ themeColor: skin.themeColor });
+          await diceBox.updateConfig({ theme: skin.theme, themeColor: skin.themeColor });
         }
         const syncCanvasResolution = () => {
           const canvas = document.querySelector<HTMLCanvasElement>(`#${containerIdRef.current} canvas`);
@@ -137,7 +137,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
         // Ignore cleanup issues from the dice renderer during unmount.
       }
     };
-  }, [dice3DAutoCloseMs, dice3DScale, notation, skin.themeColor]);
+  }, [dice3DAutoCloseMs, dice3DScale, notation, skin.theme, skin.themeColor]);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md overflow-hidden pointer-events-none">
