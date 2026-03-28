@@ -128,22 +128,16 @@ function Draw-Pattern($graphics, [string]$pattern, $random, [bool]$isLight, [int
 }
 
 function New-DiffuseTexture([string]$path, [string]$pattern, [bool]$isLight) {
-  $size = 1024
-  $bitmap = New-Object System.Drawing.Bitmap $size, $size
+  $baseTexture = Join-Path $baseThemePath $(if ($isLight) { 'diffuse-light.png' } else { 'diffuse-dark.png' })
+  $bitmap = [System.Drawing.Bitmap]::new($baseTexture)
+  $size = $bitmap.Width
   $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
   $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
   $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
   $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
   $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
-  $background = if ($isLight) { 226 } else { 92 }
-  $graphics.Clear((New-BrushColor $background))
 
   $random = [System.Random]::new(([Math]::Abs($path.GetHashCode()) % 200000) + $(if ($isLight) { 1 } else { 2 }))
-
-  $gradientRect = New-Object System.Drawing.Rectangle 0, 0, $size, $size
-  $blend = New-Object System.Drawing.Drawing2D.LinearGradientBrush($gradientRect, (New-BrushColor $(if ($isLight) { 238 } else { 72 }) 255), (New-BrushColor $(if ($isLight) { 198 } else { 122 }) 255), 45)
-  $graphics.FillRectangle($blend, $gradientRect)
-  $blend.Dispose()
 
   Draw-Pattern $graphics $pattern $random $isLight $size $size
 
