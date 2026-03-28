@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import '@3d-dice/dice-box/dist/style.css';
 import { useStore } from '@/store/useStore';
-import { Tester1BabylonDice } from './Tester1BabylonDice';
 
 interface Dice3DProps {
   results: number[];
@@ -30,7 +29,7 @@ const DICE_SKINS: Record<string, { theme: string; themeColor: string; accent: st
   toxic: { theme: 'toxic', themeColor: '#84cc16', accent: '#d9f99d', glow: 'rgba(132,204,22,0.45)' },
   glitchpop: { theme: 'glitchpop', themeColor: '#ec4899', accent: '#f9a8d4', glow: 'rgba(236,72,153,0.45)' },
   wacky: { theme: 'wacky', themeColor: '#22d3ee', accent: '#fef08a', glow: 'rgba(34,211,238,0.45)' },
-  tester1: { theme: 'tester1', themeColor: '#94a3b8', accent: '#e2e8f0', glow: 'rgba(148,163,184,0.4)' },
+  tester1: { theme: 'tester1', themeColor: '#f97316', accent: '#fdba74', glow: 'rgba(249,115,22,0.42)' },
 };
 
 function getDiceCanvasMotion(diceSkin: string, glow: string) {
@@ -127,7 +126,6 @@ function getDiceCanvasMotion(diceSkin: string, glow: string) {
         transition: { duration: 1.8, repeat: Infinity, ease: 'easeInOut' as const },
       };
     case 'wacky':
-    case 'tester1':
       return {
         style: {
           filter: 'brightness(1.1) saturate(1.52) contrast(1.12) drop-shadow(0 0 12px rgba(34,211,238,0.2))',
@@ -141,6 +139,21 @@ function getDiceCanvasMotion(diceSkin: string, glow: string) {
           rotate: [0, 0.4, -0.4, 0],
         },
         transition: { duration: 1.7, repeat: Infinity, ease: 'easeInOut' as const },
+      };
+    case 'tester1':
+      return {
+        style: {
+          filter: 'brightness(1.04) saturate(1.18) contrast(1.12) drop-shadow(0 0 14px rgba(249,115,22,0.24))',
+        },
+        animate: {
+          filter: [
+            'brightness(0.98) saturate(1.04) contrast(1.06) drop-shadow(0 0 8px rgba(251,146,60,0.14))',
+            'brightness(1.18) saturate(1.28) contrast(1.16) drop-shadow(0 0 20px rgba(251,146,60,0.28))',
+            'brightness(1.06) saturate(1.14) contrast(1.1) drop-shadow(0 0 12px rgba(234,88,12,0.18))',
+          ],
+          scale: [1, 1.012, 1],
+        },
+        transition: { duration: 2.6, repeat: Infinity, ease: 'easeInOut' as const },
       };
     default:
       return {
@@ -1298,11 +1311,5 @@ function StandardDice3D({ results, diceType, total, label, modifier = 0, highlig
 }
 
 export function Dice3D(props: Dice3DProps) {
-  const { diceSkin } = useStore();
-
-  if (diceSkin === 'tester1') {
-    return <Tester1BabylonDice {...props} />;
-  }
-
   return <StandardDice3D {...props} />;
 }
