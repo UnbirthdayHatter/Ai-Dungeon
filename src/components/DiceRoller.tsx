@@ -7,16 +7,16 @@ import { Dice3D } from './Dice3D';
 export function DiceRoller() {
   const [isOpen, setIsOpen] = useState(false);
   const [diceCount, setDiceCount] = useState(1);
-  const [activeRoll, setActiveRoll] = useState<{ results: number[]; total: number; diceType: number; message: string; label?: string; highlight?: 'highest' | 'lowest' | 'sum' } | null>(null);
+  const [activeRoll, setActiveRoll] = useState<{ results: number[]; total: number; diceType: number; label?: string; highlight?: 'highest' | 'lowest' | 'sum'; buildMessage: (resolvedResults: number[]) => string } | null>(null);
   const { addMessage, sheets, activeSheetId, generateAIResponse, isLive, isHost, aiAutoRespond, diceSkin } = useStore();
 
   const activeSheet = sheets.find((s) => s.id === activeSheetId) || sheets[0];
 
-  const completeRoll = () => {
+  const completeRoll = (resolvedResults: number[]) => {
     if (!activeRoll) return;
     addMessage({
       role: 'dice',
-      content: activeRoll.message
+      content: activeRoll.buildMessage(resolvedResults)
     });
     if (!isLive || (isHost && aiAutoRespond)) {
       generateAIResponse();
@@ -60,19 +60,28 @@ export function DiceRoller() {
       outcome = '**Bad Outcome.** Things go poorly.';
     }
 
-    const rollDetails = `[${rolls.join(', ')}]`;
-    const poolText = isZeroDice ? '0d (Rolled 2, took lowest)' : `${poolSize}d`;
-    const rollName = label ? `rolled **${label}**` : 'rolled an action';
-
-    const message = `**${activeSheet?.name || 'Player'}** ${rollName} with **${poolText}**\n\nResult: ${rollDetails} -> **${result}**\n${outcome}`;
-
     setActiveRoll({
       results: rolls,
       total: result,
       diceType: 6,
-      message,
       label: label || 'Action Roll',
       highlight: isZeroDice ? 'lowest' : 'highest',
+      buildMessage: (resolvedResults) => {
+        const actualResult = isZeroDice ? Math.min(...resolvedResults) : Math.max(...resolvedResults);
+        const actualSixes = resolvedResults.filter((r) => r === 6).length;
+        const actualOutcome =
+          actualSixes >= 2 && !isZeroDice
+            ? '**Critical Success!** You do it with increased effect.'
+            : actualResult === 6
+              ? '**Full Success!** You do it.'
+              : actualResult >= 4
+                ? '**Partial Success.** You do it, but there is a consequence.'
+                : '**Bad Outcome.** Things go poorly.';
+        const rollDetails = `[${resolvedResults.join(', ')}]`;
+        const poolText = isZeroDice ? '0d (Rolled 2, took lowest)' : `${poolSize}d`;
+        const rollName = label ? `rolled **${label}**` : 'rolled an action';
+        return `**${activeSheet?.name || 'Player'}** ${rollName} with **${poolText}**\n\nResult: ${rollDetails} -> **${actualResult}**\n${actualOutcome}`;
+      },
     });
   };
 

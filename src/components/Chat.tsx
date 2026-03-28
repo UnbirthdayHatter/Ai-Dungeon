@@ -134,6 +134,7 @@ export function Chat() {
     label?: string;
     modifier?: number;
     highlight?: 'highest' | 'lowest' | 'sum';
+    buildMessage: (resolvedResults: number[]) => string;
   } | null>(null);
   const [ttsLoadingId, setTtsLoadingId] = useState<string | null>(null);
   const [ttsPlayingId, setTtsPlayingId] = useState<string | null>(null);
@@ -250,9 +251,7 @@ export function Chat() {
     const rolls = Array.from({ length: diceCount }, () => Math.floor(Math.random() * diceSides) + 1);
     const subtotal = rolls.reduce((sum, roll) => sum + roll, 0);
     const total = subtotal + modifier;
-    const modifierLabel = modifier ? ` ${modifier > 0 ? '+' : '-'} ${Math.abs(modifier)}` : '';
-    const message = `**${activeSheet?.name || 'Player'}** rolled **${diceCount}d${diceSides}${modifier ? (modifier > 0 ? `+${modifier}` : modifier) : ''}**\n\nRolls: [${rolls.join(', ')}]\nSubtotal: **${subtotal}**${modifierLabel}\nTotal: **${total}**`;
-    return { rolls, total, message };
+    return { rolls, total };
   };
 
   const activeSheet =
@@ -393,12 +392,21 @@ export function Chat() {
           label: `${diceCommand.diceCount}d${diceCommand.diceSides}${diceCommand.modifier ? (diceCommand.modifier > 0 ? `+${diceCommand.modifier}` : diceCommand.modifier) : ''}`,
           modifier: diceCommand.modifier,
           highlight: 'sum',
+          buildMessage: (resolvedResults) => {
+            const subtotal = resolvedResults.reduce((sum, roll) => sum + roll, 0);
+            const finalTotal = subtotal + diceCommand.modifier;
+            const modifierLabel = diceCommand.modifier ? ` ${diceCommand.modifier > 0 ? '+' : '-'} ${Math.abs(diceCommand.modifier)}` : '';
+            return `**${activeSheet?.name || 'Player'}** rolled **${diceCommand.diceCount}d${diceCommand.diceSides}${diceCommand.modifier ? (diceCommand.modifier > 0 ? `+${diceCommand.modifier}` : diceCommand.modifier) : ''}**\n\nRolls: [${resolvedResults.join(', ')}]\nSubtotal: **${subtotal}**${modifierLabel}\nTotal: **${finalTotal}**`;
+          },
+        });
+      } else {
+        const subtotal = standardRoll.rolls.reduce((sum, roll) => sum + roll, 0);
+        const modifierLabel = diceCommand.modifier ? ` ${diceCommand.modifier > 0 ? '+' : '-'} ${Math.abs(diceCommand.modifier)}` : '';
+        await addMessage({
+          role: 'dice',
+          content: `**${activeSheet?.name || 'Player'}** rolled **${diceCommand.diceCount}d${diceCommand.diceSides}${diceCommand.modifier ? (diceCommand.modifier > 0 ? `+${diceCommand.modifier}` : diceCommand.modifier) : ''}**\n\nRolls: [${standardRoll.rolls.join(', ')}]\nSubtotal: **${subtotal}**${modifierLabel}\nTotal: **${standardRoll.total}**`,
         });
       }
-      await addMessage({
-        role: 'dice',
-        content: standardRoll.message,
-      });
     } else {
       await addMessage({ 
         role: isOocMode ? 'ooc' : 'user', 
@@ -593,15 +601,23 @@ export function Chat() {
       type: 6,
       label: label || 'Action Roll',
       highlight: isZeroDice ? 'lowest' : 'highest',
+      buildMessage: (resolvedResults) => {
+        const actualResult = isZeroDice ? Math.min(...resolvedResults) : Math.max(...resolvedResults);
+        const actualSixes = resolvedResults.filter(r => r === 6).length;
+        const actualOutcome =
+          actualSixes >= 2 && !isZeroDice
+            ? '**Critical Success!** You do it with increased effect.'
+            : actualResult === 6
+              ? '**Full Success!** You do it.'
+              : actualResult >= 4
+                ? '**Partial Success.** You do it, but there is a consequence.'
+                : '**Bad Outcome.** Things go poorly.';
+        const rollDetails = `[${resolvedResults.join(', ')}]`;
+        const poolText = isZeroDice ? '0d (Rolled 2, took lowest)' : `${poolSize}d`;
+        const rollName = label ? `rolled **${label}**` : `rolled an action`;
+        return `**${activeSheet?.name || 'Player'}** ${rollName} with **${poolText}**\n\nResult: ${rollDetails} -> **${actualResult}**\n${actualOutcome}`;
+      },
     });
-
-    addMessage({
-      role: 'dice',
-      content: message
-    });
-    if (canGenerateAiNow) {
-      generateAIResponse();
-    }
     
     setShowDiceRoller(false);
   };
@@ -1034,7 +1050,17 @@ export function Chat() {
           label={activeRoll.label}
           modifier={activeRoll.modifier}
           highlight={activeRoll.highlight}
-          onComplete={() => setActiveRoll(null)} 
+          onComplete={async (resolvedResults) => {
+            if (!activeRoll) return;
+            await addMessage({
+              role: 'dice',
+              content: activeRoll.buildMessage(resolvedResults),
+            });
+            if (canGenerateAiNow) {
+              generateAIResponse();
+            }
+            setActiveRoll(null);
+          }} 
         />
       )}
       

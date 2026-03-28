@@ -10,7 +10,7 @@ interface Dice3DProps {
   label?: string;
   modifier?: number;
   highlight?: 'highest' | 'lowest' | 'sum';
-  onComplete: () => void;
+  onComplete: (resolvedResults: number[]) => void;
 }
 
 const DICE_SKINS: Record<string, { theme: string; themeColor: string; accent: string; glow: string }> = {
@@ -61,6 +61,21 @@ function getDiceCanvasMotion(diceSkin: string, glow: string) {
           scale: [1, 1.008, 1],
         },
         transition: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' as const },
+      };
+    case 'bloodstone':
+      return {
+        style: {
+          filter: 'brightness(1.02) saturate(1.14) contrast(1.04) drop-shadow(0 0 14px rgba(185,28,28,0.18))',
+        },
+        animate: {
+          filter: [
+            'brightness(0.98) saturate(1.06) contrast(1.02) drop-shadow(0 0 10px rgba(120,20,20,0.1))',
+            'brightness(1.14) saturate(1.24) contrast(1.1) drop-shadow(0 0 18px rgba(251,191,36,0.14))',
+            'brightness(1.04) saturate(1.16) contrast(1.06) drop-shadow(0 0 14px rgba(185,28,28,0.16))',
+          ],
+          scale: [1, 1.008, 1],
+        },
+        transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' as const },
       };
     case 'voidfire':
       return {
@@ -197,6 +212,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
   const trayRef = useRef<HTMLDivElement | null>(null);
   const completeTimeoutRef = useRef<number | null>(null);
   const onCompleteRef = useRef(onComplete);
+  const resolvedResultsRef = useRef<number[]>(results);
   const settledRef = useRef(false);
   const [phase, setPhase] = useState<'initializing' | 'rolling' | 'settled' | 'failed'>('initializing');
   const skin = DICE_SKINS[diceSkin] || DICE_SKINS.default;
@@ -205,25 +221,33 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
+  useEffect(() => {
+    resolvedResultsRef.current = results;
+  }, [results]);
+
   const effectiveResults = useMemo(() => (results.length > 0 ? results : [total || 0]), [results, total]);
   const notation = useMemo(() => {
     const diceCount = Math.max(1, effectiveResults.length);
     const modifierPart = modifier === 0 ? '' : modifier > 0 ? `+${modifier}` : `${modifier}`;
     return `${diceCount}d${diceType}${modifierPart}`;
   }, [diceType, effectiveResults.length, modifier]);
-  const highlightedValue = useMemo(() => {
-    if (highlight === 'lowest') return Math.min(...effectiveResults);
-    if (highlight === 'highest') return Math.max(...effectiveResults);
-    return total ?? effectiveResults.reduce((sum, value) => sum + value, 0);
-  }, [effectiveResults, highlight, total]);
-  const finalTotal = total ?? effectiveResults.reduce((sum, value) => sum + value, 0);
   const diceCanvasMotion = useMemo(() => getDiceCanvasMotion(diceSkin, skin.glow), [diceSkin, skin.glow]);
+  const displayResults = resolvedResultsRef.current.length > 0 ? resolvedResultsRef.current : effectiveResults;
+  const displayHighlightedValue = highlight === 'lowest'
+    ? Math.min(...displayResults)
+    : highlight === 'highest'
+      ? Math.max(...displayResults)
+      : displayResults.reduce((sum, value) => sum + value, 0) + modifier;
+  const displayTotal = highlight === 'sum'
+    ? displayResults.reduce((sum, value) => sum + value, 0) + modifier
+    : displayHighlightedValue;
 
   useEffect(() => {
     let cancelled = false;
-    let diceBox: { init: () => Promise<unknown>; roll: (notation: string) => Promise<unknown>; clear: () => void; onRollComplete?: () => void; updateConfig?: (config: Record<string, unknown>) => Promise<unknown> | unknown } | null = null;
+    let diceBox: { init: () => Promise<unknown>; roll: (notation: string) => Promise<unknown>; clear: () => void; onRollComplete?: (results?: unknown) => void; updateConfig?: (config: Record<string, unknown>) => Promise<unknown> | unknown } | null = null;
     let resizeObserver: ResizeObserver | null = null;
     settledRef.current = false;
+    resolvedResultsRef.current = results;
 
     const finish = () => {
       if (settledRef.current) return;
@@ -232,8 +256,19 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
         window.clearTimeout(completeTimeoutRef.current);
       }
       completeTimeoutRef.current = window.setTimeout(() => {
-        onCompleteRef.current();
+        onCompleteRef.current(resolvedResultsRef.current);
       }, dice3DAutoCloseMs);
+    };
+
+    const parseDiceBoxResults = (rawResults: unknown): number[] => {
+      if (!Array.isArray(rawResults)) return effectiveResults;
+      return rawResults.flatMap((group: any) =>
+        Array.isArray(group?.rolls)
+          ? group.rolls
+              .map((roll: any) => Number(roll?.value))
+              .filter((value: number) => Number.isFinite(value))
+          : []
+      );
     };
 
     const startRoll = async () => {
@@ -249,8 +284,12 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
           gravity: 1.2,
           offscreen: false,
           });
-        diceBox.onRollComplete = () => {
+        diceBox.onRollComplete = (rollResults) => {
           if (cancelled) return;
+          const parsedResults = parseDiceBoxResults(rollResults);
+          if (parsedResults.length > 0) {
+            resolvedResultsRef.current = parsedResults;
+          }
           setPhase('settled');
           finish();
         };
@@ -303,7 +342,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
         // Ignore cleanup issues from the dice renderer during unmount.
       }
     };
-  }, [dice3DAutoCloseMs, dice3DScale, notation, skin.theme, skin.themeColor]);
+  }, [dice3DAutoCloseMs, dice3DScale, effectiveResults, notation, results, skin.theme, skin.themeColor]);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md overflow-hidden pointer-events-none">
@@ -653,7 +692,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
                     Exact Dice
                   </div>
                   <div className="flex flex-wrap justify-center gap-3">
-                    {effectiveResults.map((value, index) => (
+                    {displayResults.map((value, index) => (
                       <motion.div
                         key={`exact-face-${value}-${index}`}
                         initial={{ opacity: 0, scale: 0.9, rotate: -6 + index * 3 }}
@@ -697,7 +736,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
             >
               <div className="mb-2 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">Result</div>
               <div className="flex items-end justify-center gap-3">
-                <span className="text-6xl font-black text-white">{finalTotal}</span>
+                <span className="text-6xl font-black text-white">{displayTotal}</span>
                 {modifier !== 0 && (
                   <span className="mb-2 text-lg font-bold text-zinc-400">
                     {modifier > 0 ? `(+${modifier})` : `(${modifier})`}
@@ -708,12 +747,12 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
                 <div className="mt-2 text-sm text-zinc-400">
                   Using {highlight === 'highest' ? 'highest' : 'lowest'} die:{' '}
                   <span className="font-bold" style={{ color: skin.accent }}>
-                    {highlightedValue}
+                    {displayHighlightedValue}
                   </span>
                 </div>
               )}
               <div className="mt-3 flex flex-wrap justify-center gap-2 text-sm text-zinc-300">
-                {effectiveResults.map((value, index) => (
+                {displayResults.map((value, index) => (
                   <span
                     key={`${value}-${index}`}
                     className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-semibold"
