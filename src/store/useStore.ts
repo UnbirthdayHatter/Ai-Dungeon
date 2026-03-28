@@ -991,17 +991,79 @@ export const useStore = create<any>()((set, get) => ({
     set((current: any) => ({
       messages: nextMessages,
       savedRoleplays: syncSavedRoleplayMessages(current.savedRoleplays, current.currentSaveRoleplayId, nextMessages),
+      lastSaved: current.currentSaveRoleplayId ? Date.now() : current.lastSaved,
     }));
     if (state.isLive && state.currentLiveRoleplayId) {
       await setDoc(doc(db, 'roleplays', state.currentLiveRoleplayId, 'messages', id), { content }, { merge: true } as any).catch(console.error);
+    } else if (state.currentSaveRoleplayId && auth.currentUser) {
+      const saved = state.savedRoleplays.find((roleplay: SavedRoleplay) => roleplay.id === state.currentSaveRoleplayId);
+      if (saved) {
+        getSavedRoleplayWriter(state.currentSaveRoleplayId)(auth.currentUser.uid, {
+          ...saved,
+          messages: nextMessages,
+          updatedAt: Date.now(),
+        });
+      }
     }
   },
-  toggleMessageCollapse: (id: string) => set((state: any) => ({ messages: state.messages.map((message: Message) => message.id === id ? { ...message, isCollapsed: !message.isCollapsed } : message) })),
-  clearMessages: () => set({ messages: [] }),
-  rewindToMessage: (id: string) => set((state: any) => {
+  toggleMessageCollapse: (id: string) => {
+    const state = get();
+    const nextMessages = state.messages.map((message: Message) => message.id === id ? { ...message, isCollapsed: !message.isCollapsed } : message);
+    set((current: any) => ({
+      messages: nextMessages,
+      savedRoleplays: syncSavedRoleplayMessages(current.savedRoleplays, current.currentSaveRoleplayId, nextMessages),
+      lastSaved: current.currentSaveRoleplayId ? Date.now() : current.lastSaved,
+    }));
+    if (!state.isLive && state.currentSaveRoleplayId && auth.currentUser) {
+      const saved = state.savedRoleplays.find((roleplay: SavedRoleplay) => roleplay.id === state.currentSaveRoleplayId);
+      if (saved) {
+        getSavedRoleplayWriter(state.currentSaveRoleplayId)(auth.currentUser.uid, {
+          ...saved,
+          messages: nextMessages,
+          updatedAt: Date.now(),
+        });
+      }
+    }
+  },
+  clearMessages: () => {
+    const state = get();
+    set((current: any) => ({
+      messages: [],
+      savedRoleplays: syncSavedRoleplayMessages(current.savedRoleplays, current.currentSaveRoleplayId, []),
+      lastSaved: current.currentSaveRoleplayId ? Date.now() : current.lastSaved,
+    }));
+    if (!state.isLive && state.currentSaveRoleplayId && auth.currentUser) {
+      const saved = state.savedRoleplays.find((roleplay: SavedRoleplay) => roleplay.id === state.currentSaveRoleplayId);
+      if (saved) {
+        getSavedRoleplayWriter(state.currentSaveRoleplayId)(auth.currentUser.uid, {
+          ...saved,
+          messages: [],
+          updatedAt: Date.now(),
+        });
+      }
+    }
+  },
+  rewindToMessage: (id: string) => {
+    const state = get();
     const index = state.messages.findIndex((message: Message) => message.id === id);
-    return index === -1 ? {} : { messages: state.messages.slice(0, index + 1) };
-  }),
+    if (index === -1) return;
+    const nextMessages = state.messages.slice(0, index + 1);
+    set((current: any) => ({
+      messages: nextMessages,
+      savedRoleplays: syncSavedRoleplayMessages(current.savedRoleplays, current.currentSaveRoleplayId, nextMessages),
+      lastSaved: current.currentSaveRoleplayId ? Date.now() : current.lastSaved,
+    }));
+    if (!state.isLive && state.currentSaveRoleplayId && auth.currentUser) {
+      const saved = state.savedRoleplays.find((roleplay: SavedRoleplay) => roleplay.id === state.currentSaveRoleplayId);
+      if (saved) {
+        getSavedRoleplayWriter(state.currentSaveRoleplayId)(auth.currentUser.uid, {
+          ...saved,
+          messages: nextMessages,
+          updatedAt: Date.now(),
+        });
+      }
+    }
+  },
   branchFromMessage: (_id: string, branchName: string) => set({ currentRoleplayName: branchName }),
   saveRoleplay: (name: string) => {
     const state = get();
