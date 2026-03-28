@@ -109,7 +109,7 @@ export function Sidebar({ activeTab }: SidebarProps) {
           </button>
         </div>
 
-        <nav className="flex-1 px-4 space-y-2 mt-4 md:mt-0 overflow-y-auto">
+        <nav className="flex-1 px-4 space-y-2 mt-4 md:mt-0 overflow-y-auto overflow-x-hidden">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -164,14 +164,14 @@ export function Sidebar({ activeTab }: SidebarProps) {
                 </div>
 
                 {isExpandable && isExpanded && subItems.length > 0 && (
-                  <div className={cn("ml-9 space-y-0.5 border-l pl-2 max-h-[400px] overflow-y-auto custom-scrollbar", themeClasses.border)}>
+                  <div className={cn("ml-9 space-y-0.5 border-l pl-2 max-h-[400px] overflow-y-auto overflow-x-hidden custom-scrollbar", themeClasses.border)}>
                     {subItems.map((item) => {
                       const isMultiplayerTab = tab.id === 'multiplayer';
                       const isOwned = !isMultiplayerTab || userRoleplays.some(r => r.id === item.id);
                       const isCurrent = currentRoleplayId === item.id;
                       
                       return (
-                        <div key={item.id} className="group flex items-center gap-1 pr-2">
+                        <div key={item.id} className="group relative min-w-0 pr-2">
                           {editingId === item.id ? (
                             <div className="flex-1 flex items-center gap-1 px-2 py-1">
                               <input
@@ -212,7 +212,7 @@ export function Sidebar({ activeTab }: SidebarProps) {
                                   setIsOpen(false);
                                 }}
                                 className={cn(
-                                  "flex-1 flex items-center gap-2 px-3 py-1 text-[10px] rounded-lg transition-all",
+                                  "flex w-full min-w-0 items-center gap-2 px-3 py-1 pr-16 text-[10px] rounded-lg transition-all",
                                   isCurrent 
                                     ? themeClasses.navActive
                                     : cn(themeClasses.muted, themeClasses.navHover)
@@ -221,7 +221,11 @@ export function Sidebar({ activeTab }: SidebarProps) {
                                 <History className={cn("w-2.5 h-2.5", isCurrent ? themeClasses.accent : themeClasses.muted)} />
                                 <span className="truncate flex-1 text-left">{item.name}</span>
                               </button>
+                            </>
+                          )}
 
+                          {editingId !== item.id && (
+                            <div className="absolute inset-y-0 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
                               {isOwned && (
                                 <button
                                   onClick={(e) => {
@@ -229,40 +233,40 @@ export function Sidebar({ activeTab }: SidebarProps) {
                                     setEditingId(item.id);
                                     setEditName(item.name);
                                   }}
-                                  className={cn("opacity-0 group-hover:opacity-100 p-1 transition-all", themeClasses.muted, themeClasses.hover.replace('hover:', 'hover:'))}
+                                  className={cn("p-1 transition-all", themeClasses.muted, themeClasses.hover.replace('hover:', 'hover:'))}
                                   title="Rename"
                                 >
                                   <Pencil className="w-3 h-3" />
                                 </button>
                               )}
-                            </>
-                          )}
-                          
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (confirm(`Archive "${item.name}"? It will be moved to the Lorebook Archive.`)) {
-                                archiveRoleplay(item.id, true);
-                              }
-                            }}
-                            className={cn("opacity-0 group-hover:opacity-100 p-1 transition-all", themeClasses.muted, themeClasses.hover.replace('hover:', 'hover:'))}
-                            title="Archive Adventure"
-                          >
-                            <FolderOpen className="w-3 h-3" />
-                          </button>
 
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
-                                deleteRoleplay(item.id);
-                              }
-                            }}
-                            className="opacity-0 group-hover:opacity-100 p-1.5 bg-red-600/10 hover:bg-red-600/20 text-red-500 rounded-lg border border-red-500/20 transition-all"
-                            title="Delete"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (confirm(`Archive "${item.name}"? It will be moved to the Lorebook Archive.`)) {
+                                    archiveRoleplay(item.id, true);
+                                  }
+                                }}
+                                className={cn("p-1 transition-all", themeClasses.muted, themeClasses.hover.replace('hover:', 'hover:'))}
+                                title="Archive Adventure"
+                              >
+                                <FolderOpen className="w-3 h-3" />
+                              </button>
+
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
+                                    deleteRoleplay(item.id);
+                                  }
+                                }}
+                                className="p-1.5 bg-red-600/10 hover:bg-red-600/20 text-red-500 rounded-lg border border-red-500/20 transition-all"
+                                title="Delete"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
