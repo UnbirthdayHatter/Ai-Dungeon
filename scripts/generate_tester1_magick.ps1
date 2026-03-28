@@ -37,6 +37,8 @@ $stoneNoise = Join-Path $tempPath 'stone-noise.png'
 $shading = Join-Path $tempPath 'shading.png'
 $cracks = Join-Path $tempPath 'cracks.png'
 $embers = Join-Path $tempPath 'embers.png'
+$numberGlowLight = Join-Path $tempPath 'number-glow-light.png'
+$numberGlowDark = Join-Path $tempPath 'number-glow-dark.png'
 $preparedLight = Join-Path $tempPath 'prepared-light.png'
 $preparedDark = Join-Path $tempPath 'prepared-dark.png'
 $lightOut = Join-Path $themePath 'diffuse-light.png'
@@ -96,42 +98,61 @@ magick -size ${size}x${size} plasma:fractal `
   -modulate 100,160,100 `
   $embers
 
+magick $defaultLight `
+  -colorspace gray `
+  -threshold 78% `
+  -blur 0x6 `
+  -fill '#ffb347' -colorize 100 `
+  -modulate 100,185,100 `
+  $numberGlowLight
+
+magick $defaultDark `
+  -colorspace gray `
+  -threshold 74% `
+  -blur 0x7 `
+  -fill '#ff8a1a' -colorize 100 `
+  -modulate 100,190,100 `
+  $numberGlowDark
+
 & magick $base `
   '(' $stoneNoise '-alpha' 'off' ')' '-compose' 'Overlay' '-composite' `
   '(' $shading '-alpha' 'off' ')' '-compose' 'SoftLight' '-composite' `
   '(' $seams '-fill' '#070303' '-colorize' '100' ')' '-compose' 'Multiply' '-composite' `
   '(' $cracks '-fill' '#ff6b00' '-colorize' '100' ')' '-compose' 'Screen' '-composite' `
+  '(' $cracks '-fill' '#ffd06b' '-colorize' '100' -blur '0x1.4' ')' '-compose' 'Screen' '-composite' `
   '(' $embers '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
   '(' -size ${size}x${size} radial-gradient:'#ffae42-#2a0905' ')' '-compose' 'SoftLight' '-composite' `
   '-fill' '#33110a' '-colorize' '34' `
-  '-brightness-contrast' '-18x36' `
-  '-sigmoidal-contrast' '7x40%' `
-  '-sharpen' '0x1.2' `
+  '-brightness-contrast' '-20x44' `
+  '-sigmoidal-contrast' '8x38%' `
+  '-sharpen' '0x1.4' `
   '-type' 'TrueColor' `
   $preparedLight
 
 & magick $preparedLight `
   '-fill' '#120604' '-colorize' '24' `
   '-modulate' '52,118,100' `
-  '-brightness-contrast' '-12x28' `
+  '-brightness-contrast' '-16x34' `
   '-type' 'TrueColor' `
   $preparedDark
 
 & magick $preparedLight `
+  '(' $numberGlowLight '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
   '(' $defaultLight '-alpha' 'off' '-evaluate' 'Multiply' '0.16' ')' '-compose' 'Screen' '-composite' `
-  '-brightness-contrast' '-34x32' `
-  '-modulate' '46,128,100' `
-  '-sigmoidal-contrast' '6x40%' `
-  '-sharpen' '0x1.2' `
+  '-brightness-contrast' '-36x40' `
+  '-modulate' '44,142,100' `
+  '-sigmoidal-contrast' '7x38%' `
+  '-sharpen' '0x1.3' `
   '-type' 'TrueColor' `
   $lightOut
 
 & magick $preparedDark `
+  '(' $numberGlowDark '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
   '(' $defaultDark '-alpha' 'off' '-evaluate' 'Multiply' '0.18' ')' '-compose' 'Screen' '-composite' `
-  '-brightness-contrast' '-30x30' `
-  '-modulate' '38,132,100' `
-  '-sigmoidal-contrast' '6x38%' `
-  '-sharpen' '0x1.2' `
+  '-brightness-contrast' '-34x36' `
+  '-modulate' '36,146,100' `
+  '-sigmoidal-contrast' '7x36%' `
+  '-sharpen' '0x1.3' `
   '-type' 'TrueColor' `
   $darkOut
 

@@ -1239,6 +1239,70 @@ function StandardDice3D({ results, diceType, total, label, modifier = 0, highlig
               ))}
             </div>
           )}
+          {diceSkin === 'tester1' && (
+            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(249,115,22,0.16),transparent_32%),radial-gradient(circle_at_18%_18%,rgba(255,166,77,0.08),transparent_20%),linear-gradient(180deg,rgba(22,8,4,0.16),rgba(15,5,3,0.48)_54%,rgba(8,3,2,0.84))]" />
+              {Array.from({ length: 8 }).map((_, index) => (
+                <motion.div
+                  key={`tester1-pool-${index}`}
+                  className="absolute rounded-full blur-3xl"
+                  style={{
+                    left: `${4 + ((index * 12) % 86)}%`,
+                    bottom: `${4 + ((index * 7) % 24)}%`,
+                    width: `${120 + (index % 3) * 50}px`,
+                    height: `${34 + (index % 2) * 18}px`,
+                    background: index % 2 === 0
+                      ? 'radial-gradient(circle, rgba(249,115,22,0.2), rgba(124,45,18,0.06), transparent 74%)'
+                      : 'radial-gradient(circle, rgba(251,191,36,0.14), rgba(249,115,22,0.05), transparent 76%)',
+                  }}
+                  animate={{ opacity: [0.08, 0.24, 0.1], x: [0, 10, -5, 0], scaleX: [0.84, 1.12, 0.92] }}
+                  transition={{ duration: 3 + (index % 4) * 0.32, repeat: Infinity, ease: 'easeInOut', delay: index * 0.16 }}
+                />
+              ))}
+            </div>
+          )}
+          {diceSkin === 'tester1' && (
+            <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
+              {Array.from({ length: 18 }).map((_, index) => (
+                <motion.div
+                  key={`tester1-ember-${index}`}
+                  className="absolute rounded-full"
+                  style={{
+                    left: `${8 + ((index * 11) % 84)}%`,
+                    top: `${16 + ((index * 13) % 62)}%`,
+                    width: `${index % 4 === 0 ? 7 : 4}px`,
+                    height: `${index % 4 === 0 ? 7 : 4}px`,
+                    background: index % 3 === 0 ? 'rgba(255,220,140,0.9)' : index % 3 === 1 ? 'rgba(255,166,77,0.86)' : 'rgba(249,115,22,0.82)',
+                    boxShadow: index % 3 === 0
+                      ? '0 0 14px rgba(255,220,140,0.38)'
+                      : index % 3 === 1
+                        ? '0 0 14px rgba(255,166,77,0.34)'
+                        : '0 0 14px rgba(249,115,22,0.3)',
+                  }}
+                  animate={{ opacity: [0.08, 0.72, 0.12], scale: [0.7, 1.25, 0.84], y: [0, -10, -4] }}
+                  transition={{ duration: 1.6 + (index % 4) * 0.2, repeat: Infinity, delay: index * 0.07 }}
+                />
+              ))}
+              {Array.from({ length: 10 }).map((_, index) => (
+                <motion.div
+                  key={`tester1-streak-${index}`}
+                  className="absolute h-[3px] rounded-full blur-[0.6px]"
+                  style={{
+                    left: `${12 + ((index * 9) % 76)}%`,
+                    top: `${20 + ((index * 9) % 48)}%`,
+                    width: `${46 + (index % 3) * 24}px`,
+                    background: index % 2 === 0
+                      ? 'linear-gradient(90deg, rgba(255,220,140,0), rgba(255,220,140,0.78), rgba(249,115,22,0))'
+                      : 'linear-gradient(90deg, rgba(255,166,77,0), rgba(255,166,77,0.7), rgba(249,115,22,0))',
+                    rotate: `${-18 + (index % 5) * 7}deg`,
+                    boxShadow: '0 0 10px rgba(255,166,77,0.18)',
+                  }}
+                  animate={{ opacity: [0, 0.44, 0], x: [0, 20, -8], scaleX: [0.84, 1.2, 0.9] }}
+                  transition={{ duration: 1.4 + (index % 4) * 0.12, repeat: Infinity, delay: index * 0.09, ease: 'easeOut' }}
+                />
+              ))}
+            </div>
+          )}
           <div className="absolute inset-x-6 top-5 z-10 flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-zinc-500">
             <span>Dice Tray</span>
             <span>{notation}</span>
