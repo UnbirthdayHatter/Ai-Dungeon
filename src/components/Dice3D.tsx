@@ -28,7 +28,11 @@ const DICE_SKINS: Record<string, { theme: string; themeColor: string; accent: st
   voidfire: { theme: 'voidfire', themeColor: '#a855f7', accent: '#e9d5ff', glow: 'rgba(168,85,247,0.45)' },
   toxic: { theme: 'toxic', themeColor: '#84cc16', accent: '#d9f99d', glow: 'rgba(132,204,22,0.45)' },
   glitchpop: { theme: 'glitchpop', themeColor: '#ec4899', accent: '#f9a8d4', glow: 'rgba(236,72,153,0.45)' },
-  wacky: { theme: 'wacky', themeColor: '#22d3ee', accent: '#fef08a', glow: 'rgba(34,211,238,0.45)' },
+  wacky: { theme: 'wacky_a', themeColor: '#22d3ee', accent: '#fef08a', glow: 'rgba(34,211,238,0.45)' },
+};
+
+const ANIMATED_THEME_FRAMES: Record<string, string[]> = {
+  wacky: ['wacky_a', 'wacky_b', 'wacky_c', 'wacky_d'],
 };
 
 function getDiceCanvasMotion(diceSkin: string, glow: string) {
@@ -264,6 +268,7 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
     let cancelled = false;
     let diceBox: { init: () => Promise<unknown>; roll: (notation: string) => Promise<unknown>; clear: () => void; onRollComplete?: (results?: unknown) => void; updateConfig?: (config: Record<string, unknown>) => Promise<unknown> | unknown } | null = null;
     let resizeObserver: ResizeObserver | null = null;
+    let animatedThemeInterval: number | null = null;
     settledRef.current = false;
     resolvedResultsRef.current = results;
 
@@ -317,6 +322,18 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
         if (diceBox.updateConfig) {
           await diceBox.updateConfig({ theme: skin.theme, themeColor: skin.themeColor });
         }
+        const animatedFrames = ANIMATED_THEME_FRAMES[diceSkin];
+        if (animatedFrames && animatedFrames.length > 1 && diceBox.updateConfig) {
+          let frameIndex = 0;
+          animatedThemeInterval = window.setInterval(() => {
+            if (cancelled || settledRef.current || !diceBox?.updateConfig) return;
+            frameIndex = (frameIndex + 1) % animatedFrames.length;
+            void diceBox.updateConfig({
+              theme: animatedFrames[frameIndex],
+              themeColor: skin.themeColor,
+            });
+          }, 180);
+        }
         const syncCanvasResolution = () => {
           const canvas = document.querySelector<HTMLCanvasElement>(`#${containerIdRef.current} canvas`);
           const tray = trayRef.current;
@@ -352,6 +369,9 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
       cancelled = true;
       if (completeTimeoutRef.current) {
         window.clearTimeout(completeTimeoutRef.current);
+      }
+      if (animatedThemeInterval) {
+        window.clearInterval(animatedThemeInterval);
       }
       resizeObserver?.disconnect();
       try {

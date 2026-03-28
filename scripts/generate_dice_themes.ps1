@@ -19,7 +19,11 @@ $themes = @(
   @{ Id = 'voidfire'; Name = 'Voidfire'; Pattern = 'voidfire' },
   @{ Id = 'toxic'; Name = 'Toxic'; Pattern = 'toxic' },
   @{ Id = 'glitchpop'; Name = 'Glitchpop'; Pattern = 'glitch' },
-  @{ Id = 'wacky'; Name = 'Wacky'; Pattern = 'wacky' }
+  @{ Id = 'wacky'; Name = 'Wacky'; Pattern = 'wacky' },
+  @{ Id = 'wacky_a'; Name = 'Wacky A'; Pattern = 'wacky' },
+  @{ Id = 'wacky_b'; Name = 'Wacky B'; Pattern = 'wacky' },
+  @{ Id = 'wacky_c'; Name = 'Wacky C'; Pattern = 'wacky' },
+  @{ Id = 'wacky_d'; Name = 'Wacky D'; Pattern = 'wacky' }
 )
 
 function New-BrushColor([int]$value, [int]$alpha = 255) {
