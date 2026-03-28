@@ -25,6 +25,37 @@ function New-PatternPen([int]$gray, [int]$alpha, [double]$width) {
   return [System.Drawing.Pen]::new([System.Drawing.Color]::FromArgb($alpha, $gray, $gray, $gray), [single]$width)
 }
 
+function Apply-ToneOverlay($graphics, [string]$pattern, [bool]$isLight, [int]$width, [int]$height) {
+  $rect = New-Object System.Drawing.Rectangle 0, 0, $width, $height
+  switch ($pattern) {
+    'celestial' {
+      $darken = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 125 } else { 90 }), 8, 8, 18))
+      $graphics.FillRectangle($darken, $rect)
+      $darken.Dispose()
+    }
+    'bloodstone' {
+      $darken = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 95 } else { 72 }), 14, 4, 4))
+      $graphics.FillRectangle($darken, $rect)
+      $darken.Dispose()
+    }
+    'obsidian' {
+      $darken = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 70 } else { 55 }), 6, 6, 8))
+      $graphics.FillRectangle($darken, $rect)
+      $darken.Dispose()
+    }
+    'gem' {
+      $shade = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 34 } else { 26 }), 18, 18, 18))
+      $graphics.FillRectangle($shade, $rect)
+      $shade.Dispose()
+    }
+    'filigree' {
+      $shade = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb($(if ($isLight) { 24 } else { 18 }), 20, 12, 10))
+      $graphics.FillRectangle($shade, $rect)
+      $shade.Dispose()
+    }
+  }
+}
+
 function Draw-NoiseDots($graphics, [int]$count, [int]$size, [int]$minGray, [int]$maxGray, [int]$alphaMin, [int]$alphaMax, $random, [int]$width, [int]$height) {
   for ($i = 0; $i -lt $count; $i++) {
     $gray = $random.Next($minGray, $maxGray)
@@ -64,27 +95,27 @@ function Draw-Pattern($graphics, [string]$pattern, $random, [bool]$isLight, [int
       Draw-NoiseDots $graphics 700 2 120 210 10 28 $random $width $height
     }
     'celestial' {
-      for ($i = 0; $i -lt 10; $i++) {
-        $gray = if ($isLight) { $random.Next(135, 205) } else { $random.Next(170, 240) }
-        $pen = New-PatternPen $gray ($random.Next(20, 50)) (($random.NextDouble() * 2.4) + 1.0)
+      for ($i = 0; $i -lt 14; $i++) {
+        $gray = if ($isLight) { $random.Next(150, 225) } else { $random.Next(210, 255) }
+        $pen = New-PatternPen $gray ($random.Next(26, 72)) (($random.NextDouble() * 2.6) + 1.2)
         $rect = New-Object System.Drawing.Rectangle($random.Next(-120, 280), $random.Next(-80, 240), $random.Next(180, 360), $random.Next(120, 320))
         $graphics.DrawArc($pen, $rect, $random.Next(0, 360), $random.Next(70, 180))
         $pen.Dispose()
       }
-      Draw-NoiseDots $graphics 420 3 180 255 55 120 $random $width $height
+      Draw-NoiseDots $graphics 620 4 210 255 85 175 $random $width $height
     }
     'bloodstone' {
-      for ($i = 0; $i -lt 14; $i++) {
-        $gray = if ($isLight) { $random.Next(85, 155) } else { $random.Next(180, 245) }
-        $pen = New-PatternPen $gray ($random.Next(55, 100)) (($random.NextDouble() * 2.8) + 1.4)
-        $points = New-Object 'System.Drawing.Point[]' 5
-        for ($p = 0; $p -lt 5; $p++) {
+      for ($i = 0; $i -lt 18; $i++) {
+        $gray = if ($isLight) { $random.Next(190, 245) } else { $random.Next(215, 255) }
+        $pen = New-PatternPen $gray ($random.Next(85, 145)) (($random.NextDouble() * 3.4) + 1.6)
+        $points = New-Object 'System.Drawing.Point[]' 6
+        for ($p = 0; $p -lt 6; $p++) {
           $points[$p] = New-Object System.Drawing.Point($random.Next(0, $width), $random.Next(0, $height))
         }
         $graphics.DrawCurve($pen, $points)
         $pen.Dispose()
       }
-      Draw-NoiseDots $graphics 260 4 110 205 25 45 $random $width $height
+      Draw-NoiseDots $graphics 320 4 150 235 28 64 $random $width $height
     }
     'filigree' {
       for ($i = 0; $i -lt 16; $i++) {
@@ -139,6 +170,7 @@ function New-DiffuseTexture([string]$path, [string]$pattern, [bool]$isLight) {
 
   $random = [System.Random]::new(([Math]::Abs($path.GetHashCode()) % 200000) + $(if ($isLight) { 1 } else { 2 }))
 
+  Apply-ToneOverlay $graphics $pattern $isLight $size $size
   Draw-Pattern $graphics $pattern $random $isLight $size $size
 
   $bitmap.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
