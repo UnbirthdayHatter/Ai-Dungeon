@@ -9,7 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "postinstall": "node scripts/patch-dice-box-tester1.cjs"
   },
   "dependencies": {
     "@3d-dice/dice-box": "^1.1.4",
