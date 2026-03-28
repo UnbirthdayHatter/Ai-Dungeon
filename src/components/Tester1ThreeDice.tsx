@@ -210,6 +210,7 @@ export function Tester1ThreeDice({
     renderer.shadowMap.enabled = true;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 0.94;
+    renderer.setClearColor(0x000000, 0);
     mountRef.current.innerHTML = '';
     mountRef.current.appendChild(renderer.domElement);
 
@@ -217,9 +218,9 @@ export function Tester1ThreeDice({
     composer.addPass(new RenderPass(scene, camera));
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(mountRef.current.clientWidth, mountRef.current.clientHeight),
-      0.62,
-      0.34,
-      0.86,
+      0.82,
+      0.4,
+      0.56,
     );
     composer.addPass(bloomPass);
 
@@ -424,28 +425,29 @@ export function Tester1ThreeDice({
         </div>
 
         <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-orange-400/20 bg-zinc-950/95 shadow-[0_0_80px_rgba(0,0,0,0.55)]">
-          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,153,76,0.16),transparent_34%),radial-gradient(circle_at_50%_100%,rgba(249,115,22,0.14),transparent_28%),linear-gradient(180deg,rgba(24,10,7,0.32),rgba(8,4,4,0.82))]" />
-          <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-[radial-gradient(circle_at_50%_35%,rgba(255,175,95,0.06),transparent_26%),linear-gradient(180deg,rgba(20,9,7,0.18),rgba(6,3,3,0.45))] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
+          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,153,76,0.2),transparent_34%),radial-gradient(circle_at_50%_100%,rgba(249,115,22,0.18),transparent_28%),linear-gradient(180deg,rgba(24,10,7,0.32),rgba(8,4,4,0.82))]" />
+          <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-[radial-gradient(circle_at_50%_35%,rgba(255,175,95,0.1),transparent_26%),linear-gradient(180deg,rgba(20,9,7,0.24),rgba(6,3,3,0.5))] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
           <div className="pointer-events-none absolute inset-[10px] z-[1] overflow-hidden rounded-[1.6rem]">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,118,24,0.12),transparent_32%),linear-gradient(180deg,rgba(18,7,5,0.12),rgba(8,3,2,0.42))]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,118,24,0.24),transparent_34%),radial-gradient(circle_at_24%_82%,rgba(255,170,74,0.1),transparent_22%),radial-gradient(circle_at_78%_84%,rgba(249,115,22,0.12),transparent_22%),linear-gradient(180deg,rgba(24,8,5,0.12),rgba(8,3,2,0.42))]" />
             {Array.from({ length: 4 }).map((_, index) => (
               <motion.div
                 key={`tester1-lava-flow-${index}`}
-                className="absolute rounded-full blur-2xl"
+                className="absolute rounded-full blur-xl"
                 style={{
                   left: `${-8 + index * 24}%`,
                   bottom: `${8 + (index % 2) * 10}%`,
                   width: `${360 + index * 70}px`,
                   height: `${74 + (index % 3) * 16}px`,
                   background: index % 2 === 0
-                    ? 'linear-gradient(90deg, rgba(255,140,52,0), rgba(255,140,52,0.14), rgba(255,214,133,0.18), rgba(255,140,52,0.1), rgba(255,140,52,0))'
-                    : 'linear-gradient(90deg, rgba(249,115,22,0), rgba(249,115,22,0.1), rgba(255,176,82,0.14), rgba(249,115,22,0.08), rgba(249,115,22,0))',
+                    ? 'linear-gradient(90deg, rgba(255,140,52,0), rgba(255,140,52,0.3), rgba(255,214,133,0.34), rgba(255,140,52,0.22), rgba(255,140,52,0))'
+                    : 'linear-gradient(90deg, rgba(249,115,22,0), rgba(249,115,22,0.24), rgba(255,176,82,0.3), rgba(249,115,22,0.18), rgba(249,115,22,0))',
                   rotate: `${-4 + index * 3}deg`,
+                  opacity: 0.9,
                 }}
                 animate={{
                   x: [0, 46, -18, 0],
                   y: [0, -8, 4, 0],
-                  opacity: [0.32, 0.56, 0.38],
+                  opacity: [0.48, 0.8, 0.58],
                   scaleX: [0.92, 1.08, 0.98],
                 }}
                 transition={{ duration: 5.4 + index * 0.55, repeat: Infinity, ease: 'easeInOut', delay: index * 0.3 }}
