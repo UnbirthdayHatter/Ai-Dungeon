@@ -36,6 +36,7 @@ $seams = Join-Path $tempPath 'seams.png'
 $stoneNoise = Join-Path $tempPath 'stone-noise.png'
 $shading = Join-Path $tempPath 'shading.png'
 $cracks = Join-Path $tempPath 'cracks.png'
+$moss = Join-Path $tempPath 'moss.png'
 $preparedLight = Join-Path $tempPath 'prepared-light.png'
 $preparedDark = Join-Path $tempPath 'prepared-dark.png'
 $lightOut = Join-Path $themePath 'diffuse-light.png'
@@ -47,10 +48,10 @@ foreach ($file in @('default.json', 'normal.png', 'specular.jpg')) {
   Copy-Item (Join-Path $defaultThemePath $file) (Join-Path $themePath $file) -Force
 }
 
-magick -size ${size}x${size} xc:"#4f5661" `
+magick -size ${size}x${size} xc:"#8b7968" `
   -sparse-color Voronoi $pointSpec `
   -colorspace sRGB `
-  -blur 0x1 `
+  -blur 0x2.2 `
   $base
 
 magick $base `
@@ -85,30 +86,40 @@ magick $seams `
   -evaluate Multiply 0.55 `
   $cracks
 
+magick -size ${size}x${size} plasma:fractal `
+  -colorspace gray `
+  -contrast-stretch 18%x12% `
+  -threshold 66% `
+  -blur 0x1.1 `
+  -fill '#556b2f' -colorize 100 `
+  -modulate 100,135,100 `
+  $moss
+
 & magick $base `
   '(' $stoneNoise '-alpha' 'off' ')' '-compose' 'Overlay' '-composite' `
   '(' $shading '-alpha' 'off' ')' '-compose' 'SoftLight' '-composite' `
-  '(' $seams '-fill' '#1e2128' '-colorize' '100' ')' '-compose' 'Multiply' '-composite' `
-  '(' $cracks '-fill' '#c9d4e3' '-colorize' '100' ')' '-compose' 'Screen' '-composite' `
-  '(' -size ${size}x${size} radial-gradient:'#94a3b8-#334155' ')' '-compose' 'SoftLight' '-composite' `
-  '-fill' '#6b7280' '-colorize' '18' `
-  '-brightness-contrast' '-8x22' `
-  '-sigmoidal-contrast' '6x46%' `
+  '(' $seams '-fill' '#34261d' '-colorize' '100' ')' '-compose' 'Multiply' '-composite' `
+  '(' $cracks '-fill' '#d8c1aa' '-colorize' '100' ')' '-compose' 'Screen' '-composite' `
+  '(' $moss '-alpha' 'off' ')' '-compose' 'SoftLight' '-composite' `
+  '(' -size ${size}x${size} radial-gradient:'#cbb7a1-#6f5f52' ')' '-compose' 'SoftLight' '-composite' `
+  '-fill' '#8f7a68' '-colorize' '22' `
+  '-brightness-contrast' '-10x28' `
+  '-sigmoidal-contrast' '7x44%' `
   '-sharpen' '0x1.2' `
   '-type' 'TrueColor' `
   $preparedLight
 
 & magick $preparedLight `
-  '-fill' '#334155' '-colorize' '20' `
-  '-modulate' '54,88,100' `
-  '-brightness-contrast' '-14x18' `
+  '-fill' '#3d2f27' '-colorize' '18' `
+  '-modulate' '58,92,100' `
+  '-brightness-contrast' '-18x20' `
   '-type' 'TrueColor' `
   $preparedDark
 
 & magick $preparedLight `
   '(' $defaultLight '-alpha' 'off' '-evaluate' 'Multiply' '0.16' ')' '-compose' 'Screen' '-composite' `
-  '-brightness-contrast' '-34x28' `
-  '-modulate' '48,118,100' `
+  '-brightness-contrast' '-30x26' `
+  '-modulate' '54,108,100' `
   '-sigmoidal-contrast' '6x44%' `
   '-sharpen' '0x1.2' `
   '-type' 'TrueColor' `
@@ -116,8 +127,8 @@ magick $seams `
 
 & magick $preparedDark `
   '(' $defaultDark '-alpha' 'off' '-evaluate' 'Multiply' '0.18' ')' '-compose' 'Screen' '-composite' `
-  '-brightness-contrast' '-30x24' `
-  '-modulate' '40,120,100' `
+  '-brightness-contrast' '-28x22' `
+  '-modulate' '44,108,100' `
   '-sigmoidal-contrast' '6x42%' `
   '-sharpen' '0x1.2' `
   '-type' 'TrueColor' `
