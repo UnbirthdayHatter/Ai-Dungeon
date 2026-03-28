@@ -1,5 +1,5 @@
 {
   "name": "AI Dungeon Master",
-  "description": "A D&D roleplaying assistant powered by DeepSeek API, featuring character sheets, lorebooks, and dice rolling.",
+  "description": "A D&D roleplaying assistant, featuring character sheets, lorebooks, and dice rolling.",
   "requestFramePermissions": []
 }

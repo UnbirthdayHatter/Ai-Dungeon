@@ -89,15 +89,20 @@ export function SetupAdventure() {
 
   useEffect(() => {
     const activeTargetId = isLive ? currentLiveRoleplayId : currentSaveRoleplayId;
-    if (activeTargetId) {
-      setSelectedTargetKey(`${isLive ? 'live' : 'saved'}:${activeTargetId}`);
-    } else if (!selectedTargetKey && setupTargets.length > 0) {
+    const activeTargetKey = activeTargetId ? `${isLive ? 'live' : 'saved'}:${activeTargetId}` : '';
+    const selectedStillExists = selectedTargetKey ? setupTargets.some((target) => target.key === selectedTargetKey) : false;
+
+    if (activeTargetKey && setupTargets.some((target) => target.key === activeTargetKey) && selectedTargetKey !== activeTargetKey) {
+      setSelectedTargetKey(activeTargetKey);
+    } else if ((!selectedTargetKey || !selectedStillExists) && setupTargets.length > 0) {
       setSelectedTargetKey(setupTargets[0].key);
+    } else if (!activeTargetKey && setupTargets.length === 0 && selectedTargetKey) {
+      setSelectedTargetKey('');
     }
   }, [currentLiveRoleplayId, currentSaveRoleplayId, isLive, selectedTargetKey, setupTargets]);
 
   const selectedTarget = setupTargets.find((target) => target.key === selectedTargetKey) || null;
-  const canGenerate = !isGenerating && (!isLive || isHost);
+  const canGenerate = !isGenerating && Boolean(selectedTarget) && !selectedTarget?.disabled && (selectedTarget?.kind !== 'live' || isHost);
   const activeCharacterPool = isLive ? sessionSheets : sheets;
   const activeCharacter = activeCharacterPool.find((sheet) => sheet.id === activeSheetId) || activeCharacterPool[0] || null;
   const targetStatusLabel = selectedTarget?.disabled
