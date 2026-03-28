@@ -308,7 +308,6 @@ function ArcaneTrailField({
           transition={getTransition(index)}
         >
           <div className="absolute left-[-105%] top-[42%] h-[14%] w-[145%] rounded-full bg-[linear-gradient(90deg,rgba(168,85,247,0),rgba(168,85,247,0.12),rgba(196,181,253,0.46),rgba(255,255,255,0.06))] blur-md" />
-          <div className="absolute right-[10%] top-[18%] h-[64%] w-[40%] rounded-[999px] border border-violet-200/35 opacity-70 blur-[0.3px]" />
         </motion.div>
       ))}
     </>
