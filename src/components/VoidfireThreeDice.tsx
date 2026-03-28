@@ -42,6 +42,7 @@ const fragmentShader = `
 uniform float uTime;
 uniform float uSeed;
 uniform sampler2D uNumberMap;
+uniform sampler2D uCrackMap;
 
 varying vec2 vUv;
 varying vec3 vNormalW;
@@ -75,11 +76,14 @@ float fbm(vec2 p) {
 void main() {
   vec2 uv = vUv * 3.1 + vec2(uSeed * 2.3, uSeed * 1.1);
   float t = uTime * 0.24;
-  float fieldA = fbm(uv + vec2(t * 0.34, -t * 0.18));
-  float fieldB = fbm(uv * 1.8 - vec2(t * 0.16, -t * 0.28));
-  float crackField = abs(fieldA - 0.5) + abs(fieldB - 0.53) * 0.74;
-  float cracks = 1.0 - smoothstep(0.09, 0.22, crackField);
-  float innerCracks = 1.0 - smoothstep(0.06, 0.16, crackField);
+  vec2 crackUv = vUv * 1.05 + vec2(uSeed * 0.07, uSeed * 0.05);
+  vec2 distortion = vec2(
+    fbm(uv * 0.9 + vec2(t * 0.12, -t * 0.06)),
+    fbm(uv * 0.9 + vec2(-t * 0.08, t * 0.1))
+  ) - 0.5;
+  float crackSample = 1.0 - texture2D(uCrackMap, fract(crackUv + distortion * 0.06)).r;
+  float cracks = smoothstep(0.16, 0.52, crackSample);
+  float innerCracks = smoothstep(0.24, 0.72, crackSample);
   float crackEdge = clamp(cracks - innerCracks, 0.0, 1.0);
   float hotspots = pow(crackEdge, 7.0) * (0.42 + 0.58 * fbm(uv * 3.8 + 12.0));
   float ember = smoothstep(0.962, 0.992, fbm(uv * 5.4 + 19.0));
@@ -106,7 +110,7 @@ void main() {
   vec4 numberSample = texture2D(uNumberMap, vUv);
   float numberMask = numberSample.a;
   vec3 numberCore = vec3(1.42, 1.4, 1.58) * smoothstep(0.9, 1.0, numberMask);
-  vec3 numberGlow = vec3(0.4, 0.18, 0.74) * smoothstep(0.36, 0.98, numberMask) * 0.1;
+  vec3 numberGlow = vec3(0.34, 0.16, 0.62) * smoothstep(0.42, 0.98, numberMask) * 0.075;
 
   vec3 color = rock + voidCore + galaxyTint + nebula + starColor + crackEdgeColor + hotspotColor + emberColor;
   color += (numberGlow + numberCore) * pulse;
@@ -130,12 +134,12 @@ function createNumberTexture(value: number) {
   ctx.textBaseline = 'middle';
   ctx.font = 'bold 280px Georgia';
   ctx.lineWidth = 10;
-  ctx.strokeStyle = 'rgba(206, 158, 255, 0.78)';
-  ctx.shadowBlur = 12;
-  ctx.shadowColor = 'rgba(168, 85, 247, 0.34)';
+  ctx.strokeStyle = 'rgba(206, 158, 255, 0.68)';
+  ctx.shadowBlur = 8;
+  ctx.shadowColor = 'rgba(168, 85, 247, 0.24)';
   ctx.strokeText(String(value), canvas.width / 2, canvas.height / 2);
-  ctx.shadowBlur = 14;
-  ctx.shadowColor = 'rgba(244, 232, 255, 0.32)';
+  ctx.shadowBlur = 10;
+  ctx.shadowColor = 'rgba(244, 232, 255, 0.24)';
   ctx.fillStyle = 'rgba(245, 238, 255, 0.97)';
   ctx.fillText(String(value), canvas.width / 2, canvas.height / 2);
 
@@ -145,7 +149,7 @@ function createNumberTexture(value: number) {
   return texture;
 }
 
-function buildFaceMaterials() {
+function buildFaceMaterials(crackTexture: THREE.Texture) {
   return FACE_ORDER.map((value, index) => {
     const texture = createNumberTexture(value);
     return new THREE.ShaderMaterial({
@@ -153,6 +157,7 @@ function buildFaceMaterials() {
         uTime: { value: 0 },
         uSeed: { value: 0.29 + index * 0.191 },
         uNumberMap: { value: texture },
+        uCrackMap: { value: crackTexture },
       },
       vertexShader,
       fragmentShader,
@@ -222,6 +227,10 @@ export function VoidfireThreeDice({
 
     const scene = new THREE.Scene();
     scene.background = null;
+    const crackTexture = new THREE.TextureLoader().load('/assets/voidfire-cracks.png');
+    crackTexture.wrapS = THREE.RepeatWrapping;
+    crackTexture.wrapT = THREE.RepeatWrapping;
+    crackTexture.colorSpace = THREE.NoColorSpace;
 
     const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
     camera.position.set(0, 12.4, 6.7);
@@ -287,7 +296,7 @@ export function VoidfireThreeDice({
     });
 
     const dice = effectiveResults.map((_, index) => {
-      const materials = buildFaceMaterials();
+      const materials = buildFaceMaterials(crackTexture);
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), materials);
       mesh.castShadow = true;
       mesh.receiveShadow = false;
@@ -419,6 +428,7 @@ export function VoidfireThreeDice({
         });
         die.mesh.geometry.dispose();
       });
+      crackTexture.dispose();
       composer.dispose();
       renderer.dispose();
       mountRef.current?.replaceChildren();
