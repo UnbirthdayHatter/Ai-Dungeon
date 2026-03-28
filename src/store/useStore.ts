@@ -1516,18 +1516,33 @@ export const useStore = create<any>()((set, get) => ({
   deleteRoleplay: (id) => {
     const state = get();
     const user = auth.currentUser;
+    const isOwnedLiveRoleplay = state.userRoleplays.some((roleplay: RoleplaySummary) => roleplay.id === id && roleplay.ownerId === user?.uid);
     if (state.currentSaveRoleplayId === id || state.currentLiveRoleplayId === id || state.currentRoleplayId === id) {
       get().setCurrentRoleplayId(null);
     }
     if (user) {
+      if (isOwnedLiveRoleplay) {
+        deleteDoc(doc(db, 'roleplays', id)).catch(console.error);
+      }
+
       // If it's a saved roleplay (local to user)
       deleteDoc(doc(db, 'users', user.uid, 'savedRoleplays', id)).catch(console.error);
       
       // If it's a joined roleplay (remove from user's joined list)
       deleteDoc(doc(db, 'users', user.uid, 'joinedRoleplays', id)).catch(console.error);
 
-      // We NO LONGER delete from the global 'roleplays' collection here
-      // to ensure that one person's deletion doesn't affect others.
+      getDoc(doc(db, 'users', user.uid))
+        .then((userDoc) => {
+          if (!userDoc.exists()) return;
+          const data = userDoc.data() as any;
+          if (!Array.isArray(data.userRoleplays)) return;
+          const nextUserRoleplays = data.userRoleplays.filter((roleplay: any) => roleplay?.id !== id);
+          updateDoc(doc(db, 'users', user.uid), { userRoleplays: nextUserRoleplays }).catch(console.error);
+        })
+        .catch(console.error);
+
+      // Joined sessions are only removed from the current user's lists.
+      // Hosted sessions are removed from the source roleplays collection too.
     }
     set((state) => ({
       savedRoleplays: state.savedRoleplays.filter(r => r.id !== id),
