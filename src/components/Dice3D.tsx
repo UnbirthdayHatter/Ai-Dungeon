@@ -94,14 +94,15 @@ function getDiceCanvasMotion(diceSkin: string, glow: string) {
     case 'glitchpop':
       return {
         style: {
-          filter: 'brightness(1.04) saturate(1.28) drop-shadow(0 0 12px rgba(236,72,153,0.18))',
+          filter: 'brightness(1.08) saturate(1.42) contrast(1.08) drop-shadow(0 0 12px rgba(236,72,153,0.18))',
         },
         animate: {
           filter: [
-            'brightness(1.02) saturate(1.2) hue-rotate(-8deg) drop-shadow(0 0 8px rgba(34,211,238,0.12))',
-            'brightness(1.14) saturate(1.42) hue-rotate(10deg) drop-shadow(0 0 18px rgba(236,72,153,0.2))',
-            'brightness(1.06) saturate(1.24) hue-rotate(0deg) drop-shadow(0 0 10px rgba(250,204,21,0.14))',
+            'brightness(1.02) saturate(1.24) contrast(1.02) hue-rotate(-10deg) drop-shadow(0 0 8px rgba(34,211,238,0.14))',
+            'brightness(1.22) saturate(1.58) contrast(1.14) hue-rotate(12deg) drop-shadow(0 0 22px rgba(236,72,153,0.24))',
+            'brightness(1.1) saturate(1.3) contrast(1.08) hue-rotate(0deg) drop-shadow(0 0 14px rgba(250,204,21,0.16))',
           ],
+          x: [0, 1.5, -1.5, 0],
         },
         transition: { duration: 1.8, repeat: Infinity, ease: 'easeInOut' as const },
       };
@@ -653,8 +654,75 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
             </div>
           )}
           {diceSkin === 'glitchpop' && (
+            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_24%,rgba(236,72,153,0.18),transparent_22%),radial-gradient(circle_at_74%_18%,rgba(34,211,238,0.18),transparent_24%),radial-gradient(circle_at_48%_82%,rgba(250,204,21,0.16),transparent_26%),linear-gradient(180deg,rgba(12,4,18,0.18),rgba(16,8,24,0.5)_56%,rgba(8,4,16,0.82))]" />
+              {Array.from({ length: 7 }).map((_, index) => (
+                <motion.div
+                  key={`glitch-floor-${index}`}
+                  className="absolute rounded-full blur-2xl"
+                  style={{
+                    left: `${-4 + index * 14}%`,
+                    bottom: `${6 + ((index * 5) % 18)}%`,
+                    width: `${180 + (index % 3) * 70}px`,
+                    height: `${44 + (index % 2) * 16}px`,
+                    background: index % 3 === 0
+                      ? 'radial-gradient(circle, rgba(236,72,153,0.18), rgba(99,102,241,0.06), transparent 72%)'
+                      : index % 3 === 1
+                        ? 'radial-gradient(circle, rgba(34,211,238,0.18), rgba(59,130,246,0.06), transparent 72%)'
+                        : 'radial-gradient(circle, rgba(250,204,21,0.16), rgba(236,72,153,0.05), transparent 72%)',
+                  }}
+                  animate={{ x: [0, 18, -10, 0], opacity: [0.08, 0.24, 0.1], scaleX: [0.88, 1.08, 0.94] }}
+                  transition={{ duration: 2.8 + (index % 4) * 0.3, repeat: Infinity, delay: index * 0.14, ease: 'easeInOut' }}
+                />
+              ))}
+              {Array.from({ length: 12 }).map((_, index) => (
+                <motion.div
+                  key={`glitch-disc-${index}`}
+                  className="absolute rounded-full border blur-[1px]"
+                  style={{
+                    left: `${8 + ((index * 13) % 82)}%`,
+                    top: `${16 + ((index * 17) % 62)}%`,
+                    width: `${24 + (index % 4) * 12}px`,
+                    height: `${24 + (index % 4) * 12}px`,
+                    borderColor: index % 3 === 0
+                      ? 'rgba(236,72,153,0.4)'
+                      : index % 3 === 1
+                        ? 'rgba(34,211,238,0.4)'
+                        : 'rgba(250,204,21,0.36)',
+                    boxShadow: index % 3 === 0
+                      ? '0 0 18px rgba(236,72,153,0.16)'
+                      : index % 3 === 1
+                        ? '0 0 18px rgba(34,211,238,0.14)'
+                        : '0 0 16px rgba(250,204,21,0.12)',
+                  }}
+                  animate={{ opacity: [0.08, 0.34, 0.1], scale: [0.8, 1.22, 0.9] }}
+                  transition={{ duration: 1.9 + (index % 3) * 0.25, repeat: Infinity, delay: index * 0.08 }}
+                />
+              ))}
+            </div>
+          )}
+          {diceSkin === 'glitchpop' && (
             <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
-              {Array.from({ length: 18 }).map((_, index) => (
+              {Array.from({ length: 14 }).map((_, index) => (
+                <motion.div
+                  key={`glitch-afterimage-${index}`}
+                  className="absolute h-16 rounded-full blur-xl"
+                  style={{
+                    right: `${-2 + (index % 3) * 3}%`,
+                    top: `${18 + ((index * 5) % 56)}%`,
+                    width: `${120 + (index % 4) * 36}px`,
+                    background: index % 3 === 0
+                      ? 'linear-gradient(90deg, rgba(236,72,153,0), rgba(236,72,153,0.32), rgba(236,72,153,0))'
+                      : index % 3 === 1
+                        ? 'linear-gradient(90deg, rgba(34,211,238,0), rgba(34,211,238,0.28), rgba(34,211,238,0))'
+                        : 'linear-gradient(90deg, rgba(250,204,21,0), rgba(250,204,21,0.24), rgba(250,204,21,0))',
+                    rotate: `${-14 + (index % 5) * 6}deg`,
+                  }}
+                  animate={{ x: [0, -120, -40], opacity: [0, 0.34, 0], scaleX: [0.8, 1.18, 0.92] }}
+                  transition={{ duration: 1.2 + (index % 4) * 0.18, repeat: Infinity, delay: index * 0.09 }}
+                />
+              ))}
+              {Array.from({ length: 26 }).map((_, index) => (
                 <motion.div
                   key={`glitch-${index}`}
                   className="absolute h-3 rounded-full blur-[1px]"
@@ -668,8 +736,32 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
                         ? 'linear-gradient(90deg, rgba(34,211,238,0.0), rgba(34,211,238,0.85), transparent)'
                         : 'linear-gradient(90deg, rgba(250,204,21,0.0), rgba(250,204,21,0.8), transparent)',
                   }}
-                  animate={{ x: [0, 18, -10, 0], opacity: [0.18, 0.75, 0.2], scaleX: [0.9, 1.12, 0.92] }}
-                  transition={{ duration: 0.95 + (index % 4) * 0.18, repeat: Infinity, delay: index * 0.05 }}
+                  animate={{ x: [0, 18, -10, 0], opacity: [0.18, 0.82, 0.16], scaleX: [0.9, 1.18, 0.88] }}
+                  transition={{ duration: 0.9 + (index % 4) * 0.16, repeat: Infinity, delay: index * 0.04 }}
+                />
+              ))}
+              {Array.from({ length: 20 }).map((_, index) => (
+                <motion.div
+                  key={`glitch-spark-${index}`}
+                  className="absolute rounded-full"
+                  style={{
+                    left: `${4 + ((index * 19) % 92)}%`,
+                    top: `${8 + ((index * 23) % 78)}%`,
+                    width: `${index % 5 === 0 ? 9 : 4}px`,
+                    height: `${index % 5 === 0 ? 9 : 4}px`,
+                    background: index % 3 === 0
+                      ? 'rgba(236,72,153,0.88)'
+                      : index % 3 === 1
+                        ? 'rgba(34,211,238,0.84)'
+                        : 'rgba(250,204,21,0.84)',
+                    boxShadow: index % 3 === 0
+                      ? '0 0 16px rgba(236,72,153,0.54)'
+                      : index % 3 === 1
+                        ? '0 0 16px rgba(34,211,238,0.5)'
+                        : '0 0 16px rgba(250,204,21,0.46)',
+                  }}
+                  animate={{ opacity: [0.08, 0.9, 0.14], scale: [0.7, 1.5, 0.82] }}
+                  transition={{ duration: 0.8 + (index % 4) * 0.15, repeat: Infinity, delay: index * 0.05 }}
                 />
               ))}
             </div>
