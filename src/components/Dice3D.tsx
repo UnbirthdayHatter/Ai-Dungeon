@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import '@3d-dice/dice-box/dist/style.css';
 import { useStore } from '@/store/useStore';
 import { Tester1ThreeDice } from './Tester1ThreeDice';
+import { VoidfireThreeDice } from './VoidfireThreeDice';
 
 interface Dice3DProps {
   results: number[];
@@ -1379,6 +1380,9 @@ export function Dice3D(props: Dice3DProps) {
   const { diceSkin } = useStore();
   if (diceSkin === 'tester1' && props.diceType === 6) {
     return <Tester1ThreeDice {...props} />;
+  }
+  if (diceSkin === 'voidfire' && props.diceType === 6) {
+    return <VoidfireThreeDice {...props} />;
   }
   return <StandardDice3D {...props} />;
 }
