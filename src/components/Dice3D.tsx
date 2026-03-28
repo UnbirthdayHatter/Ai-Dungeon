@@ -430,7 +430,19 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
             </div>
           )}
           {diceSkin === 'bloodstone' && (
+            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(127,29,29,0.22),transparent_34%),radial-gradient(circle_at_20%_18%,rgba(185,28,28,0.16),transparent_24%),linear-gradient(180deg,rgba(18,6,6,0.12),rgba(24,6,6,0.5)_56%,rgba(11,3,3,0.82))]" />
+            </div>
+          )}
+          {diceSkin === 'bloodstone' && (
             <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
+              <svg className="absolute inset-0 h-full w-full opacity-80" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <g fill="none" strokeLinecap="round">
+                  <path d="M8 88 L20 76 L32 78 L42 68 L56 70 L68 58 L84 62 L94 52" stroke="rgba(251,191,36,0.52)" strokeWidth="0.45" />
+                  <path d="M12 64 L26 58 L34 48 L46 44 L58 34 L74 30 L88 18" stroke="rgba(245,158,11,0.38)" strokeWidth="0.34" />
+                  <path d="M28 96 L38 82 L48 80 L58 68 L66 70 L80 54" stroke="rgba(254,240,138,0.28)" strokeWidth="0.28" />
+                </g>
+              </svg>
               {Array.from({ length: 12 }).map((_, index) => (
                 <motion.div
                   key={`ember-${index}`}
@@ -441,6 +453,23 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
                   }}
                   animate={{ opacity: [0.1, 0.55, 0.12], y: [0, -16, -6] }}
                   transition={{ duration: 2.2 + (index % 4) * 0.3, repeat: Infinity, delay: index * 0.1 }}
+                />
+              ))}
+              {Array.from({ length: 8 }).map((_, index) => (
+                <motion.div
+                  key={`bloodstone-glow-${index}`}
+                  className="absolute rounded-full blur-2xl"
+                  style={{
+                    left: `${10 + ((index * 13) % 78)}%`,
+                    bottom: `${8 + ((index * 7) % 22)}%`,
+                    width: `${90 + (index % 3) * 28}px`,
+                    height: `${36 + (index % 2) * 10}px`,
+                    background: index % 2 === 0
+                      ? 'radial-gradient(circle, rgba(239,68,68,0.2), rgba(185,28,28,0.08), transparent 72%)'
+                      : 'radial-gradient(circle, rgba(251,191,36,0.18), rgba(120,53,15,0.08), transparent 74%)',
+                  }}
+                  animate={{ opacity: [0.08, 0.3, 0.1], scale: [0.84, 1.18, 0.92], x: [0, 8, -4, 0] }}
+                  transition={{ duration: 2.6 + (index % 3) * 0.28, repeat: Infinity, delay: index * 0.14 }}
                 />
               ))}
             </div>
@@ -604,9 +633,46 @@ export function Dice3D({ results, diceType, total, label, modifier = 0, highligh
             id={containerIdRef.current}
             className="relative z-20 h-full w-full"
             style={diceCanvasMotion.style}
-            animate={diceCanvasMotion.animate}
+            animate={{
+              ...(diceCanvasMotion.animate || {}),
+              opacity: phase === 'settled' ? 0.35 : 1,
+            }}
             transition={diceCanvasMotion.transition}
           />
+
+          <AnimatePresence>
+            {phase === 'settled' && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                className="pointer-events-none absolute inset-x-0 bottom-12 z-40 flex justify-center px-6"
+              >
+                <div className="rounded-3xl border border-white/10 bg-zinc-950/78 px-5 py-4 shadow-[0_18px_50px_rgba(0,0,0,0.42)] backdrop-blur-sm">
+                  <div className="mb-3 text-center text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">
+                    Exact Dice
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-3">
+                    {effectiveResults.map((value, index) => (
+                      <motion.div
+                        key={`exact-face-${value}-${index}`}
+                        initial={{ opacity: 0, scale: 0.9, rotate: -6 + index * 3 }}
+                        animate={{ opacity: 1, scale: 1, rotate: -4 + index * 4 }}
+                        transition={{ delay: index * 0.06, duration: 0.24 }}
+                        className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 text-2xl font-black text-white shadow-[0_0_18px_rgba(255,255,255,0.06)]"
+                        style={{
+                          background: `linear-gradient(145deg, ${skin.glow.replace(/0\.\d+\)/, '0.32)')}, rgba(10,10,12,0.96))`,
+                          boxShadow: `0 0 22px ${skin.glow}`,
+                        }}
+                      >
+                        {value}
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {phase === 'initializing' && (
             <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-zinc-300">
