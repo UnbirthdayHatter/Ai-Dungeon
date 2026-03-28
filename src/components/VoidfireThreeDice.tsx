@@ -78,12 +78,13 @@ void main() {
   float fieldA = fbm(uv + vec2(t * 0.34, -t * 0.18));
   float fieldB = fbm(uv * 1.8 - vec2(t * 0.16, -t * 0.28));
   float crackField = abs(fieldA - 0.5) + abs(fieldB - 0.53) * 0.74;
-  float cracks = 1.0 - smoothstep(0.028, 0.064, crackField);
-  float innerCracks = 1.0 - smoothstep(0.016, 0.04, crackField);
+  float cracks = 1.0 - smoothstep(0.04, 0.1, crackField);
+  float innerCracks = 1.0 - smoothstep(0.024, 0.07, crackField);
   float crackEdge = clamp(cracks - innerCracks, 0.0, 1.0);
   float hotspots = pow(cracks, 5.5) * (0.5 + 0.5 * fbm(uv * 3.5 + 12.0));
   float ember = smoothstep(0.946, 0.988, fbm(uv * 5.2 + 19.0));
-  float starField = smoothstep(0.975, 0.997, fbm(uv * 9.0 + vec2(t * 0.08, -t * 0.05) + 37.0));
+  float starField = smoothstep(0.952, 0.992, fbm(uv * 9.8 + vec2(t * 0.08, -t * 0.05) + 37.0));
+  float starFieldSmall = smoothstep(0.968, 0.996, fbm(uv * 14.5 + vec2(-t * 0.06, t * 0.04) + 58.0));
   float starTwinkle = 0.7 + 0.3 * sin(uTime * 3.6 + uSeed * 11.0 + fbm(uv * 6.5) * 6.2831);
   float pulse = 0.88
     + sin(uTime * 1.55 + uSeed * 5.6) * 0.05
@@ -95,8 +96,9 @@ void main() {
 
   vec3 voidCore = vec3(0.008, 0.01, 0.03) * innerCracks;
   vec3 galaxyTint = vec3(0.08, 0.06, 0.18) * innerCracks * (0.6 + 0.4 * fbm(uv * 4.6 + 25.0));
-  vec3 starColor = vec3(0.92, 0.94, 1.08) * starField * starTwinkle * innerCracks * 0.9;
-  vec3 crackEdgeColor = vec3(0.64, 0.32, 1.0) * crackEdge * 0.34;
+  vec3 starColor = vec3(0.92, 0.94, 1.08) * starField * starTwinkle * innerCracks * 1.12;
+  starColor += vec3(0.78, 0.82, 1.0) * starFieldSmall * (0.62 + 0.38 * starTwinkle) * innerCracks * 0.7;
+  vec3 crackEdgeColor = vec3(0.64, 0.32, 1.0) * crackEdge * 0.28;
   vec3 hotspotColor = vec3(0.8, 0.54, 1.12) * hotspots * 0.1;
   vec3 emberColor = vec3(0.46, 0.24, 0.86) * ember * 0.016;
 
