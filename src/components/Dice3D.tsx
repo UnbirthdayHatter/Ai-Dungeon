@@ -284,6 +284,38 @@ function LinearTrailField({
   );
 }
 
+function FlameTrailField({
+  prefix,
+  count,
+  getStyle,
+  getAnimate,
+  getTransition,
+}: {
+  prefix: string;
+  count: number;
+  getStyle: (index: number) => React.CSSProperties;
+  getAnimate: (index: number) => any;
+  getTransition: (index: number) => any;
+}) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, index) => (
+        <motion.div
+          key={`${prefix}-${index}`}
+          className="absolute overflow-visible"
+          style={getStyle(index)}
+          animate={getAnimate(index)}
+          transition={getTransition(index)}
+        >
+          <div className="absolute inset-x-[18%] bottom-0 h-[78%] rounded-[999px] bg-[linear-gradient(180deg,rgba(255,255,255,0.0),rgba(196,181,253,0.55),rgba(168,85,247,0.88),rgba(88,28,135,0.92))] blur-[1px]" />
+          <div className="absolute inset-x-[30%] bottom-[10%] h-[54%] rounded-[999px] bg-[linear-gradient(180deg,rgba(255,255,255,0.0),rgba(244,114,182,0.36),rgba(217,70,239,0.74),rgba(126,34,206,0.88))] blur-[0.5px]" />
+          <div className="absolute left-[36%] bottom-[34%] h-[20%] w-[28%] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.72),rgba(216,180,254,0.3),rgba(216,180,254,0))] blur-[1px]" />
+        </motion.div>
+      ))}
+    </>
+  );
+}
+
 function VoidfireEffects() {
   return (
     <>
@@ -320,21 +352,44 @@ function VoidfireEffects() {
         />
       </div>
       <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
-        <LinearTrailField
-          prefix="voidfire-trail"
+        <FlameTrailField
+          prefix="voidfire-flame"
           count={12}
           getStyle={(index) => ({
-            right: `${-2 + (index % 3) * 2}%`,
-            top: `${16 + ((index * 6) % 58)}%`,
-            width: `${110 + (index % 4) * 34}px`,
-            height: '56px',
-            background: index % 2 === 0
-              ? 'linear-gradient(90deg, rgba(147,51,234,0), rgba(168,85,247,0.38), rgba(196,181,253,0.18), rgba(0,0,0,0))'
-              : 'linear-gradient(90deg, rgba(217,70,239,0), rgba(217,70,239,0.34), rgba(129,140,248,0.18), rgba(0,0,0,0))',
-            rotate: `${-18 + (index % 5) * 7}deg`,
+            right: `${-4 + (index % 3) * 3}%`,
+            top: `${14 + ((index * 6) % 58)}%`,
+            width: `${54 + (index % 4) * 12}px`,
+            height: `${120 + (index % 3) * 26}px`,
+            rotate: `${-26 + (index % 5) * 9}deg`,
+            filter: index % 2 === 0
+              ? 'drop-shadow(0 0 16px rgba(168,85,247,0.26))'
+              : 'drop-shadow(0 0 16px rgba(217,70,239,0.24))',
           })}
-          getAnimate={() => ({ x: [0, -120, -36], opacity: [0, 0.46, 0], scaleX: [0.82, 1.2, 0.94] })}
-          getTransition={(index) => ({ duration: 1.4 + (index % 4) * 0.18, repeat: Infinity, delay: index * 0.1 })}
+          getAnimate={() => ({
+            x: [0, -86, -24],
+            y: [0, -12, -4],
+            opacity: [0, 0.82, 0],
+            scaleX: [0.78, 1.12, 0.9],
+            scaleY: [0.82, 1.18, 0.92],
+          })}
+          getTransition={(index) => ({ duration: 1.15 + (index % 4) * 0.14, repeat: Infinity, delay: index * 0.09, ease: 'easeOut' })}
+        />
+        <LinearTrailField
+          prefix="voidfire-spellstreak"
+          count={10}
+          className="absolute rounded-full blur-md"
+          getStyle={(index) => ({
+            right: `${-2 + (index % 3) * 2}%`,
+            top: `${18 + ((index * 7) % 54)}%`,
+            width: `${120 + (index % 4) * 34}px`,
+            height: '18px',
+            background: index % 2 === 0
+              ? 'linear-gradient(90deg, rgba(147,51,234,0), rgba(168,85,247,0.3), rgba(196,181,253,0.16), rgba(0,0,0,0))'
+              : 'linear-gradient(90deg, rgba(217,70,239,0), rgba(217,70,239,0.28), rgba(129,140,248,0.14), rgba(0,0,0,0))',
+            rotate: `${-14 + (index % 5) * 6}deg`,
+          })}
+          getAnimate={() => ({ x: [0, -110, -32], opacity: [0, 0.3, 0], scaleX: [0.84, 1.18, 0.92] })}
+          getTransition={(index) => ({ duration: 1.3 + (index % 4) * 0.16, repeat: Infinity, delay: index * 0.11 })}
         />
         <GlowBlobField
           prefix="voidfire-ember"
