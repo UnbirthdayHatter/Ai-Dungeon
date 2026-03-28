@@ -143,36 +143,47 @@ magick $defaultDark `
   -modulate 100,194,100 `
   $numberGlowDark
 
-& magick $base `
+& magick $defaultLight `
+  '-fill' '#070303' '-colorize' '86' `
+  '-modulate' '24,28,100' `
+  '(' $base '-alpha' 'off' ')' '-compose' 'SoftLight' '-composite' `
   '(' $stoneNoise '-alpha' 'off' ')' '-compose' 'Overlay' '-composite' `
   '(' $shading '-alpha' 'off' ')' '-compose' 'SoftLight' '-composite' `
-  '(' $seams '-fill' '#060202' '-colorize' '100' ')' '-compose' 'Multiply' '-composite' `
-  '(' $cracks '-fill' '#d84d08' '-colorize' '100' -evaluate 'Multiply' '0.62' ')' '-compose' 'Screen' '-composite' `
-  '(' $cracks '-fill' '#ffb347' '-colorize' '100' -blur '0x0.35' -evaluate 'Multiply' '0.34' ')' '-compose' 'Screen' '-composite' `
-  '(' $crackHotspots '-fill' '#ffd887' '-colorize' '100' -blur '0x1.1' -evaluate 'Multiply' '0.28' ')' '-compose' 'Screen' '-composite' `
-  '(' $embers '-alpha' 'off' -evaluate 'Multiply' '0.16' ')' '-compose' 'Screen' '-composite' `
-  '(' -size ${size}x${size} radial-gradient:'#4a1807-#0b0403' ')' '-compose' 'SoftLight' '-composite' `
-  '-fill' '#090403' '-colorize' '74' `
-  '-brightness-contrast' '-48x40' `
-  '-sigmoidal-contrast' '11x44%' `
-  '-sharpen' '0x1.6' `
+  '(' $seams '-fill' '#050202' '-colorize' '100' ')' '-compose' 'Multiply' '-composite' `
+  '(' $cracks '-fill' '#d84d08' '-colorize' '100' -evaluate 'Multiply' '0.22' ')' '-compose' 'Screen' '-composite' `
+  '(' $cracks '-fill' '#ffb347' '-colorize' '100' -blur '0x0.25' -evaluate 'Multiply' '0.08' ')' '-compose' 'Screen' '-composite' `
+  '(' $crackHotspots '-fill' '#ffd887' '-colorize' '100' -blur '0x0.7' -evaluate 'Multiply' '0.07' ')' '-compose' 'Screen' '-composite' `
+  '(' $embers '-alpha' 'off' -evaluate 'Multiply' '0.05' ')' '-compose' 'Screen' '-composite' `
+  '-brightness-contrast' '-18x20' `
+  '-sigmoidal-contrast' '7x48%' `
+  '-sharpen' '0x1.3' `
   '-type' 'TrueColor' `
   $preparedLight
 
-& magick $preparedLight `
-  '-fill' '#070303' '-colorize' '32' `
-  '-modulate' '34,106,100' `
-  '-brightness-contrast' '-30x28' `
+& magick $defaultDark `
+  '-fill' '#060202' '-colorize' '88' `
+  '-modulate' '22,26,100' `
+  '(' $base '-alpha' 'off' ')' '-compose' 'SoftLight' '-composite' `
+  '(' $stoneNoise '-alpha' 'off' ')' '-compose' 'Overlay' '-composite' `
+  '(' $shading '-alpha' 'off' ')' '-compose' 'SoftLight' '-composite' `
+  '(' $seams '-fill' '#050202' '-colorize' '100' ')' '-compose' 'Multiply' '-composite' `
+  '(' $cracks '-fill' '#d84d08' '-colorize' '100' -evaluate 'Multiply' '0.24' ')' '-compose' 'Screen' '-composite' `
+  '(' $cracks '-fill' '#ffb347' '-colorize' '100' -blur '0x0.28' -evaluate 'Multiply' '0.09' ')' '-compose' 'Screen' '-composite' `
+  '(' $crackHotspots '-fill' '#ffd887' '-colorize' '100' -blur '0x0.75' -evaluate 'Multiply' '0.08' ')' '-compose' 'Screen' '-composite' `
+  '(' $embers '-alpha' 'off' -evaluate 'Multiply' '0.06' ')' '-compose' 'Screen' '-composite' `
+  '-brightness-contrast' '-20x18' `
+  '-sigmoidal-contrast' '7x50%' `
+  '-sharpen' '0x1.3' `
   '-type' 'TrueColor' `
   $preparedDark
 
 & magick $preparedLight `
   '(' $numberGlowLight '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
   '(' $numberCoreLight '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
-  '(' $defaultLight '-alpha' 'off' '-evaluate' 'Multiply' '0.06' ')' '-compose' 'Screen' '-composite' `
-  '-brightness-contrast' '-50x34' `
-  '-modulate' '28,118,100' `
-  '-sigmoidal-contrast' '9x42%' `
+  '(' $defaultLight '-alpha' 'off' '-evaluate' 'Multiply' '0.02' ')' '-compose' 'Screen' '-composite' `
+  '-brightness-contrast' '-18x18' `
+  '-modulate' '30,104,100' `
+  '-sigmoidal-contrast' '6x48%' `
   '-sharpen' '0x1.45' `
   '-type' 'TrueColor' `
   $lightOut
@@ -180,10 +191,10 @@ magick $defaultDark `
 & magick $preparedDark `
   '(' $numberGlowDark '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
   '(' $numberCoreDark '-alpha' 'off' ')' '-compose' 'Screen' '-composite' `
-  '(' $defaultDark '-alpha' 'off' '-evaluate' 'Multiply' '0.08' ')' '-compose' 'Screen' '-composite' `
-  '-brightness-contrast' '-48x32' `
-  '-modulate' '24,122,100' `
-  '-sigmoidal-contrast' '9x40%' `
+  '(' $defaultDark '-alpha' 'off' '-evaluate' 'Multiply' '0.03' ')' '-compose' 'Screen' '-composite' `
+  '-brightness-contrast' '-20x16' `
+  '-modulate' '26,106,100' `
+  '-sigmoidal-contrast' '6x48%' `
   '-sharpen' '0x1.45' `
   '-type' 'TrueColor' `
   $darkOut
