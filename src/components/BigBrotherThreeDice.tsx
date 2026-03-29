@@ -41,7 +41,7 @@ const VARIANT_STYLE: Record<DiceVariant, {
   blue: {
     size: 1.12,
     baseA: '#2f67e0',
-    baseB: '#102040',
+    baseB: '#1a3262',
     rim: '#92b8ff',
     numberStroke: 'rgba(160, 205, 255, 0.8)',
     numberFill: 'rgba(246, 251, 255, 0.98)',
@@ -50,7 +50,7 @@ const VARIANT_STYLE: Record<DiceVariant, {
   pink: {
     size: 0.8,
     baseA: '#ff8fc5',
-    baseB: '#6f2451',
+    baseB: '#8a3066',
     rim: '#ffd1e8',
     numberStroke: 'rgba(255, 195, 226, 0.86)',
     numberFill: 'rgba(255, 247, 252, 0.98)',
@@ -266,23 +266,23 @@ export function BigBrotherThreeDice({
     );
     composer.addPass(bloomPass);
 
-    scene.add(new THREE.AmbientLight(0xfaf6ff, 0.58));
+    scene.add(new THREE.AmbientLight(0xfaf6ff, 0.72));
 
-    const blueLight = new THREE.DirectionalLight(0x93b8ff, 1.35);
+    const blueLight = new THREE.DirectionalLight(0x93b8ff, 1.55);
     blueLight.position.set(3.6, 10.8, 3.2);
     blueLight.castShadow = true;
     blueLight.shadow.mapSize.set(1024, 1024);
     scene.add(blueLight);
 
-    const pinkLight = new THREE.PointLight(0xff8fd0, 5.8, 18, 2);
+    const pinkLight = new THREE.PointLight(0xff8fd0, 6.4, 18, 2);
     pinkLight.position.set(-2.4, 3.2, 1.7);
     scene.add(pinkLight);
 
     const trayGeometry = new THREE.PlaneGeometry(18, 18);
     const trayMaterial = new THREE.MeshStandardMaterial({
-      color: new THREE.Color('#0a0714'),
-      emissive: new THREE.Color('#130c24'),
-      emissiveIntensity: 0.16,
+      color: new THREE.Color('#120d24'),
+      emissive: new THREE.Color('#1c1534'),
+      emissiveIntensity: 0.2,
       roughness: 0.96,
       metalness: 0.05,
     });
@@ -321,25 +321,35 @@ export function BigBrotherThreeDice({
     const heartTexture = createHeartTexture();
     disposableResources.push(heartTexture);
 
-    const spawnHeart = (position: THREE.Vector3) => {
-      const material = new THREE.SpriteMaterial({
-        map: heartTexture,
-        transparent: true,
-        depthWrite: false,
-        opacity: 0.92,
-        blending: THREE.AdditiveBlending,
-      });
-      const sprite = new THREE.Sprite(material);
-      const scale = 0.34 + Math.random() * 0.12;
-      sprite.scale.set(scale, scale, scale);
-      sprite.position.copy(position).add(new THREE.Vector3((Math.random() - 0.5) * 0.28, 0.32 + Math.random() * 0.12, (Math.random() - 0.5) * 0.22));
-      scene.add(sprite);
-      heartSprites.push({
-        sprite,
-        material,
-        velocity: new THREE.Vector3((Math.random() - 0.5) * 0.18, 0.72 + Math.random() * 0.18, (Math.random() - 0.5) * 0.12),
-        life: 1,
-      });
+    const spawnHeartBurst = (position: THREE.Vector3, count: number) => {
+      for (let i = 0; i < count; i += 1) {
+        const material = new THREE.SpriteMaterial({
+          map: heartTexture,
+          transparent: true,
+          depthWrite: false,
+          opacity: 0.92,
+          blending: THREE.AdditiveBlending,
+        });
+        const sprite = new THREE.Sprite(material);
+        const scale = 0.28 + Math.random() * 0.14;
+        sprite.scale.set(scale, scale, scale);
+        sprite.position.copy(position).add(new THREE.Vector3(
+          (Math.random() - 0.5) * 0.55,
+          0.28 + Math.random() * 0.18,
+          (Math.random() - 0.5) * 0.36,
+        ));
+        scene.add(sprite);
+        heartSprites.push({
+          sprite,
+          material,
+          velocity: new THREE.Vector3(
+            (Math.random() - 0.5) * 0.34,
+            0.68 + Math.random() * 0.24,
+            (Math.random() - 0.5) * 0.2,
+          ),
+          life: 0.95 + Math.random() * 0.25,
+        });
+      }
     };
 
     const dice = effectiveResults.map((_, index) => {
@@ -390,14 +400,16 @@ export function BigBrotherThreeDice({
         const now = performance.now() / 1000;
         const pairKey = [index, other.__bbIndex].sort((a, b) => a - b).join(':');
         const last = pairHeartTimes.get(pairKey) || 0;
-        if (now - last < 0.24) return;
+        if (now - last < 0.16) return;
         pairHeartTimes.set(pairKey, now);
         const midpoint = new THREE.Vector3(
           (body.position.x + other.position.x) / 2,
           (body.position.y + other.position.y) / 2,
           (body.position.z + other.position.z) / 2,
         );
-        spawnHeart(midpoint);
+        const impact = body.velocity.vsub(other.velocity).length();
+        const burstCount = Math.max(3, Math.min(6, 2 + Math.round(impact / 2.2)));
+        spawnHeartBurst(midpoint, burstCount);
       });
       world.addBody(body);
 
@@ -545,8 +557,8 @@ export function BigBrotherThreeDice({
         </div>
 
         <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-slate-300/10 bg-black shadow-[0_0_90px_rgba(0,0,0,0.82)]">
-          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_26%_24%,rgba(93,143,255,0.16),transparent_22%),radial-gradient(circle_at_74%_72%,rgba(255,127,200,0.16),transparent_22%),linear-gradient(180deg,rgba(8,8,20,0.3),rgba(2,2,8,0.96))]" />
-          <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-[linear-gradient(180deg,rgba(12,10,28,0.32),rgba(3,2,10,0.8))] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
+          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_26%_24%,rgba(93,143,255,0.24),transparent_24%),radial-gradient(circle_at_74%_72%,rgba(255,127,200,0.22),transparent_24%),linear-gradient(180deg,rgba(14,12,30,0.38),rgba(6,4,16,0.9))]" />
+          <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-[linear-gradient(180deg,rgba(22,16,42,0.4),rgba(10,8,22,0.72))] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03)]" />
           <div className="absolute inset-x-6 top-5 z-10 flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-zinc-500">
             <span>Big Brother Tray</span>
             <span>{notation}</span>
