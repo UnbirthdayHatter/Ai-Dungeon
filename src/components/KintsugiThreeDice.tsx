@@ -505,9 +505,9 @@ export function KintsugiThreeDice({
           </div>
         </div>
 
-        <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-amber-200/20 bg-black/85 shadow-[0_0_90px_rgba(0,0,0,0.62)]">
-          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,247,235,0.14),transparent_34%),linear-gradient(180deg,rgba(30,21,15,0.18),rgba(8,5,4,0.9))]" />
-          <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-[linear-gradient(180deg,rgba(62,50,39,0.22),rgba(18,14,11,0.76))] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
+        <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-amber-200/20 bg-black shadow-[0_0_90px_rgba(0,0,0,0.62)]">
+          <div className="absolute inset-0 z-0 bg-black" />
+          <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-black shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
           <div className="absolute inset-x-6 top-5 z-10 flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-zinc-500">
             <span>Kintsugi Tray</span>
             <span>{notation}</span>
