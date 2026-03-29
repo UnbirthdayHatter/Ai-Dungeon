@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import '@3d-dice/dice-box/dist/style.css';
 import { useStore } from '@/store/useStore';
+import { NightThreeDice } from './NightThreeDice';
 import { Tester1ThreeDice } from './Tester1ThreeDice';
 import { EmeraldThreeDice } from './EmeraldThreeDice';
 import { VoidfireThreeDice } from './VoidfireThreeDice';
@@ -24,6 +25,7 @@ const DICE_SKINS: Record<string, { theme: string; themeColor: string; accent: st
   celestial: { theme: 'celestial', themeColor: '#6366f1', accent: '#c7d2fe', glow: 'rgba(99,102,241,0.35)' },
   bloodstone: { theme: 'bloodstone', themeColor: '#b91c1c', accent: '#fecaca', glow: 'rgba(185,28,28,0.35)' },
   emerald: { theme: 'emerald', themeColor: '#10b981', accent: '#a7f3d0', glow: 'rgba(16,185,129,0.35)' },
+  night: { theme: 'night', themeColor: '#94a3b8', accent: '#e2e8f0', glow: 'rgba(148,163,184,0.35)' },
   sapphire: { theme: 'sapphire', themeColor: '#2563eb', accent: '#bfdbfe', glow: 'rgba(37,99,235,0.35)' },
   amethyst: { theme: 'amethyst', themeColor: '#9333ea', accent: '#e9d5ff', glow: 'rgba(147,51,234,0.35)' },
   rosegold: { theme: 'rosegold', themeColor: '#fb7185', accent: '#fecdd3', glow: 'rgba(251,113,133,0.35)' },
@@ -1384,6 +1386,9 @@ export function Dice3D(props: Dice3DProps) {
   }
   if (diceSkin === 'emerald' && props.diceType === 6) {
     return <EmeraldThreeDice {...props} />;
+  }
+  if (diceSkin === 'night' && props.diceType === 6) {
+    return <NightThreeDice {...props} />;
   }
   if (diceSkin === 'voidfire' && props.diceType === 6) {
     return <VoidfireThreeDice {...props} />;

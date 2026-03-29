@@ -20,6 +20,7 @@ const CHAT_DICE_SKINS: Array<{ id: string; name: string; private?: true }> = [
   { id: 'celestial', name: 'Starfield' },
   { id: 'bloodstone', name: 'Bloodstone' },
   { id: 'emerald', name: 'Emerald' },
+  { id: 'night', name: 'Night' },
   { id: 'sapphire', name: 'Sapphire' },
   { id: 'amethyst', name: 'Amethyst' },
   { id: 'rosegold', name: 'Rosegold' },

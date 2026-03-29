@@ -59,6 +59,7 @@ const DICE_SKIN_OPTIONS = [
   { id: 'celestial', name: 'Starfield', preview: 'from-indigo-300 via-indigo-500 to-violet-700', pip: 'text-indigo-50', note: 'animated space texture' },
   { id: 'bloodstone', name: 'Bloodstone', preview: 'from-rose-400 via-red-600 to-red-950', pip: 'text-rose-50', note: 'veined ember stone' },
   { id: 'emerald', name: 'Emerald', preview: 'from-emerald-300 via-emerald-500 to-teal-800', pip: 'text-emerald-50', note: 'cut gemstone facets' },
+  { id: 'night', name: 'Night', preview: 'from-slate-500 via-slate-800 to-black', pip: 'text-slate-100', note: 'dark star-crack glass' },
   { id: 'sapphire', name: 'Sapphire', preview: 'from-sky-300 via-blue-500 to-blue-900', pip: 'text-sky-50', note: 'cut gemstone facets' },
   { id: 'amethyst', name: 'Amethyst', preview: 'from-fuchsia-300 via-purple-500 to-violet-900', pip: 'text-fuchsia-50', note: 'cut gemstone facets' },
   { id: 'rosegold', name: 'Rosegold', preview: 'from-rose-200 via-rose-400 to-orange-500', pip: 'text-rose-50', note: 'filigree metallic grain' },

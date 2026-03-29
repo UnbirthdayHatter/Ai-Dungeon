@@ -94,6 +94,7 @@ export function DiceRoller() {
     celestial: 'from-indigo-500/20 to-violet-500/10 border-indigo-400/30 text-indigo-200',
     bloodstone: 'from-red-600/20 to-rose-900/10 border-red-500/30 text-red-200',
     emerald: 'from-emerald-500/20 to-teal-500/10 border-emerald-400/30 text-emerald-200',
+    night: 'from-slate-500/20 to-slate-900/20 border-slate-400/25 text-slate-100',
     sapphire: 'from-blue-500/20 to-cyan-500/10 border-blue-400/30 text-blue-200',
     amethyst: 'from-purple-500/20 to-fuchsia-500/10 border-purple-400/30 text-purple-200',
     rosegold: 'from-rose-400/20 to-orange-400/10 border-rose-300/30 text-rose-200',
