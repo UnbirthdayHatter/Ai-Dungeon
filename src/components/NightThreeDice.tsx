@@ -45,7 +45,9 @@ const fragmentShader = `
 uniform float uTime;
 uniform float uSeed;
 uniform sampler2D uNumberMap;
-uniform sampler2D uStarMap;
+uniform sampler2D uStarMapA;
+uniform sampler2D uStarMapB;
+uniform float uStarBlend;
 
 varying vec2 vUv;
 varying vec3 vNormalW;
@@ -80,7 +82,9 @@ float fbm(vec2 p) {
 void main() {
   float t = uTime * 0.18;
   vec2 starUv = fract(vUv * 1.18 + vec2(uSeed * 0.07 + t * 0.01, uSeed * 0.05 - t * 0.008));
-  vec3 starSample = texture2D(uStarMap, starUv).rgb;
+  vec3 starSampleA = texture2D(uStarMapA, starUv).rgb;
+  vec3 starSampleB = texture2D(uStarMapB, starUv).rgb;
+  vec3 starSample = mix(starSampleA, starSampleB, uStarBlend);
   float starLuma = max(max(starSample.r, starSample.g), starSample.b);
   float twinkle = 0.92 + 0.08 * sin(uTime * 2.6 + uSeed * 7.0 + fbm(vUv * 8.0 + uSeed * 3.0) * 6.2831);
   float fresnel = pow(1.0 - max(dot(normalize(vNormalW), normalize(vViewDir)), 0.0), 2.2);
@@ -140,7 +144,9 @@ function buildFaceMaterials(starTexture: THREE.Texture) {
         uTime: { value: 0 },
         uSeed: { value: 0.29 + index * 0.191 },
         uNumberMap: { value: texture },
-        uStarMap: { value: starTexture },
+        uStarMapA: { value: starTexture },
+        uStarMapB: { value: starTexture },
+        uStarBlend: { value: 0 },
       },
       vertexShader,
       fragmentShader,
@@ -352,10 +358,17 @@ export function NightThreeDice({
 
       let allSettled = true;
       dice.forEach((die, index) => {
+        const starFrameProgress = (elapsed * 8) % starTextures.length;
+        const starFrameIndex = Math.floor(starFrameProgress);
+        const starFrameNextIndex = (starFrameIndex + 1) % starTextures.length;
+        const starBlend = starFrameProgress - starFrameIndex;
+
         die.materials.forEach((material, faceIndex) => {
           material.uniforms.uTime.value = elapsed;
           material.uniforms.uSeed.value = 0.29 + index * 0.23 + faceIndex * 0.11;
-          material.uniforms.uStarMap.value = starTextures[Math.floor(elapsed * 10) % starTextures.length];
+          material.uniforms.uStarMapA.value = starTextures[starFrameIndex];
+          material.uniforms.uStarMapB.value = starTextures[starFrameNextIndex];
+          material.uniforms.uStarBlend.value = starBlend;
         });
 
         const bodyQuat = new THREE.Quaternion(
@@ -436,9 +449,9 @@ export function NightThreeDice({
         <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-slate-300/10 bg-black shadow-[0_0_90px_rgba(0,0,0,0.8)]">
           <div className="absolute inset-0 z-0 bg-black" />
           <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-black shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
-          <div className="pointer-events-none absolute inset-[10px] z-[22] overflow-hidden rounded-[1.6rem] opacity-14">
-            <img src="/assets/voidfire-stars/frame-00.png" alt="" className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.04),rgba(0,0,0,0.18)_68%,rgba(0,0,0,0.42))]" />
+          <div className="pointer-events-none absolute inset-[10px] z-[22] overflow-hidden rounded-[1.6rem]">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_30%,rgba(94,62,156,0.28),transparent_24%),radial-gradient(circle_at_72%_62%,rgba(42,88,164,0.2),transparent_28%),radial-gradient(circle_at_52%_48%,rgba(129,54,150,0.16),transparent_34%),radial-gradient(circle_at_50%_50%,rgba(2,4,10,0.06),rgba(0,0,0,0.4)_66%,rgba(0,0,0,0.72))]" />
+            <div className="absolute inset-0 opacity-55 [background-image:radial-gradient(circle_at_20%_35%,rgba(120,84,188,0.18),transparent_18%),radial-gradient(circle_at_64%_42%,rgba(74,112,216,0.12),transparent_20%),radial-gradient(circle_at_46%_70%,rgba(147,72,168,0.14),transparent_24%)] blur-2xl" />
           </div>
           <div className="absolute inset-x-6 top-5 z-10 flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-zinc-500">
             <span>Night Tray</span>
