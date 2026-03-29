@@ -30,11 +30,12 @@ const CHAT_DICE_SKINS: Array<{ id: string; name: string; private?: true }> = [
   { id: 'glitchpop', name: 'Glitchpop' },
   { id: 'wacky', name: 'Wacky' },
   { id: 'tester1', name: 'Tester1', private: true as const },
+  { id: 'bigbrother', name: 'Big Brother', private: true as const },
 ];
 
 function canAccessPrivateDiceSkins() {
   const identity = `${auth.currentUser?.displayName || ''} ${auth.currentUser?.email || ''}`.toLowerCase();
-  return identity.includes('unbirthdayhatter');
+  return /unbirthdayhatter|rollingseduction|rolling\s*seduction/.test(identity);
 }
 
 export function Chat() {

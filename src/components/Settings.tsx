@@ -69,11 +69,12 @@ const DICE_SKIN_OPTIONS = [
   { id: 'glitchpop', name: 'Glitchpop', preview: 'from-cyan-300 via-fuchsia-500 to-yellow-400', pip: 'text-fuchsia-50', note: 'neon data corruption' },
   { id: 'wacky', name: 'Wacky', preview: 'from-cyan-300 via-fuchsia-500 to-lime-300', pip: 'text-white', note: 'chaotic rainbow test skin' },
   { id: 'tester1', name: 'Tester1', preview: 'from-rose-500 via-fuchsia-500 to-amber-300', pip: 'text-white', note: 'private experimental skin', private: true },
+  { id: 'bigbrother', name: 'Big Brother', preview: 'from-blue-400 via-indigo-700 to-pink-400', pip: 'text-white', note: 'large blue dice, little pink dice, and heart pops', private: true },
 ] as const;
 
 function canAccessPrivateDiceSkins() {
   const identity = `${auth.currentUser?.displayName || ''} ${auth.currentUser?.email || ''}`.toLowerCase();
-  return identity.includes('unbirthdayhatter');
+  return /unbirthdayhatter|rollingseduction|rolling\s*seduction/.test(identity);
 }
 
 export function Settings() {

@@ -7,6 +7,7 @@ import { Tester1ThreeDice } from './Tester1ThreeDice';
 import { EmeraldThreeDice } from './EmeraldThreeDice';
 import { VoidfireThreeDice } from './VoidfireThreeDice';
 import { KintsugiThreeDice } from './KintsugiThreeDice';
+import { BigBrotherThreeDice } from './BigBrotherThreeDice';
 
 interface Dice3DProps {
   results: number[];
@@ -36,6 +37,7 @@ const DICE_SKINS: Record<string, { theme: string; themeColor: string; accent: st
   glitchpop: { theme: 'glitchpop', themeColor: '#ec4899', accent: '#f9a8d4', glow: 'rgba(236,72,153,0.45)' },
   wacky: { theme: 'wacky', themeColor: '#22d3ee', accent: '#fef08a', glow: 'rgba(34,211,238,0.45)' },
   tester1: { theme: 'tester1', themeColor: '#f97316', accent: '#fdba74', glow: 'rgba(249,115,22,0.42)' },
+  bigbrother: { theme: 'bigbrother', themeColor: '#5d8fff', accent: '#ffd1e8', glow: 'rgba(93,143,255,0.38)' },
 };
 
 function getDiceCanvasMotion(diceSkin: string, glow: string) {
@@ -1384,6 +1386,9 @@ export function Dice3D(props: Dice3DProps) {
   const { diceSkin } = useStore();
   if ((diceSkin === 'tester1' || diceSkin === 'default') && props.diceType === 6) {
     return <Tester1ThreeDice {...props} />;
+  }
+  if (diceSkin === 'bigbrother' && props.diceType === 6) {
+    return <BigBrotherThreeDice {...props} />;
   }
   if (diceSkin === 'emerald' && props.diceType === 6) {
     return <EmeraldThreeDice {...props} />;
