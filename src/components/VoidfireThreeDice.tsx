@@ -43,6 +43,7 @@ uniform float uTime;
 uniform float uSeed;
 uniform sampler2D uNumberMap;
 uniform sampler2D uCrackMap;
+uniform sampler2D uStarMap;
 
 varying vec2 vUv;
 varying vec3 vNormalW;
@@ -81,15 +82,19 @@ void main() {
     fbm(uv * 0.9 + vec2(t * 0.12, -t * 0.06)),
     fbm(uv * 0.9 + vec2(-t * 0.08, t * 0.1))
   ) - 0.5;
-  float crackSample = 1.0 - texture2D(uCrackMap, fract(crackUv + distortion * 0.06)).r;
+  vec2 warpedCrackUv = fract(crackUv + distortion * 0.06);
+  float crackSample = 1.0 - texture2D(uCrackMap, warpedCrackUv).r;
   float cracks = smoothstep(0.16, 0.52, crackSample);
   float innerCracks = smoothstep(0.24, 0.72, crackSample);
   float crackEdge = clamp(cracks - innerCracks, 0.0, 1.0);
   float hotspots = pow(crackEdge, 7.0) * (0.42 + 0.58 * fbm(uv * 3.8 + 12.0));
   float ember = smoothstep(0.962, 0.992, fbm(uv * 5.4 + 19.0));
-  float starField = smoothstep(0.988, 0.9984, fbm(uv * 13.8 + vec2(t * 0.08, -t * 0.05) + 37.0));
-  float starFieldSmall = smoothstep(0.9945, 0.9994, fbm(uv * 24.0 + vec2(-t * 0.06, t * 0.04) + 58.0));
-  float starTwinkle = 0.7 + 0.3 * sin(uTime * 3.6 + uSeed * 11.0 + fbm(uv * 6.5) * 6.2831);
+  vec2 starUv = fract(warpedCrackUv * 1.14 + vec2(t * 0.008, -t * 0.005));
+  vec3 starSample = texture2D(uStarMap, starUv).rgb;
+  float starLuma = dot(starSample, vec3(0.2126, 0.7152, 0.0722));
+  float starField = smoothstep(0.16, 0.36, starLuma);
+  float starFieldSmall = smoothstep(0.34, 0.62, starLuma);
+  float starTwinkle = 0.78 + 0.22 * sin(uTime * 3.6 + uSeed * 11.0 + fbm(uv * 6.5) * 6.2831);
   float pulse = 0.88
     + sin(uTime * 1.55 + uSeed * 5.6) * 0.05
     + sin(uTime * 3.2 + uSeed * 9.3) * 0.025;
@@ -101,8 +106,8 @@ void main() {
   vec3 voidCore = vec3(0.0, 0.0, 0.0025) * innerCracks;
   vec3 galaxyTint = vec3(0.003, 0.006, 0.02) * innerCracks * (0.42 + 0.58 * fbm(uv * 4.9 + 25.0));
   vec3 nebula = vec3(0.018, 0.035, 0.09) * innerCracks * smoothstep(0.52, 0.86, fbm(uv * 3.8 + vec2(t * 0.05, -t * 0.03) + 81.0)) * 0.12;
-  vec3 starColor = vec3(1.18, 1.18, 1.24) * starField * starTwinkle * innerCracks * 1.65;
-  starColor += vec3(0.84, 0.94, 1.08) * starFieldSmall * (0.54 + 0.46 * starTwinkle) * innerCracks * 1.4;
+  vec3 starColor = starSample * vec3(1.18, 1.2, 1.24) * starField * starTwinkle * innerCracks * 1.7;
+  starColor += vec3(0.92, 0.97, 1.06) * starFieldSmall * (0.54 + 0.46 * starTwinkle) * innerCracks * 0.72;
   vec3 crackEdgeColor = vec3(0.74, 0.28, 1.0) * crackEdge * 0.22;
   vec3 hotspotColor = vec3(0.92, 0.42, 1.08) * hotspots * 0.065;
   vec3 emberColor = vec3(0.5, 0.24, 0.88) * ember * 0.01;
@@ -149,7 +154,7 @@ function createNumberTexture(value: number) {
   return texture;
 }
 
-function buildFaceMaterials(crackTexture: THREE.Texture) {
+function buildFaceMaterials(crackTexture: THREE.Texture, starTexture: THREE.Texture) {
   return FACE_ORDER.map((value, index) => {
     const texture = createNumberTexture(value);
     return new THREE.ShaderMaterial({
@@ -158,6 +163,7 @@ function buildFaceMaterials(crackTexture: THREE.Texture) {
         uSeed: { value: 0.29 + index * 0.191 },
         uNumberMap: { value: texture },
         uCrackMap: { value: crackTexture },
+        uStarMap: { value: starTexture },
       },
       vertexShader,
       fragmentShader,
@@ -231,6 +237,13 @@ export function VoidfireThreeDice({
     crackTexture.wrapS = THREE.RepeatWrapping;
     crackTexture.wrapT = THREE.RepeatWrapping;
     crackTexture.colorSpace = THREE.NoColorSpace;
+    const starTextures = Array.from({ length: 8 }, (_, index) => {
+      const texture = new THREE.TextureLoader().load(`/assets/voidfire-stars/frame-0${index}.png`);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    });
 
     const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
     camera.position.set(0, 12.4, 6.7);
@@ -296,7 +309,7 @@ export function VoidfireThreeDice({
     });
 
     const dice = effectiveResults.map((_, index) => {
-      const materials = buildFaceMaterials(crackTexture);
+      const materials = buildFaceMaterials(crackTexture, starTextures[0]);
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), materials);
       mesh.castShadow = true;
       mesh.receiveShadow = false;
@@ -370,6 +383,7 @@ export function VoidfireThreeDice({
         die.materials.forEach((material, faceIndex) => {
           material.uniforms.uTime.value = elapsed;
           material.uniforms.uSeed.value = 0.29 + index * 0.23 + faceIndex * 0.11;
+          material.uniforms.uStarMap.value = starTextures[Math.floor(elapsed * 10) % starTextures.length];
         });
 
         const bodyQuat = new THREE.Quaternion(
@@ -429,6 +443,7 @@ export function VoidfireThreeDice({
         die.mesh.geometry.dispose();
       });
       crackTexture.dispose();
+      starTextures.forEach((texture) => texture.dispose());
       composer.dispose();
       renderer.dispose();
       mountRef.current?.replaceChildren();
