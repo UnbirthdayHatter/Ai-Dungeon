@@ -78,42 +78,26 @@ float fbm(vec2 p) {
 }
 
 void main() {
-  vec2 uv = vUv * 3.1 + vec2(uSeed * 2.3, uSeed * 1.1);
-  float t = uTime * 0.24;
-  vec2 distortion = vec2(
-    fbm(uv * 0.9 + vec2(t * 0.12, -t * 0.06)),
-    fbm(uv * 0.9 + vec2(-t * 0.08, t * 0.1))
-  ) - 0.5;
-  vec2 starUv = fract(vUv * 4.8 + distortion * 0.08 + vec2(t * 0.008, -t * 0.005));
-  vec2 starUvB = fract(vec2(
-    starUv.x * 0.78 - starUv.y * 0.42,
-    starUv.x * 0.42 + starUv.y * 0.78
-  ) * 1.18 + vec2(0.23 + t * -0.006, 0.11 + t * 0.004));
+  float t = uTime * 0.18;
+  vec2 starUv = fract(vUv * 1.18 + vec2(uSeed * 0.07 + t * 0.01, uSeed * 0.05 - t * 0.008));
   vec3 starSample = texture2D(uStarMap, starUv).rgb;
-  vec3 starSampleB = texture2D(uStarMap, starUvB).rgb;
-  vec3 combinedStarSample = max(starSample, starSampleB * 0.9);
-  float starLuma = max(max(combinedStarSample.r, combinedStarSample.g), combinedStarSample.b);
-  float starField = smoothstep(0.02, 0.14, starLuma);
-  float starFieldSmall = smoothstep(0.08, 0.26, starLuma);
-  float starTwinkle = 0.78 + 0.22 * sin(uTime * 3.6 + uSeed * 11.0 + fbm(uv * 6.5) * 6.2831);
-  float fresnel = pow(1.0 - max(dot(normalize(vNormalW), normalize(vViewDir)), 0.0), 2.6);
+  float starLuma = max(max(starSample.r, starSample.g), starSample.b);
+  float twinkle = 0.92 + 0.08 * sin(uTime * 2.6 + uSeed * 7.0 + fbm(vUv * 8.0 + uSeed * 3.0) * 6.2831);
+  float fresnel = pow(1.0 - max(dot(normalize(vNormalW), normalize(vViewDir)), 0.0), 2.2);
 
-  vec3 body = vec3(0.004, 0.006, 0.01);
-  body += fbm(uv * 1.5 + 10.0) * 0.01;
-  body += vec3(0.03, 0.05, 0.08) * fresnel * 0.08;
-
-  vec3 starColor = combinedStarSample * vec3(1.35, 1.38, 1.42) * starField * starTwinkle * 2.7;
-  starColor += vec3(0.86, 0.93, 1.04) * starFieldSmall * (0.54 + 0.46 * starTwinkle) * 1.18;
-  vec3 cosmicTint = vec3(0.02, 0.03, 0.07) * (0.4 + 0.6 * fbm(uv * 3.8 + 14.0));
+  vec3 body = vec3(0.004, 0.006, 0.012);
+  vec3 spaceField = starSample * twinkle;
+  spaceField += vec3(0.012, 0.018, 0.03) * smoothstep(0.02, 0.14, starLuma);
+  spaceField += vec3(0.02, 0.03, 0.05) * fresnel * 0.16;
 
   vec4 numberSample = texture2D(uNumberMap, vUv);
   float numberMask = numberSample.a;
-  vec3 numberCore = vec3(1.1, 1.14, 1.18) * smoothstep(0.9, 1.0, numberMask);
-  vec3 numberGlow = vec3(0.36, 0.48, 0.76) * smoothstep(0.32, 0.98, numberMask) * 0.08;
+  vec3 numberCore = vec3(1.02, 1.05, 1.1) * smoothstep(0.92, 1.0, numberMask);
+  vec3 numberGlow = vec3(0.26, 0.36, 0.58) * smoothstep(0.3, 0.95, numberMask) * 0.06;
 
-  vec3 color = body + cosmicTint + starColor;
-  color += numberCore + numberGlow * (0.86 + sin(uTime * 1.8 + uSeed * 4.0) * 0.08);
-  color += starColor * 0.18 * fresnel;
+  vec3 color = body + spaceField;
+  color += numberCore;
+  color += numberGlow * (0.94 + sin(uTime * 1.5 + uSeed * 4.0) * 0.04);
 
   gl_FragColor = vec4(color, 1.0);
 }
