@@ -121,6 +121,7 @@ export function KintsugiThreeDice({
 }: KintsugiThreeDiceProps) {
   const { dice3DAutoCloseMs } = useStore();
   const mountRef = useRef<HTMLDivElement | null>(null);
+  const canvasHostRef = useRef<HTMLDivElement | null>(null);
   const completeTimeoutRef = useRef<number | null>(null);
   const onCompleteRef = useRef(onComplete);
   const [phase, setPhase] = useState<'initializing' | 'rolling' | 'settled' | 'failed'>('initializing');
@@ -147,7 +148,7 @@ export function KintsugiThreeDice({
     : displayHighlightedValue;
 
   useEffect(() => {
-    if (!mountRef.current) return;
+    if (!mountRef.current || !canvasHostRef.current) return;
     setResolvedResults(null);
     let cancelled = false;
     let animationFrame = 0;
@@ -173,8 +174,8 @@ export function KintsugiThreeDice({
     renderer.domElement.style.width = '100%';
     renderer.domElement.style.height = '100%';
     renderer.domElement.style.background = 'transparent';
-    mountRef.current.innerHTML = '';
-    mountRef.current.appendChild(renderer.domElement);
+    canvasHostRef.current.innerHTML = '';
+    canvasHostRef.current.appendChild(renderer.domElement);
 
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
@@ -407,7 +408,7 @@ export function KintsugiThreeDice({
       loadedResources.forEach((resource) => resource.dispose());
       composer.dispose();
       renderer.dispose();
-      mountRef.current?.replaceChildren();
+      canvasHostRef.current?.replaceChildren();
     };
   }, [dice3DAutoCloseMs, effectiveResults, modifier, notation]);
 
@@ -436,6 +437,7 @@ export function KintsugiThreeDice({
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_26%,rgba(255,250,241,0.12),transparent_18%),radial-gradient(circle_at_72%_64%,rgba(216,164,58,0.16),transparent_20%),radial-gradient(circle_at_54%_42%,rgba(255,232,186,0.08),transparent_30%),linear-gradient(180deg,rgba(49,39,32,0.06),rgba(12,10,8,0.4))]" />
               <div className="absolute inset-0 opacity-60 [background-image:linear-gradient(135deg,rgba(255,223,162,0.0)_0%,rgba(255,223,162,0.0)_46%,rgba(214,164,72,0.18)_49%,rgba(255,234,190,0.22)_50%,rgba(214,164,72,0.18)_51%,rgba(255,223,162,0.0)_54%,rgba(255,223,162,0.0)_100%)] bg-[length:220px_220px]" />
             </div>
+            <div ref={canvasHostRef} className="relative z-10 h-full w-full" />
           </div>
 
           {phase === 'initializing' && (
