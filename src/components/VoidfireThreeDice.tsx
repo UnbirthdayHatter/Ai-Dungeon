@@ -91,9 +91,9 @@ void main() {
   float ember = smoothstep(0.962, 0.992, fbm(uv * 5.4 + 19.0));
   vec2 starUv = fract(warpedCrackUv * 4.8 + vec2(t * 0.008, -t * 0.005));
   vec3 starSample = texture2D(uStarMap, starUv).rgb;
-  float starLuma = dot(starSample, vec3(0.2126, 0.7152, 0.0722));
-  float starField = smoothstep(0.28, 0.5, starLuma);
-  float starFieldSmall = smoothstep(0.5, 0.74, starLuma);
+  float starLuma = max(max(starSample.r, starSample.g), starSample.b);
+  float starField = smoothstep(0.08, 0.22, starLuma);
+  float starFieldSmall = smoothstep(0.18, 0.42, starLuma);
   float starTwinkle = 0.78 + 0.22 * sin(uTime * 3.6 + uSeed * 11.0 + fbm(uv * 6.5) * 6.2831);
   float pulse = 0.88
     + sin(uTime * 1.55 + uSeed * 5.6) * 0.05
@@ -106,8 +106,8 @@ void main() {
   vec3 voidCore = vec3(0.0, 0.0, 0.0025) * innerCracks;
   vec3 galaxyTint = vec3(0.003, 0.006, 0.02) * innerCracks * (0.42 + 0.58 * fbm(uv * 4.9 + 25.0));
   vec3 nebula = vec3(0.018, 0.035, 0.09) * innerCracks * smoothstep(0.52, 0.86, fbm(uv * 3.8 + vec2(t * 0.05, -t * 0.03) + 81.0)) * 0.12;
-  vec3 starColor = starSample * vec3(1.18, 1.2, 1.24) * starField * starTwinkle * innerCracks * 1.7;
-  starColor += vec3(0.92, 0.97, 1.06) * starFieldSmall * (0.54 + 0.46 * starTwinkle) * innerCracks * 0.72;
+  vec3 starColor = starSample * vec3(1.5, 1.54, 1.6) * starField * starTwinkle * innerCracks * 2.4;
+  starColor += vec3(0.96, 1.0, 1.1) * starFieldSmall * (0.54 + 0.46 * starTwinkle) * innerCracks * 1.05;
   vec3 crackEdgeColor = vec3(0.74, 0.28, 1.0) * crackEdge * 0.22;
   vec3 hotspotColor = vec3(0.92, 0.42, 1.08) * hotspots * 0.065;
   vec3 emberColor = vec3(0.5, 0.24, 0.88) * ember * 0.01;
@@ -119,7 +119,7 @@ void main() {
 
   vec3 color = rock + voidCore + galaxyTint + nebula + starColor + crackEdgeColor + hotspotColor + emberColor;
   color += (numberGlow + numberCore) * pulse;
-  color += (crackEdgeColor + hotspotColor + starColor * 0.26) * pulse * 0.08;
+  color += (crackEdgeColor + hotspotColor + starColor * 0.42) * pulse * 0.08;
 
   gl_FragColor = vec4(color, 1.0);
 }
