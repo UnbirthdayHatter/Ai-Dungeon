@@ -29,6 +29,46 @@ const FACE_NORMALS: Record<number, THREE.Vector3> = {
   4: new THREE.Vector3(-1, 0, 0),
 };
 
+function buildRestingQuaternions() {
+  const seen = new Set<string>();
+  const quaternions: THREE.Quaternion[] = [];
+
+  for (let x = 0; x < 4; x += 1) {
+    for (let y = 0; y < 4; y += 1) {
+      for (let z = 0; z < 4; z += 1) {
+        const q = new THREE.Quaternion().setFromEuler(
+          new THREE.Euler((x * Math.PI) / 2, (y * Math.PI) / 2, (z * Math.PI) / 2, 'XYZ'),
+        );
+        const key = [q.x, q.y, q.z, q.w].map((value) => value.toFixed(4)).join(',');
+        if (!seen.has(key)) {
+          seen.add(key);
+          quaternions.push(q);
+        }
+      }
+    }
+  }
+
+  return quaternions;
+}
+
+const D6_RESTING_QUATERNIONS = buildRestingQuaternions();
+
+function getSnappedRestingQuaternion(current: THREE.Quaternion, topValue: number) {
+  let best = current.clone();
+  let bestDot = -Infinity;
+
+  D6_RESTING_QUATERNIONS.forEach((candidate) => {
+    if (readTopFaceValue(candidate) !== topValue) return;
+    const dot = Math.abs(current.dot(candidate));
+    if (dot > bestDot) {
+      bestDot = dot;
+      best = candidate.clone();
+    }
+  });
+
+  return best;
+}
+
 const VARIANT_STYLE: Record<DiceVariant, {
   size: number;
   baseA: string;
@@ -485,6 +525,7 @@ export function BigBrotherThreeDice({
             die.body.angularVelocity.setZero();
             die.settled = true;
             die.resolvedValue = readTopFaceValue(die.mesh.quaternion);
+            die.mesh.quaternion.copy(getSnappedRestingQuaternion(die.mesh.quaternion, die.resolvedValue));
           } else {
             allSettled = false;
           }
