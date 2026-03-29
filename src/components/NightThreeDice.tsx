@@ -85,15 +85,16 @@ void main() {
   float twinkle = 0.92 + 0.08 * sin(uTime * 2.6 + uSeed * 7.0 + fbm(vUv * 8.0 + uSeed * 3.0) * 6.2831);
   float fresnel = pow(1.0 - max(dot(normalize(vNormalW), normalize(vViewDir)), 0.0), 2.2);
 
-  vec3 body = vec3(0.004, 0.006, 0.012);
-  vec3 spaceField = starSample * twinkle;
-  spaceField += vec3(0.012, 0.018, 0.03) * smoothstep(0.02, 0.14, starLuma);
-  spaceField += vec3(0.02, 0.03, 0.05) * fresnel * 0.16;
+  vec3 body = vec3(0.002, 0.003, 0.007);
+  vec3 spaceField = starSample * twinkle * 1.48;
+  spaceField += starSample * smoothstep(0.03, 0.18, starLuma) * 0.64;
+  spaceField += vec3(0.018, 0.028, 0.05) * smoothstep(0.02, 0.14, starLuma);
+  spaceField += vec3(0.026, 0.04, 0.072) * fresnel * 0.2;
 
   vec4 numberSample = texture2D(uNumberMap, vUv);
   float numberMask = numberSample.a;
   vec3 numberCore = vec3(1.02, 1.05, 1.1) * smoothstep(0.92, 1.0, numberMask);
-  vec3 numberGlow = vec3(0.26, 0.36, 0.58) * smoothstep(0.3, 0.95, numberMask) * 0.06;
+  vec3 numberGlow = vec3(0.26, 0.36, 0.58) * smoothstep(0.3, 0.95, numberMask) * 0.05;
 
   vec3 color = body + spaceField;
   color += numberCore;
@@ -435,9 +436,9 @@ export function NightThreeDice({
         <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-slate-300/10 bg-black shadow-[0_0_90px_rgba(0,0,0,0.8)]">
           <div className="absolute inset-0 z-0 bg-black" />
           <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-black shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
-          <div className="pointer-events-none absolute inset-[10px] z-[22] overflow-hidden rounded-[1.6rem] opacity-24">
+          <div className="pointer-events-none absolute inset-[10px] z-[22] overflow-hidden rounded-[1.6rem] opacity-14">
             <img src="/assets/voidfire-stars/frame-00.png" alt="" className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.18),rgba(0,0,0,0.52)_66%,rgba(0,0,0,0.82))]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.04),rgba(0,0,0,0.18)_68%,rgba(0,0,0,0.42))]" />
           </div>
           <div className="absolute inset-x-6 top-5 z-10 flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-zinc-500">
             <span>Night Tray</span>
