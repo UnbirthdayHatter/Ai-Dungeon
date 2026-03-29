@@ -177,7 +177,8 @@ export function Tester1ThreeDice({
   highlight = 'sum',
   onComplete,
 }: Tester1ThreeDiceProps) {
-  const { dice3DAutoCloseMs } = useStore();
+  const { dice3DAutoCloseMs, diceSkin } = useStore();
+  const trayName = diceSkin === 'default' ? 'Sunforged Tray' : 'Tester1 Tray';
   const mountRef = useRef<HTMLDivElement | null>(null);
   const completeTimeoutRef = useRef<number | null>(null);
   const onCompleteRef = useRef(onComplete);
@@ -480,7 +481,7 @@ export function Tester1ThreeDice({
             ))}
           </div>
           <div className="absolute inset-x-6 top-5 z-10 flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-zinc-500">
-            <span>Tester1 Tray</span>
+            <span>{trayName}</span>
             <span>{notation}</span>
           </div>
           <div ref={mountRef} className="relative z-20 h-full w-full" />

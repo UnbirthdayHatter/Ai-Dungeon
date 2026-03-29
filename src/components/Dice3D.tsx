@@ -1378,7 +1378,7 @@ function StandardDice3D({ results, diceType, total, label, modifier = 0, highlig
 
 export function Dice3D(props: Dice3DProps) {
   const { diceSkin } = useStore();
-  if (diceSkin === 'tester1' && props.diceType === 6) {
+  if ((diceSkin === 'tester1' || diceSkin === 'default') && props.diceType === 6) {
     return <Tester1ThreeDice {...props} />;
   }
   if (diceSkin === 'voidfire' && props.diceType === 6) {
