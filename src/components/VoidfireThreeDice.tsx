@@ -473,12 +473,16 @@ export function VoidfireThreeDice({
 
         <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-violet-400/16 bg-black/95 shadow-[0_0_90px_rgba(0,0,0,0.68)]">
           <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(168,85,247,0.06),transparent_24%),radial-gradient(circle_at_50%_100%,rgba(147,51,234,0.08),transparent_18%),linear-gradient(180deg,rgba(5,3,10,0.12),rgba(1,1,4,0.96))]" />
-          <div className="absolute inset-[10px] z-0 rounded-[1.6rem] overflow-hidden border border-white/5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]">
-            <div
-              className="absolute inset-0 bg-center bg-cover opacity-72"
-              style={{ backgroundImage: "url('/assets/voidfire-warp.gif')" }}
-            />
+          <div className="absolute inset-[10px] z-0 rounded-[1.6rem] overflow-hidden border border-white/5 bg-[linear-gradient(180deg,rgba(8,5,16,0.26),rgba(1,1,3,0.46))] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(35,12,58,0.12),transparent_22%),linear-gradient(180deg,rgba(8,5,16,0.26),rgba(1,1,3,0.46))]" />
+          </div>
+          <div className="pointer-events-none absolute inset-[10px] z-[18] overflow-hidden rounded-[1.6rem] opacity-40 mix-blend-screen">
+            <img
+              src="/assets/voidfire-warp.gif"
+              alt=""
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0),rgba(0,0,0,0.34)_64%,rgba(0,0,0,0.58))]" />
           </div>
           <div className="pointer-events-none absolute inset-[10px] z-[24] overflow-hidden rounded-[1.6rem] mix-blend-screen opacity-80">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(84,28,135,0.08),transparent_24%),linear-gradient(180deg,rgba(13,7,28,0.02),rgba(4,2,10,0.14))]" />
