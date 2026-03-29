@@ -45,7 +45,6 @@ const fragmentShader = `
 uniform float uTime;
 uniform float uSeed;
 uniform sampler2D uNumberMap;
-uniform sampler2D uCrackMap;
 uniform sampler2D uStarMap;
 
 varying vec2 vUv;
@@ -81,19 +80,11 @@ float fbm(vec2 p) {
 void main() {
   vec2 uv = vUv * 3.1 + vec2(uSeed * 2.3, uSeed * 1.1);
   float t = uTime * 0.24;
-  vec2 crackUv = vUv * 0.22 + vec2(uSeed * 0.07, uSeed * 0.05);
   vec2 distortion = vec2(
     fbm(uv * 0.9 + vec2(t * 0.12, -t * 0.06)),
     fbm(uv * 0.9 + vec2(-t * 0.08, t * 0.1))
   ) - 0.5;
-  vec2 warpedCrackUv = fract(crackUv + distortion * 0.06);
-  float crackSample = 1.0 - texture2D(uCrackMap, warpedCrackUv).r;
-  float cracks = smoothstep(0.16, 0.52, crackSample);
-  float innerCracks = smoothstep(0.24, 0.72, crackSample);
-  float starInterior = smoothstep(0.18, 0.6, crackSample);
-  float crackEdge = clamp(cracks - innerCracks, 0.0, 1.0);
-
-  vec2 starUv = fract(warpedCrackUv * 4.8 + vec2(t * 0.008, -t * 0.005));
+  vec2 starUv = fract(vUv * 4.8 + distortion * 0.08 + vec2(t * 0.008, -t * 0.005));
   vec2 starUvB = fract(vec2(
     starUv.x * 0.78 - starUv.y * 0.42,
     starUv.x * 0.42 + starUv.y * 0.78
@@ -107,22 +98,20 @@ void main() {
   float starTwinkle = 0.78 + 0.22 * sin(uTime * 3.6 + uSeed * 11.0 + fbm(uv * 6.5) * 6.2831);
   float fresnel = pow(1.0 - max(dot(normalize(vNormalW), normalize(vViewDir)), 0.0), 2.6);
 
-  vec3 body = vec3(0.008, 0.01, 0.014);
+  vec3 body = vec3(0.004, 0.006, 0.01);
   body += fbm(uv * 1.5 + 10.0) * 0.01;
   body += vec3(0.03, 0.05, 0.08) * fresnel * 0.08;
 
-  vec3 voidCore = vec3(0.0, 0.001, 0.004) * starInterior;
   vec3 starColor = combinedStarSample * vec3(1.35, 1.38, 1.42) * starField * starTwinkle * 2.7;
   starColor += vec3(0.86, 0.93, 1.04) * starFieldSmall * (0.54 + 0.46 * starTwinkle) * 1.18;
-  starColor *= starInterior;
-  vec3 crackEdgeColor = vec3(0.35, 0.48, 0.78) * crackEdge * 0.08;
+  vec3 cosmicTint = vec3(0.02, 0.03, 0.07) * (0.4 + 0.6 * fbm(uv * 3.8 + 14.0));
 
   vec4 numberSample = texture2D(uNumberMap, vUv);
   float numberMask = numberSample.a;
   vec3 numberCore = vec3(1.1, 1.14, 1.18) * smoothstep(0.9, 1.0, numberMask);
   vec3 numberGlow = vec3(0.36, 0.48, 0.76) * smoothstep(0.32, 0.98, numberMask) * 0.08;
 
-  vec3 color = body + voidCore + starColor + crackEdgeColor;
+  vec3 color = body + cosmicTint + starColor;
   color += numberCore + numberGlow * (0.86 + sin(uTime * 1.8 + uSeed * 4.0) * 0.08);
   color += starColor * 0.18 * fresnel;
 
@@ -158,7 +147,7 @@ function createNumberTexture(value: number) {
   return texture;
 }
 
-function buildFaceMaterials(crackTexture: THREE.Texture, starTexture: THREE.Texture) {
+function buildFaceMaterials(starTexture: THREE.Texture) {
   return FACE_ORDER.map((value, index) => {
     const texture = createNumberTexture(value);
     return new THREE.ShaderMaterial({
@@ -166,7 +155,6 @@ function buildFaceMaterials(crackTexture: THREE.Texture, starTexture: THREE.Text
         uTime: { value: 0 },
         uSeed: { value: 0.29 + index * 0.191 },
         uNumberMap: { value: texture },
-        uCrackMap: { value: crackTexture },
         uStarMap: { value: starTexture },
       },
       vertexShader,
@@ -237,10 +225,6 @@ export function NightThreeDice({
 
     const scene = new THREE.Scene();
     scene.background = null;
-    const crackTexture = new THREE.TextureLoader().load('/assets/voidfire-cracks.png');
-    crackTexture.wrapS = THREE.RepeatWrapping;
-    crackTexture.wrapT = THREE.RepeatWrapping;
-    crackTexture.colorSpace = THREE.NoColorSpace;
     const starTextures = Array.from({ length: 8 }, (_, index) => {
       const texture = new THREE.TextureLoader().load(`/assets/voidfire-stars/frame-0${index}.png`);
       texture.wrapS = THREE.RepeatWrapping;
@@ -312,7 +296,7 @@ export function NightThreeDice({
     });
 
     const dice = effectiveResults.map((_, index) => {
-      const materials = buildFaceMaterials(crackTexture, starTextures[0]);
+      const materials = buildFaceMaterials(starTextures[0]);
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), materials);
       mesh.castShadow = true;
       mesh.receiveShadow = false;
@@ -444,7 +428,6 @@ export function NightThreeDice({
         });
         die.mesh.geometry.dispose();
       });
-      crackTexture.dispose();
       starTextures.forEach((texture) => texture.dispose());
       composer.dispose();
       renderer.dispose();
@@ -465,12 +448,12 @@ export function NightThreeDice({
           </div>
         </div>
 
-        <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-slate-300/12 bg-black/95 shadow-[0_0_90px_rgba(0,0,0,0.72)]">
-          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(96,165,250,0.06),transparent_26%),radial-gradient(circle_at_50%_100%,rgba(30,41,59,0.08),transparent_22%),linear-gradient(180deg,rgba(3,6,14,0.12),rgba(0,0,0,0.96))]" />
-          <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-[linear-gradient(180deg,rgba(6,12,22,0.18),rgba(0,0,0,0.82))] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
+        <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-slate-300/10 bg-black shadow-[0_0_90px_rgba(0,0,0,0.8)]">
+          <div className="absolute inset-0 z-0 bg-black" />
+          <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-black shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
           <div className="pointer-events-none absolute inset-[10px] z-[22] overflow-hidden rounded-[1.6rem] opacity-52">
             <img src="/assets/voidfire-warp.gif" alt="" className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.1),rgba(0,0,0,0.42)_66%,rgba(0,0,0,0.7))]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.2),rgba(0,0,0,0.58)_66%,rgba(0,0,0,0.82))]" />
           </div>
           <div className="absolute inset-x-6 top-5 z-10 flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-zinc-500">
             <span>Night Tray</span>
