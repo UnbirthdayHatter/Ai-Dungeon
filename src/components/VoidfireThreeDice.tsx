@@ -87,8 +87,8 @@ void main() {
   float crackEdge = clamp(cracks - innerCracks, 0.0, 1.0);
   float hotspots = pow(crackEdge, 7.0) * (0.42 + 0.58 * fbm(uv * 3.8 + 12.0));
   float ember = smoothstep(0.962, 0.992, fbm(uv * 5.4 + 19.0));
-  float starField = smoothstep(0.946, 0.989, fbm(uv * 10.6 + vec2(t * 0.08, -t * 0.05) + 37.0));
-  float starFieldSmall = smoothstep(0.972, 0.997, fbm(uv * 16.0 + vec2(-t * 0.06, t * 0.04) + 58.0));
+  float starField = smoothstep(0.976, 0.996, fbm(uv * 11.8 + vec2(t * 0.08, -t * 0.05) + 37.0));
+  float starFieldSmall = smoothstep(0.988, 0.9988, fbm(uv * 19.5 + vec2(-t * 0.06, t * 0.04) + 58.0));
   float starTwinkle = 0.7 + 0.3 * sin(uTime * 3.6 + uSeed * 11.0 + fbm(uv * 6.5) * 6.2831);
   float pulse = 0.88
     + sin(uTime * 1.55 + uSeed * 5.6) * 0.05
@@ -98,11 +98,11 @@ void main() {
   rock += fbm(uv * 1.6) * 0.012;
   rock += max(dot(normalize(vNormalW), normalize(vec3(0.32, 1.0, 0.58))), 0.0) * 0.018;
 
-  vec3 voidCore = vec3(0.0, 0.001, 0.006) * innerCracks;
-  vec3 galaxyTint = vec3(0.01, 0.015, 0.05) * innerCracks * (0.46 + 0.54 * fbm(uv * 4.9 + 25.0));
-  vec3 nebula = vec3(0.04, 0.08, 0.18) * innerCracks * smoothstep(0.46, 0.84, fbm(uv * 3.8 + vec2(t * 0.05, -t * 0.03) + 81.0)) * 0.22;
-  vec3 starColor = vec3(1.0, 1.0, 1.08) * starField * starTwinkle * innerCracks * 1.62;
-  starColor += vec3(0.62, 0.8, 1.0) * starFieldSmall * (0.62 + 0.38 * starTwinkle) * innerCracks * 1.18;
+  vec3 voidCore = vec3(0.0, 0.0, 0.0025) * innerCracks;
+  vec3 galaxyTint = vec3(0.003, 0.006, 0.02) * innerCracks * (0.42 + 0.58 * fbm(uv * 4.9 + 25.0));
+  vec3 nebula = vec3(0.018, 0.035, 0.09) * innerCracks * smoothstep(0.52, 0.86, fbm(uv * 3.8 + vec2(t * 0.05, -t * 0.03) + 81.0)) * 0.12;
+  vec3 starColor = vec3(1.0, 1.0, 1.06) * starField * starTwinkle * innerCracks * 1.18;
+  starColor += vec3(0.62, 0.82, 1.0) * starFieldSmall * (0.5 + 0.5 * starTwinkle) * innerCracks * 0.9;
   vec3 crackEdgeColor = vec3(0.74, 0.28, 1.0) * crackEdge * 0.22;
   vec3 hotspotColor = vec3(0.92, 0.42, 1.08) * hotspots * 0.065;
   vec3 emberColor = vec3(0.5, 0.24, 0.88) * ember * 0.01;
