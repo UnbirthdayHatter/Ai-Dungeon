@@ -90,7 +90,7 @@ export function DiceRoller() {
     classic: 'from-amber-500/20 to-orange-500/10 border-amber-500/20 text-amber-300',
     default: 'from-amber-500/20 to-orange-500/10 border-amber-500/20 text-amber-300',
     obsidian: 'from-zinc-700/40 to-zinc-900/40 border-zinc-600/30 text-zinc-200',
-    ivory: 'from-stone-200/20 to-stone-400/10 border-stone-300/30 text-stone-200',
+    ivory: 'from-stone-100/20 via-amber-100/10 to-stone-400/10 border-amber-200/30 text-amber-100',
     celestial: 'from-indigo-500/20 to-violet-500/10 border-indigo-400/30 text-indigo-200',
     bloodstone: 'from-red-600/20 to-rose-900/10 border-red-500/30 text-red-200',
     emerald: 'from-emerald-500/20 to-teal-500/10 border-emerald-400/30 text-emerald-200',

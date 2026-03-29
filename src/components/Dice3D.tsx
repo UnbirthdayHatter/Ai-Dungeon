@@ -6,6 +6,7 @@ import { NightThreeDice } from './NightThreeDice';
 import { Tester1ThreeDice } from './Tester1ThreeDice';
 import { EmeraldThreeDice } from './EmeraldThreeDice';
 import { VoidfireThreeDice } from './VoidfireThreeDice';
+import { KintsugiThreeDice } from './KintsugiThreeDice';
 
 interface Dice3DProps {
   results: number[];
@@ -21,7 +22,7 @@ const DICE_SKINS: Record<string, { theme: string; themeColor: string; accent: st
   classic: { theme: 'default', themeColor: '#f59e0b', accent: '#fde68a', glow: 'rgba(245,158,11,0.35)' },
   default: { theme: 'sunforged', themeColor: '#f59e0b', accent: '#fde68a', glow: 'rgba(245,158,11,0.35)' },
   obsidian: { theme: 'obsidian', themeColor: '#71717a', accent: '#d4d4d8', glow: 'rgba(39,39,42,0.5)' },
-  ivory: { theme: 'ivory', themeColor: '#d6d3d1', accent: '#fafaf9', glow: 'rgba(214,211,209,0.35)' },
+  ivory: { theme: 'ivory', themeColor: '#f0d8a8', accent: '#fff6df', glow: 'rgba(240,216,168,0.35)' },
   celestial: { theme: 'celestial', themeColor: '#6366f1', accent: '#c7d2fe', glow: 'rgba(99,102,241,0.35)' },
   bloodstone: { theme: 'bloodstone', themeColor: '#b91c1c', accent: '#fecaca', glow: 'rgba(185,28,28,0.35)' },
   emerald: { theme: 'emerald', themeColor: '#10b981', accent: '#a7f3d0', glow: 'rgba(16,185,129,0.35)' },
@@ -1386,6 +1387,9 @@ export function Dice3D(props: Dice3DProps) {
   }
   if (diceSkin === 'emerald' && props.diceType === 6) {
     return <EmeraldThreeDice {...props} />;
+  }
+  if (diceSkin === 'ivory' && props.diceType === 6) {
+    return <KintsugiThreeDice {...props} />;
   }
   if (diceSkin === 'night' && props.diceType === 6) {
     return <NightThreeDice {...props} />;

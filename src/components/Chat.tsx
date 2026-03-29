@@ -16,7 +16,7 @@ const CHAT_DICE_SKINS: Array<{ id: string; name: string; private?: true }> = [
   { id: 'classic', name: 'Classic' },
   { id: 'default', name: 'Sunforged' },
   { id: 'obsidian', name: 'Obsidian' },
-  { id: 'ivory', name: 'Ivory' },
+  { id: 'ivory', name: 'Kintsugi' },
   { id: 'celestial', name: 'Starfield' },
   { id: 'bloodstone', name: 'Bloodstone' },
   { id: 'emerald', name: 'Emerald' },
