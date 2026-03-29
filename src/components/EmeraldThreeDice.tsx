@@ -77,30 +77,29 @@ float fbm(vec2 p) {
 }
 
 void main() {
-  vec2 uv = vUv * 3.0 + vec2(uSeed * 2.1, uSeed * 1.4);
-  float t = uTime * 0.14;
-  float crystalA = fbm(uv + vec2(t * 0.18, -t * 0.09));
-  float crystalB = fbm(uv * 1.8 - vec2(t * 0.08, t * 0.12));
-  float veins = 1.0 - smoothstep(0.05, 0.12, abs(crystalA - crystalB));
-  float sparkle = smoothstep(0.88, 0.985, fbm(uv * 5.2 + 17.0));
-  float fresnel = pow(1.0 - max(dot(normalize(vNormalW), normalize(vViewDir)), 0.0), 2.4);
+  vec2 uv = vUv * 2.2 + vec2(uSeed * 1.6, uSeed * 1.2);
+  float t = uTime * 0.08;
+  float crystalA = fbm(uv + vec2(t * 0.1, -t * 0.05));
+  float crystalB = fbm(uv * 1.4 - vec2(t * 0.05, t * 0.08));
+  float sparkle = smoothstep(0.92, 0.988, fbm(uv * 4.2 + 17.0));
+  float fresnel = pow(1.0 - max(dot(normalize(vNormalW), normalize(vViewDir)), 0.0), 2.6);
 
-  vec3 deepEmerald = vec3(0.02, 0.16, 0.09);
-  vec3 brightEmerald = vec3(0.16, 0.62, 0.4);
-  vec3 jade = vec3(0.32, 0.86, 0.64);
+  vec3 deepEmerald = vec3(0.02, 0.12, 0.08);
+  vec3 brightEmerald = vec3(0.16, 0.56, 0.38);
+  vec3 paleGlass = vec3(0.72, 1.0, 0.9);
 
-  vec3 body = mix(deepEmerald, brightEmerald, crystalA * 0.6 + crystalB * 0.28);
-  body += jade * veins * 0.18;
-  body += jade * sparkle * 0.08;
-  body += brightEmerald * fresnel * 0.26;
+  vec3 body = mix(deepEmerald, brightEmerald, crystalA * 0.42 + crystalB * 0.18);
+  body += paleGlass * sparkle * 0.04;
+  body += brightEmerald * fresnel * 0.38;
+  body += paleGlass * fresnel * 0.12;
 
   vec4 numberSample = texture2D(uNumberMap, vUv);
   float numberMask = numberSample.a;
-  vec3 numberCore = vec3(1.12, 1.22, 1.14) * smoothstep(0.86, 1.0, numberMask);
-  vec3 numberGlow = vec3(0.42, 0.95, 0.76) * smoothstep(0.22, 0.98, numberMask) * 0.2;
+  vec3 numberCore = vec3(0.08, 0.44, 0.28) * smoothstep(0.9, 1.0, numberMask);
+  vec3 numberGlow = vec3(0.18, 0.72, 0.5) * smoothstep(0.3, 0.98, numberMask) * 0.08;
 
   vec3 color = body + numberCore + numberGlow * (0.84 + sin(uTime * 1.8 + uSeed * 4.0) * 0.08);
-  float alpha = 0.62 + fresnel * 0.18 + veins * 0.06;
+  float alpha = 0.34 + fresnel * 0.26 + crystalA * 0.08;
 
   gl_FragColor = vec4(color, alpha);
 }
@@ -119,14 +118,13 @@ function createNumberTexture(value: number) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.font = 'bold 276px Georgia';
-  ctx.lineWidth = 10;
-  ctx.strokeStyle = 'rgba(150, 255, 220, 0.5)';
-  ctx.shadowBlur = 16;
-  ctx.shadowColor = 'rgba(90, 255, 210, 0.22)';
+  ctx.lineWidth = 8;
+  ctx.strokeStyle = 'rgba(92, 214, 168, 0.22)';
+  ctx.shadowBlur = 4;
+  ctx.shadowColor = 'rgba(92, 214, 168, 0.1)';
   ctx.strokeText(String(value), canvas.width / 2, canvas.height / 2);
-  ctx.shadowBlur = 10;
-  ctx.shadowColor = 'rgba(255, 255, 255, 0.18)';
-  ctx.fillStyle = 'rgba(242, 255, 250, 0.95)';
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(42, 122, 88, 0.96)';
   ctx.fillText(String(value), canvas.width / 2, canvas.height / 2);
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -429,12 +427,12 @@ export function EmeraldThreeDice({
         </div>
 
         <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-emerald-300/18 bg-black/85 shadow-[0_0_90px_rgba(0,0,0,0.62)]">
-          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(110,231,183,0.12),transparent_30%),radial-gradient(circle_at_50%_100%,rgba(16,185,129,0.14),transparent_26%),linear-gradient(180deg,rgba(3,12,9,0.18),rgba(1,3,2,0.92))]" />
-          <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-[radial-gradient(circle_at_50%_50%,rgba(167,243,208,0.06),transparent_22%),linear-gradient(180deg,rgba(4,18,13,0.12),rgba(1,4,3,0.74))] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
+          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(167,243,208,0.08),transparent_28%),radial-gradient(circle_at_50%_100%,rgba(52,211,153,0.1),transparent_24%),linear-gradient(180deg,rgba(4,16,12,0.14),rgba(1,3,2,0.92))]" />
+          <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-[linear-gradient(180deg,rgba(15,74,58,0.28),rgba(3,28,22,0.76))] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
           <div className="pointer-events-none absolute inset-[10px] z-[22] overflow-hidden rounded-[1.6rem] mix-blend-screen opacity-60">
             {Array.from({ length: 10 }).map((_, index) => (
               <motion.div
-                key={`emerald-refraction-${index}`}
+                key={`emerald-jade-vein-${index}`}
                 className="absolute rounded-full blur-2xl"
                 style={{
                   left: `${-6 + index * 11}%`,
@@ -442,10 +440,10 @@ export function EmeraldThreeDice({
                   width: `${160 + (index % 3) * 46}px`,
                   height: `${60 + (index % 2) * 18}px`,
                   background: index % 2 === 0
-                    ? 'radial-gradient(circle, rgba(110,231,183,0.18), rgba(16,185,129,0.08), transparent 72%)'
+                    ? 'radial-gradient(circle, rgba(167,243,208,0.12), rgba(52,211,153,0.06), transparent 72%)'
                     : 'radial-gradient(circle, rgba(209,250,229,0.14), rgba(52,211,153,0.06), transparent 74%)',
                 }}
-                animate={{ x: [0, 18, -8, 0], y: [0, -10, 6, 0], opacity: [0.18, 0.42, 0.22] }}
+                animate={{ x: [0, 10, -6, 0], y: [0, -4, 3, 0], opacity: [0.14, 0.28, 0.16] }}
                 transition={{ duration: 4.6 + (index % 4) * 0.35, repeat: Infinity, ease: 'easeInOut', delay: index * 0.12 }}
               />
             ))}
