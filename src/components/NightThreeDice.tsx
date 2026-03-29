@@ -451,9 +451,9 @@ export function NightThreeDice({
         <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-slate-300/10 bg-black shadow-[0_0_90px_rgba(0,0,0,0.8)]">
           <div className="absolute inset-0 z-0 bg-black" />
           <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-black shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
-          <div className="pointer-events-none absolute inset-[10px] z-[22] overflow-hidden rounded-[1.6rem] opacity-52">
-            <img src="/assets/voidfire-warp.gif" alt="" className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.2),rgba(0,0,0,0.58)_66%,rgba(0,0,0,0.82))]" />
+          <div className="pointer-events-none absolute inset-[10px] z-[22] overflow-hidden rounded-[1.6rem] opacity-24">
+            <img src="/assets/voidfire-stars/frame-00.png" alt="" className="h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.18),rgba(0,0,0,0.52)_66%,rgba(0,0,0,0.82))]" />
           </div>
           <div className="absolute inset-x-6 top-5 z-10 flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-zinc-500">
             <span>Night Tray</span>
