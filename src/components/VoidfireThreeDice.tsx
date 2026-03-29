@@ -89,11 +89,11 @@ void main() {
   float crackEdge = clamp(cracks - innerCracks, 0.0, 1.0);
   float hotspots = pow(crackEdge, 7.0) * (0.42 + 0.58 * fbm(uv * 3.8 + 12.0));
   float ember = smoothstep(0.962, 0.992, fbm(uv * 5.4 + 19.0));
-  vec2 starUv = fract(warpedCrackUv * 1.14 + vec2(t * 0.008, -t * 0.005));
+  vec2 starUv = fract(warpedCrackUv * 4.8 + vec2(t * 0.008, -t * 0.005));
   vec3 starSample = texture2D(uStarMap, starUv).rgb;
   float starLuma = dot(starSample, vec3(0.2126, 0.7152, 0.0722));
-  float starField = smoothstep(0.16, 0.36, starLuma);
-  float starFieldSmall = smoothstep(0.34, 0.62, starLuma);
+  float starField = smoothstep(0.28, 0.5, starLuma);
+  float starFieldSmall = smoothstep(0.5, 0.74, starLuma);
   float starTwinkle = 0.78 + 0.22 * sin(uTime * 3.6 + uSeed * 11.0 + fbm(uv * 6.5) * 6.2831);
   float pulse = 0.88
     + sin(uTime * 1.55 + uSeed * 5.6) * 0.05
