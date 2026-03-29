@@ -168,6 +168,11 @@ export function KintsugiThreeDice({
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;
     renderer.setClearColor(0x000000, 0);
+    renderer.domElement.style.position = 'relative';
+    renderer.domElement.style.zIndex = '2';
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
+    renderer.domElement.style.background = 'transparent';
     mountRef.current.innerHTML = '';
     mountRef.current.appendChild(renderer.domElement);
 
@@ -422,15 +427,16 @@ export function KintsugiThreeDice({
         <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-amber-200/20 bg-black/85 shadow-[0_0_90px_rgba(0,0,0,0.62)]">
           <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,247,235,0.14),transparent_34%),linear-gradient(180deg,rgba(30,21,15,0.18),rgba(8,5,4,0.9))]" />
           <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-[linear-gradient(180deg,rgba(62,50,39,0.22),rgba(18,14,11,0.76))] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
-          <div className="pointer-events-none absolute inset-[10px] z-[12] overflow-hidden rounded-[1.6rem]">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_26%,rgba(255,250,241,0.12),transparent_18%),radial-gradient(circle_at_72%_64%,rgba(216,164,58,0.16),transparent_20%),radial-gradient(circle_at_54%_42%,rgba(255,232,186,0.08),transparent_30%),linear-gradient(180deg,rgba(49,39,32,0.06),rgba(12,10,8,0.4))]" />
-            <div className="absolute inset-0 opacity-60 [background-image:linear-gradient(135deg,rgba(255,223,162,0.0)_0%,rgba(255,223,162,0.0)_46%,rgba(214,164,72,0.18)_49%,rgba(255,234,190,0.22)_50%,rgba(214,164,72,0.18)_51%,rgba(255,223,162,0.0)_54%,rgba(255,223,162,0.0)_100%)] bg-[length:220px_220px]" />
-          </div>
           <div className="absolute inset-x-6 top-5 z-10 flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-zinc-500">
             <span>Kintsugi Tray</span>
             <span>{notation}</span>
           </div>
-          <div ref={mountRef} className="relative z-20 h-full w-full" />
+          <div ref={mountRef} className="relative z-20 h-full w-full overflow-hidden">
+            <div className="pointer-events-none absolute inset-[10px] z-0 overflow-hidden rounded-[1.6rem]">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_26%,rgba(255,250,241,0.12),transparent_18%),radial-gradient(circle_at_72%_64%,rgba(216,164,58,0.16),transparent_20%),radial-gradient(circle_at_54%_42%,rgba(255,232,186,0.08),transparent_30%),linear-gradient(180deg,rgba(49,39,32,0.06),rgba(12,10,8,0.4))]" />
+              <div className="absolute inset-0 opacity-60 [background-image:linear-gradient(135deg,rgba(255,223,162,0.0)_0%,rgba(255,223,162,0.0)_46%,rgba(214,164,72,0.18)_49%,rgba(255,234,190,0.22)_50%,rgba(214,164,72,0.18)_51%,rgba(255,223,162,0.0)_54%,rgba(255,223,162,0.0)_100%)] bg-[length:220px_220px]" />
+            </div>
+          </div>
 
           {phase === 'initializing' && (
             <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-zinc-300">
