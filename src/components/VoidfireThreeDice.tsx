@@ -91,8 +91,14 @@ void main() {
   float hotspots = pow(crackEdge, 7.0) * (0.42 + 0.58 * fbm(uv * 3.8 + 12.0));
   float ember = smoothstep(0.962, 0.992, fbm(uv * 5.4 + 19.0));
   vec2 starUv = fract(warpedCrackUv * 4.8 + vec2(t * 0.008, -t * 0.005));
+  vec2 starUvB = fract(vec2(
+    starUv.x * 0.78 - starUv.y * 0.42,
+    starUv.x * 0.42 + starUv.y * 0.78
+  ) * 1.18 + vec2(0.23 + t * -0.006, 0.11 + t * 0.004));
   vec3 starSample = texture2D(uStarMap, starUv).rgb;
-  float starLuma = max(max(starSample.r, starSample.g), starSample.b);
+  vec3 starSampleB = texture2D(uStarMap, starUvB).rgb;
+  vec3 combinedStarSample = max(starSample, starSampleB * 0.9);
+  float starLuma = max(max(combinedStarSample.r, combinedStarSample.g), combinedStarSample.b);
   float starField = smoothstep(0.02, 0.14, starLuma);
   float starFieldSmall = smoothstep(0.08, 0.26, starLuma);
   float starTwinkle = 0.78 + 0.22 * sin(uTime * 3.6 + uSeed * 11.0 + fbm(uv * 6.5) * 6.2831);
@@ -107,7 +113,7 @@ void main() {
   vec3 voidCore = vec3(0.0, 0.0, 0.0025) * starInterior;
   vec3 galaxyTint = vec3(0.004, 0.008, 0.026) * starInterior * (0.42 + 0.58 * fbm(uv * 4.9 + 25.0));
   vec3 nebula = vec3(0.024, 0.046, 0.12) * starInterior * smoothstep(0.52, 0.86, fbm(uv * 3.8 + vec2(t * 0.05, -t * 0.03) + 81.0)) * 0.16;
-  vec3 starColor = starSample * vec3(1.5, 1.54, 1.6) * starField * starTwinkle * 2.9;
+  vec3 starColor = combinedStarSample * vec3(1.5, 1.54, 1.6) * starField * starTwinkle * 2.9;
   starColor += vec3(0.96, 1.0, 1.1) * starFieldSmall * (0.54 + 0.46 * starTwinkle) * 1.28;
   starColor *= starInterior;
   vec3 crackEdgeColor = vec3(0.74, 0.28, 1.0) * crackEdge * 0.22;
