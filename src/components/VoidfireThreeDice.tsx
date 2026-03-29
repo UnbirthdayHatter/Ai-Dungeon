@@ -471,11 +471,11 @@ export function VoidfireThreeDice({
           </div>
         </div>
 
-        <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-violet-400/20 bg-zinc-950/95 shadow-[0_0_80px_rgba(0,0,0,0.58)]">
-          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(168,85,247,0.16),transparent_34%),radial-gradient(circle_at_50%_100%,rgba(147,51,234,0.18),transparent_28%),linear-gradient(180deg,rgba(12,7,22,0.34),rgba(4,2,12,0.86))]" />
-          <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-[radial-gradient(circle_at_50%_40%,rgba(180,132,255,0.09),transparent_24%),linear-gradient(180deg,rgba(16,9,30,0.18),rgba(4,2,10,0.52))] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
+        <div className="relative h-[40rem] w-full overflow-hidden rounded-[2rem] border border-violet-400/16 bg-black/95 shadow-[0_0_90px_rgba(0,0,0,0.68)]">
+          <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(168,85,247,0.08),transparent_28%),radial-gradient(circle_at_50%_100%,rgba(147,51,234,0.1),transparent_22%),linear-gradient(180deg,rgba(7,4,14,0.16),rgba(1,1,4,0.94))]" />
+          <div className="absolute inset-[10px] z-0 rounded-[1.6rem] border border-white/5 bg-[radial-gradient(circle_at_50%_40%,rgba(180,132,255,0.04),transparent_20%),linear-gradient(180deg,rgba(10,6,18,0.1),rgba(1,1,3,0.72))] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]" />
           <div className="pointer-events-none absolute inset-[10px] z-[24] overflow-hidden rounded-[1.6rem] mix-blend-screen opacity-80">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(84,28,135,0.18),transparent_30%),linear-gradient(180deg,rgba(13,7,28,0.08),rgba(4,2,10,0.32))]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(84,28,135,0.1),transparent_24%),linear-gradient(180deg,rgba(13,7,28,0.03),rgba(4,2,10,0.18))]" />
             {Array.from({ length: 5 }).map((_, index) => (
               <motion.div
                 key={`voidfire-swell-${index}`}
