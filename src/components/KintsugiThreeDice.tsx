@@ -93,6 +93,65 @@ function createFaceTextures(value: number, albedoImage: CanvasImageSource, metal
   return { map, emissiveMap };
 }
 
+function createKintsugiTrayTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 1024;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }
+
+  const base = ctx.createLinearGradient(0, 0, 0, 1024);
+  base.addColorStop(0, '#362820');
+  base.addColorStop(0.52, '#1d1612');
+  base.addColorStop(1, '#0f0c0a');
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, 1024, 1024);
+
+  const glowA = ctx.createRadialGradient(220, 220, 30, 220, 220, 220);
+  glowA.addColorStop(0, 'rgba(255,246,221,0.14)');
+  glowA.addColorStop(0.45, 'rgba(214,164,72,0.08)');
+  glowA.addColorStop(1, 'rgba(214,164,72,0)');
+  ctx.fillStyle = glowA;
+  ctx.fillRect(0, 0, 1024, 1024);
+
+  const glowB = ctx.createRadialGradient(740, 620, 30, 740, 620, 260);
+  glowB.addColorStop(0, 'rgba(255,233,190,0.1)');
+  glowB.addColorStop(0.5, 'rgba(214,164,72,0.06)');
+  glowB.addColorStop(1, 'rgba(214,164,72,0)');
+  ctx.fillStyle = glowB;
+  ctx.fillRect(0, 0, 1024, 1024);
+
+  ctx.strokeStyle = 'rgba(219,171,84,0.14)';
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+  const veins = [
+    [[70, 760], [240, 700], [420, 640], [620, 560], [810, 500], [970, 430]],
+    [[130, 250], [290, 320], [460, 380], [620, 450], [790, 560], [930, 650]],
+    [[360, 110], [430, 220], [520, 350], [640, 500], [760, 650], [860, 820]],
+  ];
+  veins.forEach((points) => {
+    ctx.beginPath();
+    ctx.moveTo(points[0][0], points[0][1]);
+    for (let i = 1; i < points.length; i += 1) {
+      const prev = points[i - 1];
+      const curr = points[i];
+      const cx = (prev[0] + curr[0]) / 2;
+      const cy = (prev[1] + curr[1]) / 2;
+      ctx.quadraticCurveTo(prev[0], prev[1], cx, cy);
+    }
+    ctx.stroke();
+  });
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+}
+
 function readTopFaceValue(quaternion: THREE.Quaternion) {
   const up = new THREE.Vector3(0, 1, 0);
   let bestValue = 1;
@@ -154,6 +213,8 @@ export function KintsugiThreeDice({
     let animationFrame = 0;
     let resizeObserver: ResizeObserver | null = null;
     let loadedResources: Array<{ dispose: () => void }> = [];
+    let trayGeometry: THREE.PlaneGeometry | null = null;
+    let trayMaterial: THREE.MeshStandardMaterial | null = null;
 
     const scene = new THREE.Scene();
     scene.background = null;
@@ -198,6 +259,23 @@ export function KintsugiThreeDice({
     const goldLight = new THREE.PointLight(0xffd277, 4.8, 18, 2);
     goldLight.position.set(-2.2, 3.8, 2.0);
     scene.add(goldLight);
+
+    const trayTexture = createKintsugiTrayTexture();
+    loadedResources.push(trayTexture);
+    trayGeometry = new THREE.PlaneGeometry(18, 18);
+    trayMaterial = new THREE.MeshStandardMaterial({
+      map: trayTexture,
+      color: new THREE.Color('#1b1511'),
+      emissive: new THREE.Color('#3d2c1f'),
+      emissiveIntensity: 0.1,
+      roughness: 0.96,
+      metalness: 0.06,
+    });
+    const trayMesh = new THREE.Mesh(trayGeometry, trayMaterial);
+    trayMesh.rotation.x = -Math.PI / 2;
+    trayMesh.position.set(0, -0.52, 0);
+    trayMesh.receiveShadow = true;
+    scene.add(trayMesh);
 
     const world = new CANNON.World({
       gravity: new CANNON.Vec3(0, -24, 0),
@@ -406,6 +484,8 @@ export function KintsugiThreeDice({
       }
       resizeObserver?.disconnect();
       loadedResources.forEach((resource) => resource.dispose());
+      trayGeometry?.dispose();
+      trayMaterial?.dispose();
       composer.dispose();
       renderer.dispose();
       canvasHostRef.current?.replaceChildren();
@@ -433,10 +513,6 @@ export function KintsugiThreeDice({
             <span>{notation}</span>
           </div>
           <div ref={mountRef} className="relative z-20 h-full w-full overflow-hidden">
-            <div className="pointer-events-none absolute inset-[10px] z-0 overflow-hidden rounded-[1.6rem]">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_26%,rgba(255,250,241,0.12),transparent_18%),radial-gradient(circle_at_72%_64%,rgba(216,164,58,0.16),transparent_20%),radial-gradient(circle_at_54%_42%,rgba(255,232,186,0.08),transparent_30%),linear-gradient(180deg,rgba(49,39,32,0.06),rgba(12,10,8,0.4))]" />
-              <div className="absolute inset-0 opacity-60 [background-image:linear-gradient(135deg,rgba(255,223,162,0.0)_0%,rgba(255,223,162,0.0)_46%,rgba(214,164,72,0.18)_49%,rgba(255,234,190,0.22)_50%,rgba(214,164,72,0.18)_51%,rgba(255,223,162,0.0)_54%,rgba(255,223,162,0.0)_100%)] bg-[length:220px_220px]" />
-            </div>
             <div ref={canvasHostRef} className="relative z-10 h-full w-full" />
           </div>
 
